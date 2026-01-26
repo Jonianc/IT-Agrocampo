@@ -21,7 +21,9 @@ class AGP_PV_Ajax {
     }
 
     public function handle_submit(): void {
-        check_ajax_referer( 'agp_pv_submit', 'nonce' );
+        if ( ! check_ajax_referer( 'agp_pv_submit', 'nonce', false ) ) {
+            wp_send_json_error( array( 'message' => __( 'Nonce inválido.', 'agrocampo-post-venta' ) ) );
+        }
 
         if ( ! empty( $_POST['agp_pv_hp'] ) ) {
             wp_send_json_error( array( 'message' => __( 'Formulario inválido.', 'agrocampo-post-venta' ) ) );

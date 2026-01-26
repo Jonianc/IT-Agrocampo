@@ -17,7 +17,6 @@ if ( ! defined( 'ABSPATH' ) ) {
     <h1><?php esc_html_e( 'Post Venta', 'agrocampo-post-venta' ); ?></h1>
 
     <form id="agp-pv-form" enctype="multipart/form-data">
-        <input type="hidden" name="nonce" value="<?php echo esc_attr( wp_create_nonce( 'agp_pv_submit' ) ); ?>">
         <input type="text" name="agp_pv_hp" class="agp-pv-honeypot" tabindex="-1" autocomplete="off">
 
         <div class="agp-pv-field">
