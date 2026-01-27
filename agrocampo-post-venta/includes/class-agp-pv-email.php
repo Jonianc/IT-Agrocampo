@@ -15,14 +15,6 @@ class AGP_PV_Email {
         }
 
         $pdf_result = AGP_PV_PDF::ensure_pdf_attachment( $submission_id, $submission );
-        if ( ! $pdf_result['success'] ) {
-            AGP_PV_DB::update_mail_status( $submission_id, 'failed', $pdf_result['message'] );
-            return array(
-                'mail_sent' => false,
-                'mail_error' => $pdf_result['message'],
-                'admin_hint' => __( 'Configura SMTP (WP Mail SMTP u otro).', 'agrocampo-post-venta' ),
-            );
-        }
 
         $mail_available = function_exists( 'mail' ) || has_filter( 'phpmailer_init' );
         if ( ! $mail_available ) {
@@ -61,16 +53,14 @@ class AGP_PV_Email {
         $body = self::build_email_body( $submission_id, $submission );
 
         $attachments = array();
-        $pdf_attachment_id = (int) ( $submission['pdf_attachment_id'] ?? 0 );
-        if ( ! empty( $pdf_result['attachment_id'] ) ) {
-            $pdf_attachment_id = (int) $pdf_result['attachment_id'];
-        }
-
-        if ( $pdf_attachment_id ) {
-            $pdf_path = get_attached_file( $pdf_attachment_id );
+        $pdf_warning = '';
+        if ( isset( $pdf_result['status'] ) && 'ready' === $pdf_result['status'] && ! empty( $pdf_result['attachment_id'] ) ) {
+            $pdf_path = get_attached_file( (int) $pdf_result['attachment_id'] );
             if ( $pdf_path && file_exists( $pdf_path ) ) {
                 $attachments[] = $pdf_path;
             }
+        } elseif ( isset( $pdf_result['status'] ) && 'failed' === $pdf_result['status'] ) {
+            $pdf_warning = $pdf_result['message'] ?? __( 'PDF inválido, se envió el correo sin adjunto.', 'agrocampo-post-venta' );
         }
 
         $headers = array( 'Content-Type: text/html; charset=UTF-8' );
@@ -101,6 +91,14 @@ class AGP_PV_Email {
         }
 
         AGP_PV_DB::update_mail_status( $submission_id, 'sent', '' );
+
+        if ( $pdf_warning ) {
+            return array(
+                'mail_sent' => true,
+                'pdf_warning' => $pdf_warning,
+            );
+        }
+
         return array( 'mail_sent' => true );
     }
 

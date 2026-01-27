@@ -140,6 +140,15 @@
                             return;
                         }
 
+                        if (response.data.pdf_warning) {
+                            var pdfMessage = response.data.message || 'Informe enviado, pero el PDF falló.';
+                            if (response.data.pdf_warning) {
+                                pdfMessage += ' ' + response.data.pdf_warning;
+                            }
+                            $('.agp-pv-status').text(pdfMessage);
+                            return;
+                        }
+
                         $('.agp-pv-status').text(response.data.message);
                         if (response.data.autoclose) {
                             setTimeout(function () {

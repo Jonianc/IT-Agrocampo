@@ -47,12 +47,16 @@ if ( ! class_exists( 'FPDF' ) ) {
             $this->pages[ $this->page ] .= sprintf( "BT /F1 %d Tf %.2f %.2f Td (%s) Tj ET\n", $this->font_size, $x, 842 - $y, $escaped );
         }
 
-        public function Output( string $dest = 'S' ): string {
+        public function Output( string $dest = 'I', string $name = '' ): string {
             $objects = array();
             $offsets = array();
             $buffer = "%PDF-1.3\n";
 
             $objects[] = "1 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj\n";
+
+            $page_count = count( $this->pages );
+            $pages_id = ( $page_count * 2 ) + 2;
+            $catalog_id = $pages_id + 1;
 
             $kids = array();
             foreach ( $this->pages as $index => $content ) {
@@ -60,12 +64,12 @@ if ( ! class_exists( 'FPDF' ) ) {
                 $objects[] = $content_obj . " 0 obj << /Length " . strlen( $content ) . " >> stream\n" . $content . "endstream endobj\n";
 
                 $page_obj = count( $objects ) + 1;
-                $objects[] = $page_obj . " 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents " . $content_obj . " 0 R >> endobj\n";
+                $objects[] = $page_obj . " 0 obj << /Type /Page /Parent " . $pages_id . " 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents " . $content_obj . " 0 R >> endobj\n";
                 $kids[] = $page_obj . " 0 R";
             }
 
-            $objects[] = "2 0 obj << /Type /Pages /Count " . count( $kids ) . " /Kids [" . implode( ' ', $kids ) . "] >> endobj\n";
-            $objects[] = ( count( $objects ) + 1 ) . " 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n";
+            $objects[] = $pages_id . " 0 obj << /Type /Pages /Count " . count( $kids ) . " /Kids [" . implode( ' ', $kids ) . "] >> endobj\n";
+            $objects[] = $catalog_id . " 0 obj << /Type /Catalog /Pages " . $pages_id . " 0 R >> endobj\n";
 
             foreach ( $objects as $obj ) {
                 $offsets[] = strlen( $buffer );
@@ -78,10 +82,15 @@ if ( ! class_exists( 'FPDF' ) ) {
                 $buffer .= sprintf( "%010d 00000 n \n", $offset );
             }
 
-            $buffer .= "trailer << /Size " . ( count( $objects ) + 1 ) . " /Root " . ( count( $objects ) ) . " 0 R >>\nstartxref\n" . $xref . "\n%%EOF";
+            $buffer .= "trailer << /Size " . ( count( $objects ) + 1 ) . " /Root " . $catalog_id . " 0 R >>\nstartxref\n" . $xref . "\n%%EOF";
 
             if ( 'S' === $dest ) {
                 return $buffer;
+            }
+
+            if ( 'F' === $dest && $name ) {
+                file_put_contents( $name, $buffer );
+                return '';
             }
 
             echo $buffer;

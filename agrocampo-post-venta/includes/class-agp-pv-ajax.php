@@ -55,25 +55,6 @@ class AGP_PV_Ajax {
             wp_send_json_error( array( 'message' => __( 'No se pudo guardar el envío.', 'agrocampo-post-venta' ) ) );
         }
 
-        $submission = AGP_PV_Email::get_submission( $submission_id );
-        if ( ! $submission ) {
-            wp_send_json_error( array( 'message' => __( 'No se pudo cargar el envío guardado.', 'agrocampo-post-venta' ) ) );
-        }
-
-        $pdf_result = AGP_PV_PDF::ensure_pdf_attachment( $submission_id, $submission );
-        if ( ! $pdf_result['success'] ) {
-            AGP_PV_DB::update_mail_status( $submission_id, 'failed', $pdf_result['message'] );
-            wp_send_json_success(
-                array(
-                    'message' => __( 'Informe guardado, pero no se pudo generar el PDF.', 'agrocampo-post-venta' ),
-                    'mail_sent' => false,
-                    'mail_error' => $pdf_result['message'],
-                    'admin_hint' => __( 'Configura SMTP (WP Mail SMTP u otro).', 'agrocampo-post-venta' ),
-                    'submission_id' => $submission_id,
-                )
-            );
-        }
-
         $email_result = AGP_PV_Email::send_submission_email( $submission_id );
         if ( empty( $email_result['mail_sent'] ) ) {
             wp_send_json_success(
@@ -82,6 +63,16 @@ class AGP_PV_Ajax {
                     'mail_sent' => false,
                     'mail_error' => $email_result['mail_error'] ?? __( 'No se pudo enviar el correo.', 'agrocampo-post-venta' ),
                     'admin_hint' => $email_result['admin_hint'] ?? __( 'Configura SMTP (WP Mail SMTP u otro).', 'agrocampo-post-venta' ),
+                    'submission_id' => $submission_id,
+                )
+            );
+        }
+
+        if ( ! empty( $email_result['pdf_warning'] ) ) {
+            wp_send_json_success(
+                array(
+                    'message' => __( 'Informe enviado, pero el PDF no pudo adjuntarse.', 'agrocampo-post-venta' ),
+                    'pdf_warning' => $email_result['pdf_warning'],
                     'submission_id' => $submission_id,
                 )
             );
@@ -323,6 +314,9 @@ class AGP_PV_Ajax {
                 'firma_tecnico_id' => $data['firma_tecnico_id'],
                 'fotos_ids' => $data['fotos_ids'],
                 'pdf_attachment_id' => 0,
+                'pdf_status' => 'pending',
+                'pdf_error' => '',
+                'pdf_last_attempt_at' => null,
                 'correo_copia' => $data['correo_copia'],
                 'mail_status' => 'pending',
                 'mail_error' => '',
@@ -332,7 +326,7 @@ class AGP_PV_Ajax {
             ),
             array(
                 '%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s',
-                '%s','%s','%s','%s','%s','%d','%d','%s','%d','%s','%s','%s','%s','%s','%s'
+                '%s','%s','%s','%s','%s','%d','%d','%s','%d','%s','%s','%s','%s','%s','%s','%s','%s','%s'
             )
         );
 
