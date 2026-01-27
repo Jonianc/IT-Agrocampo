@@ -141,10 +141,14 @@
                     }
 
                     if (response.data && response.data.errors) {
+                        var firstMessage = '';
                         Object.keys(response.data.errors).forEach(function (key) {
                             $('.agp-pv-error[data-error-for="' + key + '"]').text(response.data.errors[key]);
+                            if (!firstMessage) {
+                                firstMessage = response.data.errors[key];
+                            }
                         });
-                        $('.agp-pv-status').text(agpPvData.messages.invalid);
+                        $('.agp-pv-status').text(firstMessage || agpPvData.messages.invalid);
                         return;
                     }
 
