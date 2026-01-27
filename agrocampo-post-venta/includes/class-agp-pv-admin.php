@@ -22,6 +22,7 @@ class AGP_PV_Admin {
         add_action( 'admin_menu', array( $this, 'register_menu' ) );
         add_action( 'admin_post_agp_pv_resend_email', array( $this, 'handle_resend_email' ) );
         add_action( 'admin_post_agp_pv_send_test_email', array( $this, 'handle_send_test_email' ) );
+        add_action( 'admin_post_agp_pv_save_recipients', array( $this, 'handle_save_recipients' ) );
     }
 
     public function register_menu(): void {
@@ -64,11 +65,27 @@ class AGP_PV_Admin {
                 $message = sanitize_text_field( wp_unslash( $_GET['agp_pv_notice_message'] ?? '' ) );
                 $class = 'notice-error';
             }
+            if ( 'recipients_saved' === $notice ) {
+                $message = __( 'Destinatarios actualizados.', 'agrocampo-post-venta' );
+            }
 
             if ( $message ) {
                 echo '<div class="notice ' . esc_attr( $class ) . '"><p>' . esc_html( $message ) . '</p></div>';
             }
         }
+
+        echo '<div class="card">';
+        echo '<h2>' . esc_html__( 'Destinatarios de correo', 'agrocampo-post-venta' ) . '</h2>';
+        echo '<p>' . esc_html__( 'Define los correos que recibirán el informe. Sepáralos por coma.', 'agrocampo-post-venta' ) . '</p>';
+        $recipients = AGP_PV_Email::get_configured_recipients();
+        $recipients_value = implode( ', ', $recipients );
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+        echo '<input type="hidden" name="action" value="agp_pv_save_recipients">';
+        wp_nonce_field( 'agp_pv_save_recipients' );
+        echo '<textarea name="agp_pv_recipients" rows="3" class="large-text">' . esc_textarea( $recipients_value ) . '</textarea>';
+        echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Guardar destinatarios', 'agrocampo-post-venta' ) . '</button></p>';
+        echo '</form>';
+        echo '</div>';
 
         echo '<div class="card">';
         echo '<h2>' . esc_html__( 'Requisito de correo', 'agrocampo-post-venta' ) . '</h2>';
@@ -137,6 +154,20 @@ class AGP_PV_Admin {
                 'admin.php?page=agp-pv-submissions&agp_pv_notice=test_failed&agp_pv_notice_message=' . rawurlencode( $message )
             )
         );
+        exit;
+    }
+
+    public function handle_save_recipients(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ) );
+        }
+
+        check_admin_referer( 'agp_pv_save_recipients' );
+
+        $raw = isset( $_POST['agp_pv_recipients'] ) ? sanitize_textarea_field( wp_unslash( $_POST['agp_pv_recipients'] ) ) : '';
+        AGP_PV_Email::update_recipients_option( $raw );
+
+        wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-submissions&agp_pv_notice=recipients_saved' ) );
         exit;
     }
 }

@@ -5,6 +5,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class AGP_PV_Email {
+    private const RECIPIENTS_OPTION_KEY = 'agp_pv_recipients';
+    private const DEFAULT_RECIPIENTS = array(
+        'info@agrocampo.cl',
+        'paolacisterna@agrocampo.cl',
+        'ivonnechacon@agrocampo.cl',
+        'patriciagutierrez@agrocampo.cl',
+        'luiszuniga@agrocampo.cl',
+        'enriquerivas@agrocampo.cl',
+    );
+
     public static function send_submission_email( int $submission_id ): array {
         $submission = self::get_submission( $submission_id );
         if ( ! $submission ) {
@@ -27,14 +37,7 @@ class AGP_PV_Email {
             );
         }
 
-        $recipients = array(
-            'info@agrocampo.cl',
-            'paolacisterna@agrocampo.cl',
-            'ivonnechacon@agrocampo.cl',
-            'patriciagutierrez@agrocampo.cl',
-            'luiszuniga@agrocampo.cl',
-            'enriquerivas@agrocampo.cl',
-        );
+        $recipients = self::get_configured_recipients();
 
         if ( ! empty( $submission['email_cliente'] ) ) {
             $recipients[] = $submission['email_cliente'];
@@ -42,6 +45,7 @@ class AGP_PV_Email {
         if ( ! empty( $submission['correo_copia'] ) ) {
             $recipients[] = $submission['correo_copia'];
         }
+        $recipients = array_values( array_unique( $recipients ) );
 
         $subject = sprintf(
             'IT %d / %s / %s',
@@ -147,6 +151,44 @@ class AGP_PV_Email {
         );
 
         return $row ?: null;
+    }
+
+    public static function get_configured_recipients(): array {
+        $saved = get_option( self::RECIPIENTS_OPTION_KEY, array() );
+        $recipients = array();
+
+        if ( is_array( $saved ) && ! empty( $saved ) ) {
+            foreach ( $saved as $email ) {
+                $email = sanitize_email( (string) $email );
+                if ( $email && is_email( $email ) ) {
+                    $recipients[] = $email;
+                }
+            }
+        }
+
+        if ( empty( $recipients ) ) {
+            $recipients = self::DEFAULT_RECIPIENTS;
+        }
+
+        return $recipients;
+    }
+
+    public static function update_recipients_option( string $raw ): void {
+        $emails = array_filter( array_map( 'trim', explode( ',', $raw ) ) );
+        $clean = array();
+        foreach ( $emails as $email ) {
+            $email = sanitize_email( $email );
+            if ( $email && is_email( $email ) ) {
+                $clean[] = $email;
+            }
+        }
+
+        if ( empty( $clean ) ) {
+            delete_option( self::RECIPIENTS_OPTION_KEY );
+            return;
+        }
+
+        update_option( self::RECIPIENTS_OPTION_KEY, array_values( array_unique( $clean ) ) );
     }
 
     public static function send_test_email( string $email ): array {
