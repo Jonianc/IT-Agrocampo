@@ -7,9 +7,85 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once AGP_PV_PLUGIN_DIR . 'includes/fpdf/fpdf.php';
 
 class AGP_PV_PDF {
-    public static function generate_pdf( int $submission_id, array $submission ): ?string {
+    public static function ensure_pdf_attachment( int $submission_id, array $submission ): array {
         if ( ! class_exists( 'FPDF' ) ) {
-            return null;
+            return array(
+                'success' => false,
+                'message' => __( 'No se encontró FPDF para generar el PDF.', 'agrocampo-post-venta' ),
+                'attachment_id' => 0,
+                'path' => '',
+            );
+        }
+
+        if ( ! empty( $submission['pdf_attachment_id'] ) ) {
+            $existing_path = get_attached_file( (int) $submission['pdf_attachment_id'] );
+            if ( $existing_path && file_exists( $existing_path ) ) {
+                return array(
+                    'success' => true,
+                    'message' => '',
+                    'attachment_id' => (int) $submission['pdf_attachment_id'],
+                    'path' => $existing_path,
+                );
+            }
+        }
+
+        $output = self::build_pdf_binary( $submission_id, $submission );
+        if ( '' === $output ) {
+            return array(
+                'success' => false,
+                'message' => __( 'No se pudo generar el contenido del PDF.', 'agrocampo-post-venta' ),
+                'attachment_id' => 0,
+                'path' => '',
+            );
+        }
+
+        $upload_dir = wp_upload_dir();
+        $filename = wp_unique_filename( $upload_dir['path'], 'agp-pv-' . $submission_id . '.pdf' );
+        $path = trailingslashit( $upload_dir['path'] ) . $filename;
+        $saved = file_put_contents( $path, $output );
+        if ( false === $saved ) {
+            return array(
+                'success' => false,
+                'message' => __( 'No se pudo guardar el PDF.', 'agrocampo-post-venta' ),
+                'attachment_id' => 0,
+                'path' => '',
+            );
+        }
+
+        $attachment = array(
+            'post_mime_type' => 'application/pdf',
+            'post_title' => sanitize_file_name( $filename ),
+            'post_content' => '',
+            'post_status' => 'inherit',
+        );
+
+        $attach_id = wp_insert_attachment( $attachment, $path );
+        if ( ! $attach_id ) {
+            return array(
+                'success' => false,
+                'message' => __( 'No se pudo registrar el PDF en la biblioteca de medios.', 'agrocampo-post-venta' ),
+                'attachment_id' => 0,
+                'path' => $path,
+            );
+        }
+
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+        $attach_data = wp_generate_attachment_metadata( $attach_id, $path );
+        wp_update_attachment_metadata( $attach_id, $attach_data );
+
+        AGP_PV_DB::update_pdf_attachment( $submission_id, (int) $attach_id );
+
+        return array(
+            'success' => true,
+            'message' => '',
+            'attachment_id' => (int) $attach_id,
+            'path' => $path,
+        );
+    }
+
+    private static function build_pdf_binary( int $submission_id, array $submission ): string {
+        if ( ! class_exists( 'FPDF' ) ) {
+            return '';
         }
 
         $pdf = new FPDF();
@@ -68,16 +144,6 @@ class AGP_PV_PDF {
             }
         }
 
-        $output = $pdf->Output( 'S' );
-        if ( '' === $output ) {
-            return null;
-        }
-
-        $upload_dir = wp_upload_dir();
-        $filename = 'agp-pv-' . $submission_id . '.pdf';
-        $path = trailingslashit( $upload_dir['path'] ) . $filename;
-        file_put_contents( $path, $output );
-
-        return $path;
+        return (string) $pdf->Output( 'S' );
     }
 }

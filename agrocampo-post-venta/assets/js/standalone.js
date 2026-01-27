@@ -131,6 +131,15 @@
             })
                 .done(function (response) {
                     if (response.success) {
+                        if (response.data.mail_sent === false) {
+                            var mailMessage = response.data.message || 'Informe guardado, pero el correo falló.';
+                            if (response.data.mail_error) {
+                                mailMessage += ' ' + response.data.mail_error;
+                            }
+                            $('.agp-pv-status').text(mailMessage);
+                            return;
+                        }
+
                         $('.agp-pv-status').text(response.data.message);
                         if (response.data.autoclose) {
                             setTimeout(function () {

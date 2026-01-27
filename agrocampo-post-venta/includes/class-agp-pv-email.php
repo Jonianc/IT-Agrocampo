@@ -9,15 +9,29 @@ class AGP_PV_Email {
         $submission = self::get_submission( $submission_id );
         if ( ! $submission ) {
             return array(
-                'success' => false,
-                'message' => __( 'No se encontró el envío.', 'agrocampo-post-venta' ),
+                'mail_sent' => false,
+                'mail_error' => __( 'No se encontró el envío.', 'agrocampo-post-venta' ),
             );
         }
 
-        if ( ! function_exists( 'mail' ) ) {
+        $pdf_result = AGP_PV_PDF::ensure_pdf_attachment( $submission_id, $submission );
+        if ( ! $pdf_result['success'] ) {
+            AGP_PV_DB::update_mail_status( $submission_id, 'failed', $pdf_result['message'] );
             return array(
-                'success' => false,
-                'message' => __( 'La función mail() no está disponible en el servidor.', 'agrocampo-post-venta' ),
+                'mail_sent' => false,
+                'mail_error' => $pdf_result['message'],
+                'admin_hint' => __( 'Configura SMTP (WP Mail SMTP u otro).', 'agrocampo-post-venta' ),
+            );
+        }
+
+        $mail_available = function_exists( 'mail' ) || has_filter( 'phpmailer_init' );
+        if ( ! $mail_available ) {
+            $message = __( 'La función mail() no está disponible en el servidor.', 'agrocampo-post-venta' );
+            AGP_PV_DB::update_mail_status( $submission_id, 'failed', $message );
+            return array(
+                'mail_sent' => false,
+                'mail_error' => $message,
+                'admin_hint' => __( 'Configura SMTP (WP Mail SMTP u otro).', 'agrocampo-post-venta' ),
             );
         }
 
@@ -47,27 +61,47 @@ class AGP_PV_Email {
         $body = self::build_email_body( $submission_id, $submission );
 
         $attachments = array();
-        $pdf_path = AGP_PV_PDF::generate_pdf( $submission_id, $submission );
-        if ( $pdf_path ) {
-            $attachments[] = $pdf_path;
+        $pdf_attachment_id = (int) ( $submission['pdf_attachment_id'] ?? 0 );
+        if ( ! empty( $pdf_result['attachment_id'] ) ) {
+            $pdf_attachment_id = (int) $pdf_result['attachment_id'];
+        }
+
+        if ( $pdf_attachment_id ) {
+            $pdf_path = get_attached_file( $pdf_attachment_id );
+            if ( $pdf_path && file_exists( $pdf_path ) ) {
+                $attachments[] = $pdf_path;
+            }
         }
 
         $headers = array( 'Content-Type: text/html; charset=UTF-8' );
 
-        $sent = wp_mail( $recipients, $subject, $body, $headers, $attachments );
+        $mail_error = null;
+        $failed_callback = static function ( $wp_error ) use ( &$mail_error ) {
+            if ( $wp_error instanceof WP_Error ) {
+                $mail_error = $wp_error;
+            }
+        };
 
-        if ( $pdf_path && file_exists( $pdf_path ) ) {
-            unlink( $pdf_path );
-        }
+        add_action( 'wp_mail_failed', $failed_callback );
+        $sent = wp_mail( $recipients, $subject, $body, $headers, $attachments );
+        remove_action( 'wp_mail_failed', $failed_callback );
 
         if ( ! $sent ) {
+            $message = __( 'No se pudo enviar el correo.', 'agrocampo-post-venta' );
+            if ( $mail_error instanceof WP_Error ) {
+                $message = $mail_error->get_error_message();
+            }
+            $message = wp_strip_all_tags( (string) $message );
+            AGP_PV_DB::update_mail_status( $submission_id, 'failed', $message );
             return array(
-                'success' => false,
-                'message' => __( 'No se pudo enviar el correo.', 'agrocampo-post-venta' ),
+                'mail_sent' => false,
+                'mail_error' => $message,
+                'admin_hint' => __( 'Configura SMTP (WP Mail SMTP u otro).', 'agrocampo-post-venta' ),
             );
         }
 
-        return array( 'success' => true );
+        AGP_PV_DB::update_mail_status( $submission_id, 'sent', '' );
+        return array( 'mail_sent' => true );
     }
 
     public static function build_email_body( int $submission_id, array $submission ): string {
@@ -115,5 +149,56 @@ class AGP_PV_Email {
         );
 
         return $row ?: null;
+    }
+
+    public static function send_test_email( string $email ): array {
+        $email = sanitize_email( $email );
+        if ( ! is_email( $email ) ) {
+            return array(
+                'sent' => false,
+                'message' => __( 'Correo inválido.', 'agrocampo-post-venta' ),
+            );
+        }
+
+        $mail_available = function_exists( 'mail' ) || has_filter( 'phpmailer_init' );
+        if ( ! $mail_available ) {
+            return array(
+                'sent' => false,
+                'message' => __( 'La función mail() no está disponible en el servidor.', 'agrocampo-post-venta' ),
+            );
+        }
+
+        $mail_error = null;
+        $failed_callback = static function ( $wp_error ) use ( &$mail_error ) {
+            if ( $wp_error instanceof WP_Error ) {
+                $mail_error = $wp_error;
+            }
+        };
+
+        add_action( 'wp_mail_failed', $failed_callback );
+        $sent = wp_mail(
+            $email,
+            __( 'Prueba de correo Post Venta', 'agrocampo-post-venta' ),
+            __( 'Este es un correo de prueba del plugin Agrocampo Post Venta.', 'agrocampo-post-venta' ),
+            array( 'Content-Type: text/plain; charset=UTF-8' )
+        );
+        remove_action( 'wp_mail_failed', $failed_callback );
+
+        if ( ! $sent ) {
+            $message = __( 'No se pudo enviar el correo de prueba.', 'agrocampo-post-venta' );
+            if ( $mail_error instanceof WP_Error ) {
+                $message = $mail_error->get_error_message();
+            }
+            $message = wp_strip_all_tags( (string) $message );
+            return array(
+                'sent' => false,
+                'message' => $message,
+            );
+        }
+
+        return array(
+            'sent' => true,
+            'message' => __( 'Correo de prueba enviado.', 'agrocampo-post-venta' ),
+        );
     }
 }

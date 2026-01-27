@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class AGP_PV_DB {
-    public const VERSION = '1.0.0';
+    public const VERSION = '1.1.0';
     public const OPTION_KEY = 'agp_pv_db_version';
 
     public static function table_name(): string {
@@ -51,7 +51,11 @@ class AGP_PV_DB {
             firma_cliente_id BIGINT UNSIGNED DEFAULT 0,
             firma_tecnico_id BIGINT UNSIGNED DEFAULT 0,
             fotos_ids LONGTEXT,
+            pdf_attachment_id BIGINT UNSIGNED DEFAULT 0,
             correo_copia VARCHAR(255) DEFAULT '',
+            mail_status VARCHAR(20) DEFAULT 'pending',
+            mail_error VARCHAR(255) DEFAULT '',
+            mail_last_attempt_at DATETIME NULL,
             created_at DATETIME NOT NULL,
             updated_at DATETIME NOT NULL,
             PRIMARY KEY  (id)
@@ -59,5 +63,39 @@ class AGP_PV_DB {
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta( $sql );
+    }
+
+    public static function update_mail_status( int $submission_id, string $status, string $error = '' ): void {
+        global $wpdb;
+        $table = self::table_name();
+
+        $wpdb->update(
+            $table,
+            array(
+                'mail_status' => $status,
+                'mail_error' => $error,
+                'mail_last_attempt_at' => current_time( 'mysql' ),
+                'updated_at' => current_time( 'mysql' ),
+            ),
+            array( 'id' => $submission_id ),
+            array( '%s', '%s', '%s', '%s' ),
+            array( '%d' )
+        );
+    }
+
+    public static function update_pdf_attachment( int $submission_id, int $attachment_id ): void {
+        global $wpdb;
+        $table = self::table_name();
+
+        $wpdb->update(
+            $table,
+            array(
+                'pdf_attachment_id' => $attachment_id,
+                'updated_at' => current_time( 'mysql' ),
+            ),
+            array( 'id' => $submission_id ),
+            array( '%d', '%s' ),
+            array( '%d' )
+        );
     }
 }

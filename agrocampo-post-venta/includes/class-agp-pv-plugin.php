@@ -8,6 +8,7 @@ class AGP_PV_Plugin {
     private static ?AGP_PV_Plugin $instance = null;
 
     private function __construct() {
+        add_action( 'init', array( $this, 'maybe_upgrade' ) );
         add_action( 'init', array( $this, 'register_rewrite' ) );
         add_filter( 'query_vars', array( $this, 'register_query_var' ) );
         add_action( 'template_redirect', array( $this, 'render_standalone' ) );
@@ -32,6 +33,10 @@ class AGP_PV_Plugin {
 
     public static function deactivate(): void {
         flush_rewrite_rules();
+    }
+
+    public function maybe_upgrade(): void {
+        AGP_PV_DB::maybe_upgrade();
     }
 
     public function register_rewrite(): void {
