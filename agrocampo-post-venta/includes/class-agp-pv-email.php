@@ -14,6 +14,13 @@ class AGP_PV_Email {
             );
         }
 
+        if ( ! function_exists( 'mail' ) ) {
+            return array(
+                'success' => false,
+                'message' => __( 'La función mail() no está disponible en el servidor.', 'agrocampo-post-venta' ),
+            );
+        }
+
         $recipients = array(
             'info@agrocampo.cl',
             'paolacisterna@agrocampo.cl',
