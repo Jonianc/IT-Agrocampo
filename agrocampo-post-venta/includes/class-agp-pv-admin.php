@@ -109,7 +109,11 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
         $this->items = $wpdb->get_results( $items_query, ARRAY_A );
 
         $count_sql = "SELECT COUNT(*) FROM {$table} {$where}";
-        $count_query = $wpdb->prepare( $count_sql, $args );
+        if ( $args ) {
+            $count_query = $wpdb->prepare( $count_sql, $args );
+        } else {
+            $count_query = $count_sql;
+        }
         $total_items = (int) $wpdb->get_var( $count_query );
 
         $this->set_pagination_args(
