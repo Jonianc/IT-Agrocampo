@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class AGP_PV_DB {
-    public const VERSION = '1.2.0';
+    public const VERSION = '1.3.0';
     public const OPTION_KEY = 'agp_pv_db_version';
 
     public static function table_name(): string {
@@ -39,7 +39,9 @@ class AGP_PV_DB {
             fecha VARCHAR(20) DEFAULT '',
             horas VARCHAR(255) DEFAULT '',
             tipo_servicio VARCHAR(255) DEFAULT '',
+            tipo_servicio_label VARCHAR(255) DEFAULT '',
             tipo_mantencion VARCHAR(255) DEFAULT '',
+            tipo_mantencion_label VARCHAR(255) DEFAULT '',
             cantidad_horas VARCHAR(255) DEFAULT '',
             fecha_reparacion VARCHAR(20) DEFAULT '',
             fecha_cierre VARCHAR(20) DEFAULT '',

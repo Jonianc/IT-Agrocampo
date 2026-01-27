@@ -30,6 +30,8 @@ class AGP_PV_Ajax {
         }
 
         $data = $this->sanitize_submission( $_POST );
+        $data['tipo_servicio_label'] = $this->get_tipo_servicio_label( $data['tipo_servicio'] );
+        $data['tipo_mantencion_label'] = $this->get_tipo_mantencion_label( $data['tipo_mantencion'] );
         $errors = $this->validate_submission( $data );
 
         if ( ! empty( $errors ) ) {
@@ -159,6 +161,34 @@ class AGP_PV_Ajax {
         }
 
         return $errors;
+    }
+
+    private function get_tipo_servicio_label( string $value ): string {
+        $map = array(
+            'one' => 'Factura Cliente',
+            'two' => 'Garantia',
+            'Interno' => 'Mantención',
+            'Visita-de-Cortesía' => 'Visita de Cortesía',
+            'Diagnostico-Técnico' => 'Diagnostico Técnico',
+            'Entrega-Técnica' => 'Entrega Técnica',
+        );
+
+        return $map[ $value ] ?? $value;
+    }
+
+    private function get_tipo_mantencion_label( string $value ): string {
+        $map = array(
+            'one' => '100 Horas',
+            'two' => '400 Horas',
+            '500-Horas' => '500 Horas',
+            '800-Horas' => '800 Horas',
+            '1000-Horas' => '1000 Horas',
+            '1200' => '1200 Horas',
+            '1600-Horas' => '1500 Horas',
+            'OTRO' => 'OTRO',
+        );
+
+        return $map[ $value ] ?? $value;
     }
 
     private function handle_signatures(): array {
@@ -301,7 +331,9 @@ class AGP_PV_Ajax {
                 'fecha' => $data['fecha'],
                 'horas' => $data['horas'],
                 'tipo_servicio' => $data['tipo_servicio'],
+                'tipo_servicio_label' => $data['tipo_servicio_label'],
                 'tipo_mantencion' => $data['tipo_mantencion'],
+                'tipo_mantencion_label' => $data['tipo_mantencion_label'],
                 'cantidad_horas' => $data['cantidad_horas'],
                 'fecha_reparacion' => $data['fecha_reparacion'],
                 'fecha_cierre' => $data['fecha_cierre'],
@@ -325,8 +357,41 @@ class AGP_PV_Ajax {
                 'updated_at' => $now,
             ),
             array(
-                '%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s',
-                '%s','%s','%s','%s','%s','%d','%d','%s','%d','%s','%s','%s','%s','%s','%s','%s','%s','%s'
+                '%s', // tecnico
+                '%s', // cliente
+                '%s', // email_cliente
+                '%s', // faena_lugar
+                '%s', // maquina
+                '%s', // modelo
+                '%s', // serie
+                '%s', // numero_interno
+                '%s', // fecha
+                '%s', // horas
+                '%s', // tipo_servicio
+                '%s', // tipo_servicio_label
+                '%s', // tipo_mantencion
+                '%s', // tipo_mantencion_label
+                '%s', // cantidad_horas
+                '%s', // fecha_reparacion
+                '%s', // fecha_cierre
+                '%s', // lubricantes
+                '%s', // filtros_utilizados
+                '%s', // componentes_utilizados
+                '%s', // trabajos_realizados
+                '%s', // observaciones
+                '%d', // firma_cliente_id
+                '%d', // firma_tecnico_id
+                '%s', // fotos_ids
+                '%d', // pdf_attachment_id
+                '%s', // pdf_status
+                '%s', // pdf_error
+                '%s', // pdf_last_attempt_at
+                '%s', // correo_copia
+                '%s', // mail_status
+                '%s', // mail_error
+                '%s', // mail_last_attempt_at
+                '%s', // created_at
+                '%s', // updated_at
             )
         );
 

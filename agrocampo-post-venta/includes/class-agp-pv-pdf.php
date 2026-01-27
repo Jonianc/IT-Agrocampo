@@ -6,6 +6,234 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 require_once AGP_PV_PLUGIN_DIR . 'includes/fpdf/fpdf.php';
 
+class AGP_PV_PDF_Document extends FPDF {
+    private int $submission_id = 0;
+    private string $issue_date = '';
+    private string $logo_path = '';
+    private float $logo_width_mm = 38.0;
+    private float $label_width_mm = 45.0;
+    private float $gap_mm = 4.0;
+    private float $footer_height_mm = 18.0;
+
+    public function configure( int $submission_id, string $issue_date, string $logo_path, float $logo_width_mm ): void {
+        $this->submission_id = $submission_id;
+        $this->issue_date = $issue_date;
+        $this->logo_path = $logo_path;
+        $this->logo_width_mm = $logo_width_mm;
+
+        $margin = $this->mm_to_pt( 12 );
+        $this->SetMargins( $margin, $margin, $margin );
+        $this->SetAutoPageBreak( true, $this->mm_to_pt( $this->footer_height_mm ) );
+        $this->AddPage( 'P', 'A4' );
+    }
+
+    public function Header(): void {
+        $this->SetFont( 'Helvetica', 'B', 14 );
+        $start_y = $this->GetY();
+        $logo_height = 0.0;
+
+        if ( $this->logo_path && file_exists( $this->logo_path ) ) {
+            $size = getimagesize( $this->logo_path );
+            if ( $size ) {
+                $width_pt = $this->mm_to_pt( $this->logo_width_mm );
+                $ratio = $size[1] / $size[0];
+                $height_pt = $width_pt * $ratio;
+                $this->Image( $this->logo_path, $this->GetX(), $start_y, $width_pt, 0 );
+                $logo_height = $height_pt;
+            }
+        }
+
+        $title = __( 'INFORME TÉCNICO', 'agrocampo-post-venta' );
+        $title_width = $this->GetStringWidth( $title );
+        $center_x = ( $this->page_width - $title_width ) / 2;
+        $this->SetXY( $center_x, $start_y );
+        $this->Cell( $title_width, $this->mm_to_pt( 6 ), $title );
+
+        $this->SetFont( 'Helvetica', '', 10 );
+        $right_block_width = $this->mm_to_pt( 35 );
+        $right_x = $this->page_width - $this->r_margin - $right_block_width;
+        $this->SetXY( $right_x, $start_y );
+        $this->MultiCell(
+            $right_block_width,
+            $this->mm_to_pt( 5 ),
+            sprintf( "IT: %d\n%s", $this->submission_id, $this->issue_date )
+        );
+
+        $header_height = max( $logo_height, $this->mm_to_pt( 16 ) );
+        $line_y = $start_y + $header_height + $this->mm_to_pt( 3 );
+        $this->Line( $this->l_margin, $line_y, $this->page_width - $this->r_margin, $line_y );
+        $this->SetY( $line_y + $this->mm_to_pt( 3 ) );
+    }
+
+    public function Footer(): void {
+        $this->SetFont( 'Helvetica', '', 9 );
+        $footer_text = __( 'Talca • Linares • Parral   |   +56 9 9748 5650', 'agrocampo-post-venta' );
+        $page_text = sprintf( __( 'Página %d', 'agrocampo-post-venta' ), $this->page );
+        $full_text = $footer_text . '   |   ' . $page_text;
+        $width = $this->GetStringWidth( $full_text );
+        $y = $this->page_height - $this->mm_to_pt( 10 );
+        $x = ( $this->page_width - $width ) / 2;
+        $this->SetXY( $x, $y );
+        $this->Cell( $width, $this->mm_to_pt( 4 ), $full_text );
+    }
+
+    public function section_title( string $text ): void {
+        $this->ensure_space( $this->mm_to_pt( 8 ) );
+        $this->SetFont( 'Helvetica', 'B', 11 );
+        $this->Cell( 0, $this->mm_to_pt( 6 ), $text );
+        $this->Ln( $this->mm_to_pt( 2 ) );
+        $line_y = $this->GetY();
+        $this->Line( $this->l_margin, $line_y, $this->page_width - $this->r_margin, $line_y );
+        $this->Ln( $this->mm_to_pt( 4 ) );
+        $this->SetFont( 'Helvetica', '', 10 );
+    }
+
+    public function row2( string $label, string $value ): void {
+        $label_width = $this->mm_to_pt( $this->label_width_mm );
+        $gap = $this->mm_to_pt( $this->gap_mm );
+        $value_width = $this->page_width - $this->l_margin - $this->r_margin - $label_width - $gap;
+        $lines = $this->wrap_text( $value, $value_width );
+        $line_height = $this->mm_to_pt( 5 );
+        $height = max( 1, count( $lines ) ) * $line_height;
+
+        $this->ensure_space( $height );
+        $start_x = $this->l_margin;
+        $start_y = $this->GetY();
+
+        $this->SetFont( 'Helvetica', 'B', 10 );
+        $this->SetXY( $start_x, $start_y );
+        $this->Cell( $label_width, $line_height, $label );
+
+        $this->SetFont( 'Helvetica', '', 10 );
+        $this->SetXY( $start_x + $label_width + $gap, $start_y );
+        foreach ( $lines as $index => $line ) {
+            $this->Cell( $value_width, $line_height, $line );
+            if ( $index < count( $lines ) - 1 ) {
+                $this->Ln( $line_height );
+                $this->SetX( $start_x + $label_width + $gap );
+            }
+        }
+
+        $this->SetY( $start_y + $height );
+        $this->SetX( $this->l_margin );
+    }
+
+    public function box_text( string $title, string $text ): void {
+        $this->ensure_space( $this->mm_to_pt( 10 ) );
+        $this->SetFont( 'Helvetica', 'B', 10 );
+        $this->Cell( 0, $this->mm_to_pt( 6 ), $title );
+        $this->Ln( $this->mm_to_pt( 1 ) );
+
+        $this->SetFont( 'Helvetica', '', 10 );
+        $box_width = $this->page_width - $this->l_margin - $this->r_margin;
+        $line_height = $this->mm_to_pt( 5 );
+        $lines = $this->wrap_text( $text, $box_width - $this->mm_to_pt( 4 ) );
+        $text_height = max( 1, count( $lines ) ) * $line_height;
+        $box_height = $text_height + $this->mm_to_pt( 4 );
+
+        $this->ensure_space( $box_height );
+        $x = $this->l_margin;
+        $y = $this->GetY();
+        $this->Rect( $x, $y, $box_width, $box_height );
+
+        $this->SetXY( $x + $this->mm_to_pt( 2 ), $y + $this->mm_to_pt( 2 ) );
+        foreach ( $lines as $index => $line ) {
+            $this->Cell( $box_width - $this->mm_to_pt( 4 ), $line_height, $line );
+            if ( $index < count( $lines ) - 1 ) {
+                $this->Ln( $line_height );
+                $this->SetX( $x + $this->mm_to_pt( 2 ) );
+            }
+        }
+
+        $this->SetY( $y + $box_height + $this->mm_to_pt( 2 ) );
+    }
+
+    public function signature_row( array $left, array $right ): void {
+        $box_height = $this->mm_to_pt( 35 );
+        $box_width = ( $this->page_width - $this->l_margin - $this->r_margin - $this->mm_to_pt( 6 ) ) / 2;
+        $gap = $this->mm_to_pt( 6 );
+
+        $this->ensure_space( $box_height + $this->mm_to_pt( 10 ) );
+        $y = $this->GetY();
+        $x = $this->l_margin;
+
+        $this->signature_box( $left['label'], $left['path'], $x, $y, $box_width, $box_height );
+        $this->signature_box( $right['label'], $right['path'], $x + $box_width + $gap, $y, $box_width, $box_height );
+
+        $this->SetY( $y + $box_height + $this->mm_to_pt( 6 ) );
+    }
+
+    private function signature_box( string $label, string $path, float $x, float $y, float $width, float $height ): void {
+        $this->SetFont( 'Helvetica', 'B', 9 );
+        $this->SetXY( $x, $y );
+        $this->Cell( $width, $this->mm_to_pt( 5 ), $label );
+
+        $box_y = $y + $this->mm_to_pt( 5 );
+        $this->Rect( $x, $box_y, $width, $height );
+        if ( $path && file_exists( $path ) ) {
+            $size = getimagesize( $path );
+            if ( $size ) {
+                $ratio = $size[1] / $size[0];
+                $max_w = $width - $this->mm_to_pt( 6 );
+                $max_h = $height - $this->mm_to_pt( 6 );
+                $img_w = $max_w;
+                $img_h = $img_w * $ratio;
+                if ( $img_h > $max_h ) {
+                    $img_h = $max_h;
+                    $img_w = $img_h / $ratio;
+                }
+                $img_x = $x + ( $width - $img_w ) / 2;
+                $img_y = $box_y + ( $height - $img_h ) / 2;
+                $this->Image( $path, $img_x, $img_y, $img_w, $img_h );
+                return;
+            }
+        }
+
+        $this->SetFont( 'Helvetica', '', 9 );
+        $this->SetXY( $x, $box_y + ( $height / 2 ) );
+        $this->Cell( $width, $this->mm_to_pt( 4 ), __( 'Firma no disponible', 'agrocampo-post-venta' ) );
+    }
+
+    private function wrap_text( string $text, float $width ): array {
+        $text = trim( $text );
+        if ( '' === $text ) {
+            return array( '' );
+        }
+
+        $words = preg_split( '/\s+/', $text );
+        $lines = array();
+        $current = '';
+        foreach ( $words as $word ) {
+            $test = '' === $current ? $word : $current . ' ' . $word;
+            if ( $this->GetStringWidth( $test ) <= $width ) {
+                $current = $test;
+                continue;
+            }
+
+            if ( '' !== $current ) {
+                $lines[] = $current;
+            }
+            $current = $word;
+        }
+
+        if ( '' !== $current ) {
+            $lines[] = $current;
+        }
+
+        return $lines;
+    }
+
+    private function ensure_space( float $height ): void {
+        if ( $this->auto_page_break && ( $this->GetY() + $height ) > $this->page_break_trigger ) {
+            $this->AddPage( 'P', 'A4' );
+        }
+    }
+
+    private function mm_to_pt( float $mm ): float {
+        return ( $mm * 72 ) / 25.4;
+    }
+}
+
 class AGP_PV_PDF {
     public static function ensure_pdf_attachment( int $submission_id, array $submission ): array {
         if ( ! class_exists( 'FPDF' ) ) {
@@ -92,63 +320,55 @@ class AGP_PV_PDF {
     }
 
     private static function generate_pdf_file( int $submission_id, array $submission, string $path ): bool {
-        $pdf = new FPDF();
-        $pdf->AddPage();
-        $pdf->SetFont( 'Helvetica', '', 14 );
-        $pdf->Cell( 0, 10, 'Informe Tecnico' );
-        $pdf->Ln( 10 );
+        $logo_config = self::get_logo_config();
+        $issue_date = date_i18n( 'd-m-Y' );
+        $document = new AGP_PV_PDF_Document();
+        $document->configure( $submission_id, $issue_date, $logo_config['path'], $logo_config['width_mm'] );
 
-        $pdf->SetFont( 'Helvetica', '', 10 );
-        $pdf->MultiCell( 0, 5, 'ID: ' . $submission_id );
-        $pdf->MultiCell( 0, 5, 'Tecnico: ' . $submission['tecnico'] );
-        $pdf->MultiCell( 0, 5, 'Cliente: ' . $submission['cliente'] );
-        $pdf->MultiCell( 0, 5, 'Correo Cliente: ' . $submission['email_cliente'] );
-        $pdf->MultiCell( 0, 5, 'Faena Lugar: ' . $submission['faena_lugar'] );
-        $pdf->MultiCell( 0, 5, 'Maquina: ' . $submission['maquina'] );
-        $pdf->MultiCell( 0, 5, 'Modelo: ' . $submission['modelo'] );
-        $pdf->MultiCell( 0, 5, 'Serie: ' . $submission['serie'] );
-        $pdf->MultiCell( 0, 5, 'N° Interno: ' . $submission['numero_interno'] );
-        $pdf->MultiCell( 0, 5, 'Fecha: ' . $submission['fecha'] );
-        $pdf->MultiCell( 0, 5, 'Horas: ' . $submission['horas'] );
-        $pdf->MultiCell( 0, 5, 'Tipo de Servicio: ' . $submission['tipo_servicio'] );
-        $pdf->MultiCell( 0, 5, 'Tipo de Mantencion: ' . $submission['tipo_mantencion'] );
-        $pdf->MultiCell( 0, 5, 'Cantidad de Horas: ' . $submission['cantidad_horas'] );
-        $pdf->MultiCell( 0, 5, 'Fecha Reparacion: ' . $submission['fecha_reparacion'] );
-        $pdf->MultiCell( 0, 5, 'Fecha Cierre: ' . $submission['fecha_cierre'] );
-        $pdf->Ln( 2 );
+        $tipo_servicio_label = $submission['tipo_servicio_label'] ?? self::map_tipo_servicio( (string) $submission['tipo_servicio'] );
+        $tipo_mantencion_label = $submission['tipo_mantencion_label'] ?? self::map_tipo_mantencion( (string) $submission['tipo_mantencion'] );
 
-        $pdf->MultiCell( 0, 5, "Lubricantes: \n" . $submission['lubricantes'] );
-        $pdf->Ln( 1 );
-        $pdf->MultiCell( 0, 5, "Filtros Utilizados: \n" . $submission['filtros_utilizados'] );
-        $pdf->Ln( 1 );
-        $pdf->MultiCell( 0, 5, "Componentes Utilizados: \n" . $submission['componentes_utilizados'] );
-        $pdf->Ln( 1 );
-        $pdf->MultiCell( 0, 5, "Trabajos Realizados: \n" . $submission['trabajos_realizados'] );
-        $pdf->Ln( 1 );
-        $pdf->MultiCell( 0, 5, "Observaciones: \n" . $submission['observaciones'] );
-        $pdf->Ln( 2 );
+        $document->section_title( __( 'Datos Generales', 'agrocampo-post-venta' ) );
+        $document->row2( __( 'Técnico', 'agrocampo-post-venta' ), (string) $submission['tecnico'] );
+        $document->row2( __( 'Cliente', 'agrocampo-post-venta' ), (string) $submission['cliente'] );
+        $document->row2( __( 'Correo Cliente', 'agrocampo-post-venta' ), (string) $submission['email_cliente'] );
+        $document->row2( __( 'Faena / Lugar', 'agrocampo-post-venta' ), (string) $submission['faena_lugar'] );
 
-        $pdf->MultiCell( 0, 5, 'Firmas y Fotos:' );
-        if ( ! empty( $submission['firma_cliente_id'] ) ) {
-            $url = wp_get_attachment_url( $submission['firma_cliente_id'] );
-            $pdf->MultiCell( 0, 5, 'Firma Cliente: ' . ( $url ?: '' ) );
-        }
-        if ( ! empty( $submission['firma_tecnico_id'] ) ) {
-            $url = wp_get_attachment_url( $submission['firma_tecnico_id'] );
-            $pdf->MultiCell( 0, 5, 'Firma Tecnico: ' . ( $url ?: '' ) );
-        }
+        $document->section_title( __( 'Equipo', 'agrocampo-post-venta' ) );
+        $document->row2( __( 'Máquina', 'agrocampo-post-venta' ), (string) $submission['maquina'] );
+        $document->row2( __( 'Modelo', 'agrocampo-post-venta' ), (string) $submission['modelo'] );
+        $document->row2( __( 'Serie', 'agrocampo-post-venta' ), (string) $submission['serie'] );
+        $document->row2( __( 'N° Interno', 'agrocampo-post-venta' ), (string) $submission['numero_interno'] );
+        $document->row2( __( 'Fecha', 'agrocampo-post-venta' ), (string) $submission['fecha'] );
+        $document->row2( __( 'Horas', 'agrocampo-post-venta' ), (string) $submission['horas'] );
 
-        $fotos = json_decode( (string) $submission['fotos_ids'], true );
-        if ( is_array( $fotos ) && ! empty( $fotos ) ) {
-            foreach ( $fotos as $foto_id ) {
-                $url = wp_get_attachment_url( (int) $foto_id );
-                if ( $url ) {
-                    $pdf->MultiCell( 0, 5, 'Foto: ' . $url );
-                }
-            }
-        }
+        $document->section_title( __( 'Servicio', 'agrocampo-post-venta' ) );
+        $document->row2( __( 'Tipo de Servicio', 'agrocampo-post-venta' ), (string) $tipo_servicio_label );
+        $document->row2( __( 'Tipo de Mantención', 'agrocampo-post-venta' ), (string) $tipo_mantencion_label );
+        $document->row2( __( 'Cantidad de Horas', 'agrocampo-post-venta' ), (string) $submission['cantidad_horas'] );
+        $document->row2( __( 'Fecha Reparación', 'agrocampo-post-venta' ), (string) $submission['fecha_reparacion'] );
+        $document->row2( __( 'Fecha Cierre', 'agrocampo-post-venta' ), (string) $submission['fecha_cierre'] );
 
-        $pdf->Output( 'F', $path );
+        $document->section_title( __( 'Detalle', 'agrocampo-post-venta' ) );
+        $document->box_text( __( 'Lubricantes', 'agrocampo-post-venta' ), (string) $submission['lubricantes'] );
+        $document->box_text( __( 'Filtros Utilizados', 'agrocampo-post-venta' ), (string) $submission['filtros_utilizados'] );
+        $document->box_text( __( 'Componentes Utilizados', 'agrocampo-post-venta' ), (string) $submission['componentes_utilizados'] );
+        $document->box_text( __( 'Trabajos Realizados', 'agrocampo-post-venta' ), (string) $submission['trabajos_realizados'] );
+        $document->box_text( __( 'Observaciones', 'agrocampo-post-venta' ), (string) $submission['observaciones'] );
+
+        $document->section_title( __( 'Firmas', 'agrocampo-post-venta' ) );
+        $document->signature_row(
+            array(
+                'label' => __( 'Firma Cliente', 'agrocampo-post-venta' ),
+                'path' => self::resolve_attachment_path( (int) ( $submission['firma_cliente_id'] ?? 0 ) ),
+            ),
+            array(
+                'label' => __( 'Firma Técnico', 'agrocampo-post-venta' ),
+                'path' => self::resolve_attachment_path( (int) ( $submission['firma_tecnico_id'] ?? 0 ) ),
+            )
+        );
+
+        $document->Output( 'F', $path );
         return file_exists( $path );
     }
 
@@ -333,6 +553,77 @@ class AGP_PV_PDF {
 
     private static function update_pdf_status( int $submission_id, string $status, string $error ): void {
         AGP_PV_DB::update_pdf_status( $submission_id, $status, $error );
+    }
+
+    private static function get_logo_config(): array {
+        $logo_id = absint( get_option( 'agp_pv_logo_attachment_id', 0 ) );
+        $width_mm = (float) get_option( 'agp_pv_logo_width_mm', 38 );
+        $path = '';
+
+        if ( $logo_id ) {
+            $candidate = get_attached_file( $logo_id );
+            if ( $candidate && file_exists( $candidate ) ) {
+                $path = $candidate;
+            }
+        }
+
+        return array(
+            'path' => $path,
+            'width_mm' => $width_mm > 0 ? $width_mm : 38.0,
+        );
+    }
+
+    private static function resolve_attachment_path( int $attachment_id ): string {
+        if ( ! $attachment_id ) {
+            return '';
+        }
+
+        $path = get_attached_file( $attachment_id );
+        if ( $path && file_exists( $path ) ) {
+            return $path;
+        }
+
+        $url = wp_get_attachment_url( $attachment_id );
+        if ( $url ) {
+            $uploads = wp_upload_dir();
+            if ( 0 === strpos( $url, $uploads['baseurl'] ) ) {
+                $relative = substr( $url, strlen( $uploads['baseurl'] ) );
+                $candidate = $uploads['basedir'] . $relative;
+                if ( file_exists( $candidate ) ) {
+                    return $candidate;
+                }
+            }
+        }
+
+        return '';
+    }
+
+    private static function map_tipo_servicio( string $value ): string {
+        $map = array(
+            'one' => 'Factura Cliente',
+            'two' => 'Garantia',
+            'Interno' => 'Mantención',
+            'Visita-de-Cortesía' => 'Visita de Cortesía',
+            'Diagnostico-Técnico' => 'Diagnostico Técnico',
+            'Entrega-Técnica' => 'Entrega Técnica',
+        );
+
+        return $map[ $value ] ?? $value;
+    }
+
+    private static function map_tipo_mantencion( string $value ): string {
+        $map = array(
+            'one' => '100 Horas',
+            'two' => '400 Horas',
+            '500-Horas' => '500 Horas',
+            '800-Horas' => '800 Horas',
+            '1000-Horas' => '1000 Horas',
+            '1200' => '1200 Horas',
+            '1600-Horas' => '1500 Horas',
+            'OTRO' => 'OTRO',
+        );
+
+        return $map[ $value ] ?? $value;
     }
 
     private static function log( string $message ): void {

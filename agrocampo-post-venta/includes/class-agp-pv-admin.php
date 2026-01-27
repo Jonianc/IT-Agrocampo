@@ -23,6 +23,8 @@ class AGP_PV_Admin {
         add_action( 'admin_post_agp_pv_resend_email', array( $this, 'handle_resend_email' ) );
         add_action( 'admin_post_agp_pv_send_test_email', array( $this, 'handle_send_test_email' ) );
         add_action( 'admin_post_agp_pv_save_recipients', array( $this, 'handle_save_recipients' ) );
+        add_action( 'admin_post_agp_pv_save_logo', array( $this, 'handle_save_logo' ) );
+        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
     }
 
     public function register_menu(): void {
@@ -33,6 +35,15 @@ class AGP_PV_Admin {
             'agp-pv-submissions',
             array( $this, 'render_list_page' ),
             'dashicons-forms'
+        );
+
+        add_submenu_page(
+            'agp-pv-submissions',
+            __( 'Ajustes', 'agrocampo-post-venta' ),
+            __( 'Ajustes', 'agrocampo-post-venta' ),
+            'manage_options',
+            'agp-pv-settings',
+            array( $this, 'render_settings_page' )
         );
     }
 
@@ -74,6 +85,63 @@ class AGP_PV_Admin {
             }
         }
 
+        echo '<form method="get">';
+        echo '<input type="hidden" name="page" value="agp-pv-submissions">';
+        $table->search_box( __( 'Buscar', 'agrocampo-post-venta' ), 'agp-pv-search' );
+        $table->display();
+        echo '</form>';
+        echo '</div>';
+    }
+
+    public function render_settings_page(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ) );
+        }
+
+        $notice = isset( $_GET['agp_pv_notice'] ) ? sanitize_text_field( wp_unslash( $_GET['agp_pv_notice'] ) ) : '';
+        $message = '';
+        $class = 'notice-success';
+
+        if ( 'recipients_saved' === $notice ) {
+            $message = __( 'Destinatarios actualizados.', 'agrocampo-post-venta' );
+        }
+        if ( 'logo_saved' === $notice ) {
+            $message = __( 'Logo actualizado.', 'agrocampo-post-venta' );
+        }
+        if ( 'test_sent' === $notice ) {
+            $message = __( 'Correo de prueba enviado.', 'agrocampo-post-venta' );
+        }
+        if ( 'test_failed' === $notice ) {
+            $message = sanitize_text_field( wp_unslash( $_GET['agp_pv_notice_message'] ?? '' ) );
+            $class = 'notice-error';
+        }
+
+        echo '<div class="wrap">';
+        echo '<h1>' . esc_html__( 'Ajustes Post Venta', 'agrocampo-post-venta' ) . '</h1>';
+
+        if ( $message ) {
+            echo '<div class="notice ' . esc_attr( $class ) . '"><p>' . esc_html( $message ) . '</p></div>';
+        }
+
+        $logo_id = absint( get_option( 'agp_pv_logo_attachment_id', 0 ) );
+        $logo_width = (float) get_option( 'agp_pv_logo_width_mm', 38 );
+        $logo_url = $logo_id ? wp_get_attachment_url( $logo_id ) : '';
+
+        echo '<div class="card">';
+        echo '<h2>' . esc_html__( 'Logo PDF', 'agrocampo-post-venta' ) . '</h2>';
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+        echo '<input type="hidden" name="action" value="agp_pv_save_logo">';
+        wp_nonce_field( 'agp_pv_save_logo' );
+        echo '<input type="hidden" name="agp_pv_logo_attachment_id" id="agp-pv-logo-attachment-id" value="' . esc_attr( (string) $logo_id ) . '">';
+        echo '<p><img id="agp-pv-logo-preview" src="' . esc_url( $logo_url ) . '" style="max-width:200px;display:' . ( $logo_url ? 'block' : 'none' ) . ';" alt=""></p>';
+        echo '<p><button type="button" class="button" id="agp-pv-logo-select">' . esc_html__( 'Seleccionar logo', 'agrocampo-post-venta' ) . '</button> ';
+        echo '<button type="button" class="button" id="agp-pv-logo-remove">' . esc_html__( 'Quitar logo', 'agrocampo-post-venta' ) . '</button></p>';
+        echo '<p><label for="agp-pv-logo-width">' . esc_html__( 'Ancho máximo (mm)', 'agrocampo-post-venta' ) . '</label> ';
+        echo '<input type="number" step="0.1" min="10" max="80" id="agp-pv-logo-width" name="agp_pv_logo_width_mm" value="' . esc_attr( (string) $logo_width ) . '"></p>';
+        echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Guardar logo', 'agrocampo-post-venta' ) . '</button></p>';
+        echo '</form>';
+        echo '</div>';
+
         echo '<div class="card">';
         echo '<h2>' . esc_html__( 'Destinatarios de correo', 'agrocampo-post-venta' ) . '</h2>';
         echo '<p>' . esc_html__( 'Define los correos que recibirán el informe. Sepáralos por coma.', 'agrocampo-post-venta' ) . '</p>';
@@ -90,7 +158,6 @@ class AGP_PV_Admin {
         echo '<div class="card">';
         echo '<h2>' . esc_html__( 'Requisito de correo', 'agrocampo-post-venta' ) . '</h2>';
         echo '<p>' . esc_html__( 'Si tu hosting no tiene habilitada la función mail(), necesitas configurar SMTP con un plugin como WP Mail SMTP (u otro). Solicita al proveedor: host SMTP, puerto, cifrado TLS/SSL, usuario y contraseña (o app password).', 'agrocampo-post-venta' ) . '</p>';
-
         echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
         echo '<input type="hidden" name="action" value="agp_pv_send_test_email">';
         wp_nonce_field( 'agp_pv_send_test_email' );
@@ -100,11 +167,6 @@ class AGP_PV_Admin {
         echo '</form>';
         echo '</div>';
 
-        echo '<form method="get">';
-        echo '<input type="hidden" name="page" value="agp-pv-submissions">';
-        $table->search_box( __( 'Buscar', 'agrocampo-post-venta' ), 'agp-pv-search' );
-        $table->display();
-        echo '</form>';
         echo '</div>';
     }
 
@@ -144,14 +206,14 @@ class AGP_PV_Admin {
         $result = AGP_PV_Email::send_test_email( $email );
 
         if ( ! empty( $result['sent'] ) ) {
-            wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-submissions&agp_pv_notice=test_sent' ) );
+            wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=test_sent' ) );
             exit;
         }
 
         $message = $result['message'] ?? __( 'No se pudo enviar el correo de prueba.', 'agrocampo-post-venta' );
         wp_safe_redirect(
             admin_url(
-                'admin.php?page=agp-pv-submissions&agp_pv_notice=test_failed&agp_pv_notice_message=' . rawurlencode( $message )
+                'admin.php?page=agp-pv-settings&agp_pv_notice=test_failed&agp_pv_notice_message=' . rawurlencode( $message )
             )
         );
         exit;
@@ -167,8 +229,40 @@ class AGP_PV_Admin {
         $raw = isset( $_POST['agp_pv_recipients'] ) ? sanitize_textarea_field( wp_unslash( $_POST['agp_pv_recipients'] ) ) : '';
         AGP_PV_Email::update_recipients_option( $raw );
 
-        wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-submissions&agp_pv_notice=recipients_saved' ) );
+        wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=recipients_saved' ) );
         exit;
+    }
+
+    public function handle_save_logo(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ) );
+        }
+
+        check_admin_referer( 'agp_pv_save_logo' );
+
+        $logo_id = isset( $_POST['agp_pv_logo_attachment_id'] ) ? absint( $_POST['agp_pv_logo_attachment_id'] ) : 0;
+        $width = isset( $_POST['agp_pv_logo_width_mm'] ) ? (float) sanitize_text_field( wp_unslash( $_POST['agp_pv_logo_width_mm'] ) ) : 38.0;
+
+        update_option( 'agp_pv_logo_attachment_id', $logo_id );
+        update_option( 'agp_pv_logo_width_mm', $width > 0 ? $width : 38.0 );
+
+        wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=logo_saved' ) );
+        exit;
+    }
+
+    public function enqueue_admin_assets( string $hook ): void {
+        if ( empty( $_GET['page'] ) || 'agp-pv-settings' !== $_GET['page'] ) {
+            return;
+        }
+
+        wp_enqueue_media();
+        wp_enqueue_script(
+            'agp-pv-admin-settings',
+            AGP_PV_PLUGIN_URL . 'assets/js/admin-settings.js',
+            array( 'jquery' ),
+            AGP_PV_VERSION,
+            true
+        );
     }
 }
 
