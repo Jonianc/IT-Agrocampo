@@ -161,7 +161,7 @@ class AGP_PV_PDF {
         }
 
         $size = filesize( $path );
-        if ( ! $size || $size < 10240 ) {
+        if ( ! $size || $size < 1024 ) {
             return array(
                 'valid' => false,
                 'message' => __( 'El PDF generado es demasiado pequeño o está vacío.', 'agrocampo-post-venta' ),
