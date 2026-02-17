@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.8] - 2026-02-17
+
+### Added
+- Se agrega en Ajustes un nuevo bloque "Importador de informes" para subir CSV históricos del plugin anterior (Forminator).
+- Se incorpora un nuevo handler `admin_post_agp_pv_import_legacy_csv` con nonce y validación de permisos para ejecutar la importación desde administración.
+
+### Changed
+- Se implementa mapeo de columnas del CSV legado (incluyendo "Hora de envío", campos técnicos y categorías) hacia la estructura interna de informes actuales.
+- Se agregan avisos de resultado de importación en Ajustes con resumen de filas importadas y omitidas.
+
 ## [1.4.7] - 2026-02-17
 
 ### Added

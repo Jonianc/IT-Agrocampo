@@ -25,6 +25,7 @@ class AGP_PV_Admin {
         add_action( 'admin_post_agp_pv_send_test_email', array( $this, 'handle_send_test_email' ) );
         add_action( 'admin_post_agp_pv_save_recipients', array( $this, 'handle_save_recipients' ) );
         add_action( 'admin_post_agp_pv_save_logo', array( $this, 'handle_save_logo' ) );
+        add_action( 'admin_post_agp_pv_import_legacy_csv', array( $this, 'handle_import_legacy_csv' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
         add_action( 'admin_init', array( $this, 'handle_view_pdf_request' ) );
     }
@@ -138,6 +139,18 @@ class AGP_PV_Admin {
         echo '</form>';
         echo '</section>';
 
+        echo '<section class="card agp-pv-card">';
+        echo '<h2>' . esc_html__( 'Importador de informes', 'agrocampo-post-venta' ) . '</h2>';
+        echo '<p>' . esc_html__( 'Importa informes históricos exportados desde Forminator del plugin anterior (CSV).', 'agrocampo-post-venta' ) . '</p>';
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" enctype="multipart/form-data">';
+        echo '<input type="hidden" name="action" value="agp_pv_import_legacy_csv">';
+        wp_nonce_field( 'agp_pv_import_legacy_csv' );
+        echo '<p><label for="agp-pv-legacy-csv"><strong>' . esc_html__( 'Archivo CSV', 'agrocampo-post-venta' ) . '</strong></label><br>';
+        echo '<input type="file" id="agp-pv-legacy-csv" name="agp_pv_legacy_csv" accept=".csv,text/csv" required></p>';
+        echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Importar informes', 'agrocampo-post-venta' ) . '</button></p>';
+        echo '</form>';
+        echo '</section>';
+
         echo '</div>';
         echo '</div>';
     }
@@ -185,6 +198,16 @@ class AGP_PV_Admin {
             $count = isset( $_GET['agp_pv_notice_count'] ) ? absint( $_GET['agp_pv_notice_count'] ) : 0;
             /* translators: %d: processed items count */
             $message = sprintf( __( 'PDF regenerado en %d informes.', 'agrocampo-post-venta' ), $count );
+        }
+        if ( 'import_invalid_file' === $notice || 'import_failed' === $notice ) {
+            $message = sanitize_text_field( wp_unslash( $_GET['agp_pv_notice_message'] ?? '' ) );
+            $class = 'notice-error';
+        }
+        if ( 'import_completed' === $notice ) {
+            $imported = isset( $_GET['agp_pv_imported'] ) ? absint( $_GET['agp_pv_imported'] ) : 0;
+            $skipped = isset( $_GET['agp_pv_skipped'] ) ? absint( $_GET['agp_pv_skipped'] ) : 0;
+            /* translators: 1: imported rows, 2: skipped rows */
+            $message = sprintf( __( 'Importación completada. Importados: %1$d. Omitidos: %2$d.', 'agrocampo-post-venta' ), $imported, $skipped );
         }
 
         if ( $message ) {
@@ -347,6 +370,212 @@ class AGP_PV_Admin {
 
         wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=logo_saved' ) );
         exit;
+    }
+
+    public function handle_import_legacy_csv(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ) );
+        }
+
+        check_admin_referer( 'agp_pv_import_legacy_csv' );
+
+        if ( empty( $_FILES['agp_pv_legacy_csv']['tmp_name'] ) ) {
+            wp_safe_redirect(
+                admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=import_invalid_file&agp_pv_notice_message=' . rawurlencode( __( 'Debes seleccionar un archivo CSV válido.', 'agrocampo-post-venta' ) ) )
+            );
+            exit;
+        }
+
+        $file_path = (string) $_FILES['agp_pv_legacy_csv']['tmp_name'];
+        $result = $this->import_legacy_csv_file( $file_path );
+
+        if ( ! $result['ok'] ) {
+            wp_safe_redirect(
+                admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=import_failed&agp_pv_notice_message=' . rawurlencode( $result['message'] ) )
+            );
+            exit;
+        }
+
+        wp_safe_redirect(
+            admin_url(
+                'admin.php?page=agp-pv-settings&agp_pv_notice=import_completed&agp_pv_imported=' .
+                absint( $result['imported'] ) .
+                '&agp_pv_skipped=' .
+                absint( $result['skipped'] )
+            )
+        );
+        exit;
+    }
+
+    private function import_legacy_csv_file( string $file_path ): array {
+        $handle = fopen( $file_path, 'r' );
+        if ( false === $handle ) {
+            return array(
+                'ok' => false,
+                'message' => __( 'No fue posible abrir el archivo CSV.', 'agrocampo-post-venta' ),
+                'imported' => 0,
+                'skipped' => 0,
+            );
+        }
+
+        global $wpdb;
+
+        $headers = array();
+        $imported = 0;
+        $skipped = 0;
+        $table = AGP_PV_DB::table_name();
+
+        while ( ( $row = fgetcsv( $handle ) ) !== false ) {
+            if ( empty( $row ) || ( 1 === count( $row ) && '' === trim( (string) $row[0] ) ) ) {
+                continue;
+            }
+
+            if ( empty( $headers ) ) {
+                $headers = $this->normalize_import_headers( $row );
+                continue;
+            }
+
+            $normalized_row = array();
+            foreach ( $headers as $index => $header ) {
+                $normalized_row[ $header ] = isset( $row[ $index ] ) ? trim( (string) $row[ $index ] ) : '';
+            }
+
+            $submission = $this->map_legacy_row_to_submission( $normalized_row );
+            if ( '' === $submission['tecnico'] && '' === $submission['cliente'] && '' === $submission['maquina'] ) {
+                $skipped++;
+                continue;
+            }
+
+            $inserted = $wpdb->insert( $table, $submission, $this->submission_insert_formats() );
+            if ( false === $inserted ) {
+                fclose( $handle );
+                return array(
+                    'ok' => false,
+                    'message' => __( 'No se pudo importar una fila del CSV.', 'agrocampo-post-venta' ),
+                    'imported' => $imported,
+                    'skipped' => $skipped,
+                );
+            }
+
+            $imported++;
+        }
+
+        fclose( $handle );
+
+        return array(
+            'ok' => true,
+            'message' => '',
+            'imported' => $imported,
+            'skipped' => $skipped,
+        );
+    }
+
+    private function normalize_import_headers( array $raw_headers ): array {
+        $headers = array();
+
+        foreach ( $raw_headers as $header ) {
+            $value = wp_strip_all_tags( (string) $header );
+            $value = trim( $value, "\xEF\xBB\xBF\" \t\n\r\0\x0B" );
+            $headers[] = mb_strtolower( remove_accents( $value ) );
+        }
+
+        return $headers;
+    }
+
+    private function map_legacy_row_to_submission( array $row ): array {
+        $tipo_servicio_label = $this->legacy_value( $row, 'tipo de servicio' );
+        $tipo_mantencion_label = $this->legacy_value( $row, 'tipo de mantencion' );
+        $created_at = $this->parse_legacy_datetime( $this->legacy_value( $row, 'hora de envio' ) );
+
+        return array(
+            'tecnico' => sanitize_text_field( $this->legacy_value( $row, 'tecnico' ) ),
+            'cliente' => sanitize_text_field( $this->legacy_value( $row, 'cliente' ) ),
+            'email_cliente' => sanitize_email( $this->legacy_value( $row, 'correo cliente' ) ),
+            'faena_lugar' => sanitize_text_field( $this->legacy_value( $row, 'address - faena lugar' ) ),
+            'maquina' => sanitize_text_field( $this->legacy_value( $row, 'maquina' ) ),
+            'modelo' => sanitize_text_field( $this->legacy_value( $row, 'modelo' ) ),
+            'serie' => sanitize_text_field( $this->legacy_value( $row, 'serie' ) ),
+            'numero_interno' => sanitize_text_field( $this->legacy_value( $row, 'n° interno' ) ),
+            'fecha' => sanitize_text_field( $this->legacy_value( $row, 'fecha' ) ),
+            'horas' => sanitize_text_field( $this->legacy_value( $row, 'horas' ) ),
+            'tipo_servicio' => $this->map_legacy_tipo_servicio_key( $tipo_servicio_label ),
+            'tipo_servicio_label' => sanitize_text_field( $tipo_servicio_label ),
+            'tipo_mantencion' => $this->map_legacy_tipo_mantencion_key( $tipo_mantencion_label ),
+            'tipo_mantencion_label' => sanitize_text_field( $tipo_mantencion_label ),
+            'cantidad_horas' => sanitize_text_field( $this->legacy_value( $row, 'cantidad de horas' ) ),
+            'fecha_reparacion' => sanitize_text_field( $this->legacy_value( $row, 'fecha reparacion' ) ),
+            'fecha_cierre' => sanitize_text_field( $this->legacy_value( $row, 'fecha cierre' ) ),
+            'lubricantes' => sanitize_textarea_field( $this->legacy_value( $row, 'lubricantes' ) ),
+            'filtros_utilizados' => sanitize_textarea_field( $this->legacy_value( $row, 'filtros utilizados' ) ),
+            'componentes_utilizados' => sanitize_textarea_field( $this->legacy_value( $row, 'componentes utilizados' ) ),
+            'trabajos_realizados' => sanitize_textarea_field( $this->legacy_value( $row, 'trabajos realizados' ) ),
+            'observaciones' => sanitize_textarea_field( $this->legacy_value( $row, 'observaciones' ) ),
+            'firma_cliente_id' => 0,
+            'firma_tecnico_id' => 0,
+            'fotos_ids' => wp_json_encode( array() ),
+            'pdf_attachment_id' => 0,
+            'pdf_status' => 'pending',
+            'pdf_error' => '',
+            'pdf_last_attempt_at' => null,
+            'correo_copia' => sanitize_email( $this->legacy_value( $row, 'correo copia' ) ),
+            'mail_status' => 'pending',
+            'mail_error' => '',
+            'mail_last_attempt_at' => null,
+            'created_at' => $created_at,
+            'updated_at' => $created_at,
+        );
+    }
+
+    private function submission_insert_formats(): array {
+        return array(
+            '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s',
+            '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s',
+            '%s', '%s', '%d', '%d', '%s', '%d', '%s', '%s', '%s', '%s',
+            '%s', '%s', '%s', '%s', '%s',
+        );
+    }
+
+    private function legacy_value( array $row, string $key ): string {
+        return isset( $row[ $key ] ) ? (string) $row[ $key ] : '';
+    }
+
+    private function map_legacy_tipo_servicio_key( string $value ): string {
+        $normalized = mb_strtolower( remove_accents( trim( $value ) ) );
+        $map = array(
+            'factura cliente' => 'one',
+            'garantia' => 'two',
+            'mantencion' => 'Interno',
+            'visita de cortesia' => 'Visita-de-Cortesía',
+            'diagnostico tecnico' => 'Diagnostico-Técnico',
+            'entrega tecnica' => 'Entrega-Técnica',
+        );
+
+        return $map[ $normalized ] ?? sanitize_text_field( $value );
+    }
+
+    private function map_legacy_tipo_mantencion_key( string $value ): string {
+        $normalized = mb_strtolower( remove_accents( trim( $value ) ) );
+        $map = array(
+            '100 horas' => 'one',
+            '400 horas' => 'two',
+            '500 horas' => '500-Horas',
+            '800 horas' => '800-Horas',
+            '1000 horas' => '1000-Horas',
+            '1200 horas' => '1200',
+            '1500 horas' => '1600-Horas',
+            'otro' => 'OTRO',
+        );
+
+        return $map[ $normalized ] ?? sanitize_text_field( $value );
+    }
+
+    private function parse_legacy_datetime( string $value ): string {
+        $timestamp = strtotime( trim( $value ) );
+        if ( false === $timestamp ) {
+            return current_time( 'mysql' );
+        }
+
+        return wp_date( 'Y-m-d H:i:s', $timestamp );
     }
 
     public function enqueue_admin_assets( string $hook ): void {
