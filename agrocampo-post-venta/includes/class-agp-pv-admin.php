@@ -26,6 +26,7 @@ class AGP_PV_Admin {
         add_action( 'admin_post_agp_pv_save_recipients', array( $this, 'handle_save_recipients' ) );
         add_action( 'admin_post_agp_pv_save_logo', array( $this, 'handle_save_logo' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
+        add_action( 'admin_init', array( $this, 'handle_view_pdf_request' ) );
     }
 
     public function register_menu(): void {
@@ -236,6 +237,62 @@ class AGP_PV_Admin {
         }
 
         wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-submissions&agp_pv_notice=pdf_regenerated' ) );
+        exit;
+    }
+
+
+    public function handle_view_pdf_request(): void {
+        if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+
+        $page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+        if ( 'agp-pv-submissions' !== $page ) {
+            return;
+        }
+
+        $view_id = isset( $_GET['view'] ) ? absint( $_GET['view'] ) : 0;
+        if ( ! $view_id ) {
+            return;
+        }
+
+        $nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+        if ( ! wp_verify_nonce( $nonce, 'agp_pv_view_pdf_' . $view_id ) ) {
+            wp_die( esc_html__( 'Enlace de PDF inválido o expirado.', 'agrocampo-post-venta' ), esc_html__( 'Acceso denegado', 'agrocampo-post-venta' ), array( 'response' => 403 ) );
+        }
+
+        $submission = AGP_PV_Email::get_submission( $view_id );
+        if ( ! $submission ) {
+            wp_die( esc_html__( 'No se encontró el informe solicitado.', 'agrocampo-post-venta' ), esc_html__( 'Informe no encontrado', 'agrocampo-post-venta' ), array( 'response' => 404 ) );
+        }
+
+        $pdf_result = AGP_PV_PDF::ensure_pdf_attachment( $view_id, $submission );
+        if ( empty( $pdf_result['status'] ) || 'ready' !== $pdf_result['status'] ) {
+            wp_die( esc_html( $pdf_result['message'] ?? __( 'No fue posible generar el PDF.', 'agrocampo-post-venta' ) ), esc_html__( 'Error al generar PDF', 'agrocampo-post-venta' ), array( 'response' => 500 ) );
+        }
+
+        $pdf_path = isset( $pdf_result['path'] ) ? (string) $pdf_result['path'] : '';
+        if ( ! $pdf_path || ! file_exists( $pdf_path ) ) {
+            wp_die( esc_html__( 'No se encontró el archivo PDF en el servidor.', 'agrocampo-post-venta' ), esc_html__( 'PDF no disponible', 'agrocampo-post-venta' ), array( 'response' => 404 ) );
+        }
+
+        $pdf_bytes = file_get_contents( $pdf_path );
+        if ( false === $pdf_bytes ) {
+            wp_die( esc_html__( 'No fue posible leer el PDF generado.', 'agrocampo-post-venta' ), esc_html__( 'Error de lectura', 'agrocampo-post-venta' ), array( 'response' => 500 ) );
+        }
+
+        $filename = 'informe-tecnico-' . $view_id . '.pdf';
+
+        while ( ob_get_level() ) {
+            ob_end_clean();
+        }
+
+        nocache_headers();
+        header( 'Content-Type: application/pdf' );
+        header( 'Content-Disposition: inline; filename="' . sanitize_file_name( $filename ) . '"' );
+        header( 'Content-Length: ' . (string) strlen( $pdf_bytes ) );
+
+        echo $pdf_bytes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         exit;
     }
 
@@ -655,6 +712,14 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
         exit;
     }
 
+
+    private function get_view_pdf_url( int $submission_id ): string {
+        return wp_nonce_url(
+            admin_url( 'admin.php?page=agp-pv-submissions&view=' . $submission_id ),
+            'agp_pv_view_pdf_' . $submission_id
+        );
+    }
+
     public function column_default( $item, $column_name ) {
         if ( 'mail_status' === $column_name ) {
             return '<span class="agp-pv-status agp-pv-status-' . esc_attr( $item['mail_status'] ?? '' ) . '">' . esc_html( $this->format_status( (string) ( $item['mail_status'] ?? '' ) ) ) . '</span>';
@@ -693,6 +758,12 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
             esc_html__( 'Regenerar PDF', 'agrocampo-post-venta' )
         );
 
+        $actions['view_pdf'] = sprintf(
+            '<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
+            esc_url( $this->get_view_pdf_url( $submission_id ) ),
+            esc_html__( 'Ver PDF', 'agrocampo-post-venta' )
+        );
+
         return esc_html( (string) $submission_id ) . $this->row_actions( $actions );
     }
 
@@ -722,12 +793,10 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
             $output .= '<strong>' . esc_html( $key ) . ':</strong> ' . esc_html( (string) $value ) . '<br>';
         }
 
-        if ( ! empty( $submission['pdf_attachment_id'] ) ) {
-            $url = wp_get_attachment_url( (int) $submission['pdf_attachment_id'] );
-            if ( $url ) {
-                $output .= '<strong>' . esc_html__( 'PDF:', 'agrocampo-post-venta' ) . '</strong> ';
-                $output .= '<a href="' . esc_url( $url ) . '" target="_blank" rel="noopener">' . esc_html__( 'Ver PDF', 'agrocampo-post-venta' ) . '</a><br>';
-            }
+        if ( ! empty( $submission['pdf_attachment_id'] ) || ! empty( $submission['id'] ) ) {
+            $view_url = $this->get_view_pdf_url( (int) $submission_id );
+            $output .= '<strong>' . esc_html__( 'PDF:', 'agrocampo-post-venta' ) . '</strong> ';
+            $output .= '<a href="' . esc_url( $view_url ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Ver PDF', 'agrocampo-post-venta' ) . '</a><br>';
         }
 
         $fotos = json_decode( (string) $submission['fotos_ids'], true );

@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.7] - 2026-02-17
+
+### Added
+- Se incorpora ruta segura para "Ver PDF" en el gestor usando URL firmada con nonce (`?view=<id>&_wpnonce=<nonce>`).
+- Se agrega handler en admin para validar permisos y nonce, cargar el informe por ID y responder el PDF en línea con headers `Content-Type`, `Content-Disposition`, `Content-Length` y no-cache.
+
+### Changed
+- El enlace "Ver PDF" del listado/detalle ahora abre una URL firmada en pestaña nueva, evitando exposición de PDF sin autorización válida.
+
 ## [1.4.6] - 2026-02-17
 
 ### Changed
