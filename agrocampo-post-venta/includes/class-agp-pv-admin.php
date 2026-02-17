@@ -206,8 +206,13 @@ class AGP_PV_Admin {
         if ( 'import_completed' === $notice ) {
             $imported = isset( $_GET['agp_pv_imported'] ) ? absint( $_GET['agp_pv_imported'] ) : 0;
             $skipped = isset( $_GET['agp_pv_skipped'] ) ? absint( $_GET['agp_pv_skipped'] ) : 0;
-            /* translators: 1: imported rows, 2: skipped rows */
-            $message = sprintf( __( 'Importación completada. Importados: %1$d. Omitidos: %2$d.', 'agrocampo-post-venta' ), $imported, $skipped );
+            $failed = isset( $_GET['agp_pv_failed'] ) ? absint( $_GET['agp_pv_failed'] ) : 0;
+            /* translators: 1: imported rows, 2: skipped rows, 3: failed rows */
+            $message = sprintf( __( 'Importación completada. Importados: %1$d. Omitidos: %2$d. Fallidos: %3$d.', 'agrocampo-post-venta' ), $imported, $skipped, $failed );
+
+            if ( $failed > 0 ) {
+                $class = 'notice-warning';
+            }
         }
 
         if ( $message ) {
@@ -401,7 +406,9 @@ class AGP_PV_Admin {
                 'admin.php?page=agp-pv-settings&agp_pv_notice=import_completed&agp_pv_imported=' .
                 absint( $result['imported'] ) .
                 '&agp_pv_skipped=' .
-                absint( $result['skipped'] )
+                absint( $result['skipped'] ) .
+                '&agp_pv_failed=' .
+                absint( $result['failed'] )
             )
         );
         exit;
@@ -415,6 +422,7 @@ class AGP_PV_Admin {
                 'message' => __( 'No fue posible abrir el archivo CSV.', 'agrocampo-post-venta' ),
                 'imported' => 0,
                 'skipped' => 0,
+                'failed' => 0,
             );
         }
 
@@ -423,20 +431,41 @@ class AGP_PV_Admin {
         $headers = array();
         $imported = 0;
         $skipped = 0;
+        $failed = 0;
         $table = AGP_PV_DB::table_name();
+        $line_number = 0;
+        $first_error = '';
 
         while ( ( $row = fgetcsv( $handle ) ) !== false ) {
+            $line_number++;
+
             if ( empty( $row ) || ( 1 === count( $row ) && '' === trim( (string) $row[0] ) ) ) {
                 continue;
             }
 
             if ( empty( $headers ) ) {
                 $headers = $this->normalize_import_headers( $row );
+
+                if ( ! $this->has_legacy_required_headers( $headers ) ) {
+                    fclose( $handle );
+                    return array(
+                        'ok' => false,
+                        'message' => __( 'El CSV no contiene las columnas mínimas requeridas (Técnico, Cliente y Máquina).', 'agrocampo-post-venta' ),
+                        'imported' => 0,
+                        'skipped' => 0,
+                        'failed' => 0,
+                    );
+                }
+
                 continue;
             }
 
             $normalized_row = array();
             foreach ( $headers as $index => $header ) {
+                if ( '' === $header ) {
+                    continue;
+                }
+
                 $normalized_row[ $header ] = isset( $row[ $index ] ) ? trim( (string) $row[ $index ] ) : '';
             }
 
@@ -448,13 +477,14 @@ class AGP_PV_Admin {
 
             $inserted = $wpdb->insert( $table, $submission, $this->submission_insert_formats() );
             if ( false === $inserted ) {
-                fclose( $handle );
-                return array(
-                    'ok' => false,
-                    'message' => __( 'No se pudo importar una fila del CSV.', 'agrocampo-post-venta' ),
-                    'imported' => $imported,
-                    'skipped' => $skipped,
-                );
+                $failed++;
+
+                if ( '' === $first_error ) {
+                    $db_error = ! empty( $wpdb->last_error ) ? sanitize_text_field( (string) $wpdb->last_error ) : __( 'Error desconocido de base de datos.', 'agrocampo-post-venta' );
+                    $first_error = sprintf( __( 'Línea %1$d: %2$s', 'agrocampo-post-venta' ), $line_number, $db_error );
+                }
+
+                continue;
             }
 
             $imported++;
@@ -462,11 +492,22 @@ class AGP_PV_Admin {
 
         fclose( $handle );
 
+        if ( 0 === $imported && $failed > 0 ) {
+            return array(
+                'ok' => false,
+                'message' => sprintf( __( 'No se pudo importar ninguna fila. %s', 'agrocampo-post-venta' ), $first_error ),
+                'imported' => 0,
+                'skipped' => $skipped,
+                'failed' => $failed,
+            );
+        }
+
         return array(
             'ok' => true,
             'message' => '',
             'imported' => $imported,
             'skipped' => $skipped,
+            'failed' => $failed,
         );
     }
 
@@ -480,6 +521,18 @@ class AGP_PV_Admin {
         }
 
         return $headers;
+    }
+
+    private function has_legacy_required_headers( array $headers ): bool {
+        $required = array( 'tecnico', 'cliente', 'maquina' );
+
+        foreach ( $required as $header ) {
+            if ( ! in_array( $header, $headers, true ) ) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function map_legacy_row_to_submission( array $row ): array {

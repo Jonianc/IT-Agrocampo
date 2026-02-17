@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.9] - 2026-02-17
+
+### Fixed
+- Se corrige el importador CSV para no abortar todo el proceso al fallar una fila: ahora continúa, cuenta filas fallidas y completa la importación parcial.
+- Se reemplaza el mensaje genérico de error por validaciones más claras (cabeceras mínimas) y detalle cuando ninguna fila pudo importarse (incluye línea y error DB).
+
+### Changed
+- El resumen de importación en Ajustes ahora muestra `Importados`, `Omitidos` y `Fallidos`, con aviso tipo warning cuando hay filas fallidas.
+
 ## [1.4.8] - 2026-02-17
 
 ### Added
