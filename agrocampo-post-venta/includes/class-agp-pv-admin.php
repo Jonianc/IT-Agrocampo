@@ -26,6 +26,7 @@ class AGP_PV_Admin {
         add_action( 'admin_post_agp_pv_save_recipients', array( $this, 'handle_save_recipients' ) );
         add_action( 'admin_post_agp_pv_save_logo', array( $this, 'handle_save_logo' ) );
         add_action( 'admin_post_agp_pv_import_legacy_csv', array( $this, 'handle_import_legacy_csv' ) );
+        add_action( 'admin_post_agp_pv_delete_all_submissions', array( $this, 'handle_delete_all_submissions' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
         add_action( 'admin_init', array( $this, 'handle_view_pdf_request' ) );
     }
@@ -151,6 +152,17 @@ class AGP_PV_Admin {
         echo '</form>';
         echo '</section>';
 
+
+        echo '<section class="card agp-pv-card">';
+        echo '<h2>' . esc_html__( 'Zona peligrosa', 'agrocampo-post-venta' ) . '</h2>';
+        echo '<p>' . esc_html__( 'Elimina permanentemente todos los informes almacenados en este plugin.', 'agrocampo-post-venta' ) . '</p>';
+        echo "<form method=\"post\" action=\"" . esc_url( admin_url( 'admin-post.php' ) ) . "\" onsubmit=\"return confirm('" . esc_js( __( '¿Estás seguro? Esta acción eliminará todos los informes y no se puede deshacer.', 'agrocampo-post-venta' ) ) . "');\">";
+        echo '<input type="hidden" name="action" value="agp_pv_delete_all_submissions">';
+        wp_nonce_field( 'agp_pv_delete_all_submissions' );
+        echo '<p><button type="submit" class="button button-secondary">' . esc_html__( 'Eliminar todos los informes', 'agrocampo-post-venta' ) . '</button></p>';
+        echo '</form>';
+        echo '</section>';
+
         echo '</div>';
         echo '</div>';
     }
@@ -198,6 +210,15 @@ class AGP_PV_Admin {
             $count = isset( $_GET['agp_pv_notice_count'] ) ? absint( $_GET['agp_pv_notice_count'] ) : 0;
             /* translators: %d: processed items count */
             $message = sprintf( __( 'PDF regenerado en %d informes.', 'agrocampo-post-venta' ), $count );
+        }
+        if ( 'delete_all_completed' === $notice ) {
+            $count = isset( $_GET['agp_pv_notice_count'] ) ? absint( $_GET['agp_pv_notice_count'] ) : 0;
+            /* translators: %d: deleted items count */
+            $message = sprintf( __( 'Se eliminaron todos los informes. Total eliminado: %d.', 'agrocampo-post-venta' ), $count );
+        }
+        if ( 'delete_all_failed' === $notice ) {
+            $message = sanitize_text_field( wp_unslash( $_GET['agp_pv_notice_message'] ?? '' ) );
+            $class = 'notice-error';
         }
         if ( 'import_invalid_file' === $notice || 'import_failed' === $notice ) {
             $message = sanitize_text_field( wp_unslash( $_GET['agp_pv_notice_message'] ?? '' ) );
@@ -374,6 +395,44 @@ class AGP_PV_Admin {
         update_option( 'agp_pv_logo_width_mm', $width > 0 ? $width : 38.0 );
 
         wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=logo_saved' ) );
+        exit;
+    }
+
+    public function handle_delete_all_submissions(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ) );
+        }
+
+        check_admin_referer( 'agp_pv_delete_all_submissions' );
+
+        global $wpdb;
+        $table = AGP_PV_DB::table_name();
+
+        $rows = $wpdb->get_results( "SELECT pdf_attachment_id FROM {$table}", ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+        $deleted = 0;
+
+        if ( is_array( $rows ) ) {
+            foreach ( $rows as $row ) {
+                $pdf_id = isset( $row['pdf_attachment_id'] ) ? (int) $row['pdf_attachment_id'] : 0;
+                if ( $pdf_id > 0 ) {
+                    wp_delete_attachment( $pdf_id, true );
+                }
+                $deleted++;
+            }
+        }
+
+        $result = $wpdb->query( "DELETE FROM {$table}" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+        if ( false === $result ) {
+            $message = ! empty( $wpdb->last_error ) ? sanitize_text_field( (string) $wpdb->last_error ) : __( 'No se pudieron eliminar los informes.', 'agrocampo-post-venta' );
+            wp_safe_redirect(
+                admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=delete_all_failed&agp_pv_notice_message=' . rawurlencode( $message ) )
+            );
+            exit;
+        }
+
+        wp_safe_redirect(
+            admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=delete_all_completed&agp_pv_notice_count=' . $deleted )
+        );
         exit;
     }
 

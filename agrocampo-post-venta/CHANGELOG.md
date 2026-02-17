@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.10] - 2026-02-17
+
+### Added
+- Se agrega en Ajustes una sección "Zona peligrosa" con acción para eliminar todos los informes del plugin.
+- Se incorpora el handler `admin_post_agp_pv_delete_all_submissions` con validación de permisos, nonce y confirmación en cliente.
+
+### Changed
+- El borrado masivo total ahora elimina adjuntos PDF asociados y luego limpia la tabla de informes.
+- Se agregan avisos de resultado para eliminación total (éxito/error) con conteo de registros eliminados.
+
 ## [1.4.9] - 2026-02-17
 
 ### Fixed
