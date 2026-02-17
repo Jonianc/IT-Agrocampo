@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.11] - 2026-02-17
+
+### Added
+- Se agrega columna `legacy_id` en la tabla de informes para guardar el ID histórico del formulario anterior.
+- El importador CSV ahora reconoce y mapea ID legado desde cabeceras como `legacy_id`, `entry_id` o variantes de `id formulario`.
+
+### Changed
+- En el gestor, la columna ID muestra prioritariamente `legacy_id` cuando existe y mantiene el ID interno para acciones funcionales.
+
 ## [1.4.10] - 2026-02-17
 
 ### Added

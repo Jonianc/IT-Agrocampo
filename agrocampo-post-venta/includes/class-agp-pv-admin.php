@@ -600,6 +600,7 @@ class AGP_PV_Admin {
         $created_at = $this->parse_legacy_datetime( $this->legacy_value( $row, 'hora de envio' ) );
 
         return array(
+            'legacy_id' => $this->extract_legacy_id( $row ),
             'tecnico' => sanitize_text_field( $this->legacy_value( $row, 'tecnico' ) ),
             'cliente' => sanitize_text_field( $this->legacy_value( $row, 'cliente' ) ),
             'email_cliente' => sanitize_email( $this->legacy_value( $row, 'correo cliente' ) ),
@@ -640,11 +641,37 @@ class AGP_PV_Admin {
 
     private function submission_insert_formats(): array {
         return array(
-            '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s',
+            '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s',
             '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s',
             '%s', '%s', '%d', '%d', '%s', '%d', '%s', '%s', '%s', '%s',
             '%s', '%s', '%s', '%s', '%s',
         );
+    }
+
+
+    private function extract_legacy_id( array $row ): int {
+        $candidates = array(
+            'legacy_id',
+            'entry_id',
+            'id',
+            'id formulario',
+            'id del formulario',
+            'id formulario anterior',
+        );
+
+        foreach ( $candidates as $candidate ) {
+            $value = isset( $row[ $candidate ] ) ? trim( (string) $row[ $candidate ] ) : '';
+            if ( '' === $value ) {
+                continue;
+            }
+
+            $legacy_id = absint( $value );
+            if ( $legacy_id > 0 ) {
+                return $legacy_id;
+            }
+        }
+
+        return 0;
     }
 
     private function legacy_value( array $row, string $key ): string {
@@ -1105,7 +1132,10 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
             esc_html__( 'Ver PDF', 'agrocampo-post-venta' )
         );
 
-        return esc_html( (string) $submission_id ) . $this->row_actions( $actions );
+        $legacy_id = isset( $item['legacy_id'] ) ? absint( $item['legacy_id'] ) : 0;
+        $display_id = $legacy_id > 0 ? $legacy_id : $submission_id;
+
+        return esc_html( (string) $display_id ) . $this->row_actions( $actions );
     }
 
     public function single_row( $item ): void {

@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class AGP_PV_DB {
-    public const VERSION = '1.4.0';
+    public const VERSION = '1.5.0';
     public const OPTION_KEY = 'agp_pv_db_version';
 
     public static function table_name(): string {
@@ -28,6 +28,7 @@ class AGP_PV_DB {
 
         $sql = "CREATE TABLE {$table} (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            legacy_id BIGINT UNSIGNED DEFAULT 0,
             tecnico VARCHAR(255) NOT NULL,
             cliente VARCHAR(255) NOT NULL,
             email_cliente VARCHAR(255) DEFAULT '',
@@ -63,7 +64,8 @@ class AGP_PV_DB {
             mail_last_attempt_at DATETIME NULL,
             created_at DATETIME NOT NULL,
             updated_at DATETIME NOT NULL,
-            PRIMARY KEY  (id)
+            PRIMARY KEY  (id),
+            KEY legacy_id (legacy_id)
         ) {$charset};";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
