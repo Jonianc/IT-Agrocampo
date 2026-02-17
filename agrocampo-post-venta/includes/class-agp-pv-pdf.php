@@ -401,6 +401,36 @@ class AGP_PV_PDF_Document extends FPDF {
 class AGP_PV_PDF {
     private static string $last_pdf_error = '';
 
+    public static function regenerate_pdf_attachment( int $submission_id ): array {
+        $submission = AGP_PV_Email::get_submission( $submission_id );
+        if ( ! $submission ) {
+            return array(
+                'ok' => false,
+                'message' => __( 'No se encontró el informe.', 'agrocampo-post-venta' ),
+            );
+        }
+
+        if ( ! empty( $submission['pdf_attachment_id'] ) ) {
+            wp_delete_attachment( (int) $submission['pdf_attachment_id'], true );
+            $submission['pdf_attachment_id'] = 0;
+        }
+
+        $result = self::ensure_pdf_attachment( $submission_id, $submission );
+
+        if ( empty( $result['status'] ) || 'ready' !== $result['status'] ) {
+            return array(
+                'ok' => false,
+                'message' => $result['message'] ?? __( 'No se pudo regenerar el PDF.', 'agrocampo-post-venta' ),
+            );
+        }
+
+        return array(
+            'ok' => true,
+            'message' => '',
+            'attachment_id' => (int) ( $result['attachment_id'] ?? 0 ),
+        );
+    }
+
     public static function ensure_pdf_attachment( int $submission_id, array $submission ): array {
         if ( ! class_exists( 'FPDF' ) ) {
             self::update_pdf_status( $submission_id, 'failed', __( 'No se encontró FPDF para generar el PDF.', 'agrocampo-post-venta' ) );

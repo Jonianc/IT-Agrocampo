@@ -21,6 +21,7 @@ class AGP_PV_Admin {
     private function __construct() {
         add_action( 'admin_menu', array( $this, 'register_menu' ) );
         add_action( 'admin_post_agp_pv_resend_email', array( $this, 'handle_resend_email' ) );
+        add_action( 'admin_post_agp_pv_regenerate_pdf', array( $this, 'handle_regenerate_pdf' ) );
         add_action( 'admin_post_agp_pv_send_test_email', array( $this, 'handle_send_test_email' ) );
         add_action( 'admin_post_agp_pv_save_recipients', array( $this, 'handle_save_recipients' ) );
         add_action( 'admin_post_agp_pv_save_logo', array( $this, 'handle_save_logo' ) );
@@ -55,39 +56,16 @@ class AGP_PV_Admin {
         $table = new AGP_PV_Submissions_Table();
         $table->prepare_items();
 
-        echo '<div class="wrap">';
-        echo '<h1>' . esc_html__( 'Envíos Informe Técnico', 'agrocampo-post-venta' ) . '</h1>';
+        echo '<div class="wrap agp-pv-admin">';
+        echo '<h1>' . esc_html__( 'Gestor de informes técnicos', 'agrocampo-post-venta' ) . '</h1>';
+        echo '<p class="description">' . esc_html__( 'Busca, filtra y ejecuta acciones sobre los informes enviados.', 'agrocampo-post-venta' ) . '</p>';
 
-        if ( isset( $_GET['agp_pv_notice'] ) ) {
-            $notice = sanitize_text_field( wp_unslash( $_GET['agp_pv_notice'] ) );
-            $message = '';
-            $class = 'notice-success';
-            if ( 'mail_failed' === $notice ) {
-                $message = sanitize_text_field( wp_unslash( $_GET['agp_pv_notice_message'] ?? '' ) );
-                $class = 'notice-error';
-            }
-            if ( 'mail_sent' === $notice ) {
-                $message = __( 'Correo reenviado.', 'agrocampo-post-venta' );
-            }
-            if ( 'test_sent' === $notice ) {
-                $message = __( 'Correo de prueba enviado.', 'agrocampo-post-venta' );
-            }
-            if ( 'test_failed' === $notice ) {
-                $message = sanitize_text_field( wp_unslash( $_GET['agp_pv_notice_message'] ?? '' ) );
-                $class = 'notice-error';
-            }
-            if ( 'recipients_saved' === $notice ) {
-                $message = __( 'Destinatarios actualizados.', 'agrocampo-post-venta' );
-            }
+        $this->render_admin_notice();
 
-            if ( $message ) {
-                echo '<div class="notice ' . esc_attr( $class ) . '"><p>' . esc_html( $message ) . '</p></div>';
-            }
-        }
-
-        echo '<form method="get">';
+        echo '<form method="get" class="agp-pv-filters">';
         echo '<input type="hidden" name="page" value="agp-pv-submissions">';
-        $table->search_box( __( 'Buscar', 'agrocampo-post-venta' ), 'agp-pv-search' );
+        $table->render_filters();
+        $table->search_box( __( 'Buscar en informes', 'agrocampo-post-venta' ), 'agp-pv-search' );
         $table->display();
         echo '</form>';
         echo '</div>';
@@ -98,83 +76,119 @@ class AGP_PV_Admin {
             wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ) );
         }
 
-        $notice = isset( $_GET['agp_pv_notice'] ) ? sanitize_text_field( wp_unslash( $_GET['agp_pv_notice'] ) ) : '';
+        $logo_id = absint( get_option( 'agp_pv_logo_attachment_id', 0 ) );
+        $logo_width = (float) get_option( 'agp_pv_logo_width_mm', 38 );
+        $logo_url = $logo_id ? wp_get_attachment_url( $logo_id ) : '';
+        $recipients = AGP_PV_Email::get_configured_recipients();
+        $recipients_value = implode( ', ', $recipients );
+
+        echo '<div class="wrap agp-pv-admin">';
+        echo '<h1>' . esc_html__( 'Ajustes Informe Técnico', 'agrocampo-post-venta' ) . '</h1>';
+        echo '<p class="description">' . esc_html__( 'Configura envío de correos, logo PDF y accesos rápidos.', 'agrocampo-post-venta' ) . '</p>';
+
+        $this->render_admin_notice();
+
+        echo '<div class="agp-pv-settings-grid">';
+
+        echo '<section class="card agp-pv-card">';
+        echo '<h2>' . esc_html__( 'Acceso rápido', 'agrocampo-post-venta' ) . '</h2>';
+        echo '<p>' . esc_html__( 'Abre el formulario público de Informe Técnico en una nueva pestaña.', 'agrocampo-post-venta' ) . '</p>';
+        echo '<p><a class="button button-primary" target="_blank" rel="noopener noreferrer" href="' . esc_url( home_url( '/post-venta/' ) ) . '">' . esc_html__( 'Abrir Informe Técnico', 'agrocampo-post-venta' ) . '</a></p>';
+        echo '</section>';
+
+        echo '<section class="card agp-pv-card">';
+        echo '<h2>' . esc_html__( 'Logo del PDF', 'agrocampo-post-venta' ) . '</h2>';
+        echo '<p>' . esc_html__( 'Este logo se mostrará en la cabecera del PDF generado.', 'agrocampo-post-venta' ) . '</p>';
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+        echo '<input type="hidden" name="action" value="agp_pv_save_logo">';
+        wp_nonce_field( 'agp_pv_save_logo' );
+        echo '<input type="hidden" name="agp_pv_logo_attachment_id" id="agp-pv-logo-attachment-id" value="' . esc_attr( (string) $logo_id ) . '">';
+        echo '<p><img id="agp-pv-logo-preview" src="' . esc_url( $logo_url ) . '" style="max-width:200px;display:' . ( $logo_url ? 'block' : 'none' ) . ';" alt=""></p>';
+        echo '<p>';
+        echo '<button type="button" class="button button-primary" id="agp-pv-logo-select">' . esc_html__( 'Seleccionar logo', 'agrocampo-post-venta' ) . '</button> ';
+        echo '<button type="button" class="button button-secondary" id="agp-pv-logo-remove">' . esc_html__( 'Quitar logo', 'agrocampo-post-venta' ) . '</button>';
+        echo '</p>';
+        echo '<p><label for="agp-pv-logo-width"><strong>' . esc_html__( 'Ancho máximo (mm)', 'agrocampo-post-venta' ) . '</strong></label><br>';
+        echo '<input type="number" step="0.1" min="10" max="80" id="agp-pv-logo-width" name="agp_pv_logo_width_mm" value="' . esc_attr( (string) $logo_width ) . '"></p>';
+        echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Guardar logo', 'agrocampo-post-venta' ) . '</button></p>';
+        echo '</form>';
+        echo '</section>';
+
+        echo '<section class="card agp-pv-card">';
+        echo '<h2>' . esc_html__( 'Destinatarios de correo', 'agrocampo-post-venta' ) . '</h2>';
+        echo '<p>' . esc_html__( 'Define los correos que recibirán el informe. Sepáralos por coma.', 'agrocampo-post-venta' ) . '</p>';
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+        echo '<input type="hidden" name="action" value="agp_pv_save_recipients">';
+        wp_nonce_field( 'agp_pv_save_recipients' );
+        echo '<textarea name="agp_pv_recipients" rows="4" class="large-text">' . esc_textarea( $recipients_value ) . '</textarea>';
+        echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Guardar destinatarios', 'agrocampo-post-venta' ) . '</button></p>';
+        echo '</form>';
+        echo '</section>';
+
+        echo '<section class="card agp-pv-card">';
+        echo '<h2>' . esc_html__( 'Prueba de correo', 'agrocampo-post-venta' ) . '</h2>';
+        echo '<p>' . esc_html__( 'Si tu hosting no tiene habilitada la función mail(), configura SMTP con un plugin como WP Mail SMTP.', 'agrocampo-post-venta' ) . '</p>';
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+        echo '<input type="hidden" name="action" value="agp_pv_send_test_email">';
+        wp_nonce_field( 'agp_pv_send_test_email' );
+        echo '<p><label for="agp-pv-test-email"><strong>' . esc_html__( 'Enviar correo de prueba a', 'agrocampo-post-venta' ) . '</strong></label><br>';
+        echo '<input type="email" id="agp-pv-test-email" name="test_email" class="regular-text" required></p>';
+        echo '<p><button type="submit" class="button button-secondary">' . esc_html__( 'Enviar correo de prueba', 'agrocampo-post-venta' ) . '</button></p>';
+        echo '</form>';
+        echo '</section>';
+
+        echo '</div>';
+        echo '</div>';
+    }
+
+    private function render_admin_notice(): void {
+        if ( ! isset( $_GET['agp_pv_notice'] ) ) {
+            return;
+        }
+
+        $notice = sanitize_key( wp_unslash( $_GET['agp_pv_notice'] ) );
         $message = '';
         $class = 'notice-success';
 
+        if ( 'mail_failed' === $notice || 'test_failed' === $notice || 'pdf_failed' === $notice ) {
+            $message = sanitize_text_field( wp_unslash( $_GET['agp_pv_notice_message'] ?? '' ) );
+            $class = 'notice-error';
+        }
+
+        if ( 'mail_sent' === $notice ) {
+            $message = __( 'Correo reenviado.', 'agrocampo-post-venta' );
+        }
+        if ( 'pdf_regenerated' === $notice ) {
+            $message = __( 'PDF regenerado correctamente.', 'agrocampo-post-venta' );
+        }
+        if ( 'test_sent' === $notice ) {
+            $message = __( 'Correo de prueba enviado.', 'agrocampo-post-venta' );
+        }
         if ( 'recipients_saved' === $notice ) {
             $message = __( 'Destinatarios actualizados.', 'agrocampo-post-venta' );
         }
         if ( 'logo_saved' === $notice ) {
             $message = __( 'Logo actualizado.', 'agrocampo-post-venta' );
         }
-        if ( 'test_sent' === $notice ) {
-            $message = __( 'Correo de prueba enviado.', 'agrocampo-post-venta' );
+        if ( 'bulk_deleted' === $notice ) {
+            $count = isset( $_GET['agp_pv_notice_count'] ) ? absint( $_GET['agp_pv_notice_count'] ) : 0;
+            /* translators: %d: deleted items count */
+            $message = sprintf( __( 'Se eliminaron %d informes.', 'agrocampo-post-venta' ), $count );
         }
-        if ( 'test_failed' === $notice ) {
-            $message = sanitize_text_field( wp_unslash( $_GET['agp_pv_notice_message'] ?? '' ) );
-            $class = 'notice-error';
+        if ( 'bulk_resend' === $notice ) {
+            $count = isset( $_GET['agp_pv_notice_count'] ) ? absint( $_GET['agp_pv_notice_count'] ) : 0;
+            /* translators: %d: processed items count */
+            $message = sprintf( __( 'Reenvío ejecutado en %d informes.', 'agrocampo-post-venta' ), $count );
         }
-
-        echo '<div class="wrap">';
-        echo '<h1>' . esc_html__( 'Ajustes Informe Técnico', 'agrocampo-post-venta' ) . '</h1>';
+        if ( 'bulk_regenerated' === $notice ) {
+            $count = isset( $_GET['agp_pv_notice_count'] ) ? absint( $_GET['agp_pv_notice_count'] ) : 0;
+            /* translators: %d: processed items count */
+            $message = sprintf( __( 'PDF regenerado en %d informes.', 'agrocampo-post-venta' ), $count );
+        }
 
         if ( $message ) {
-            echo '<div class="notice ' . esc_attr( $class ) . '"><p>' . esc_html( $message ) . '</p></div>';
+            echo '<div class="notice ' . esc_attr( $class ) . ' is-dismissible"><p><strong>' . esc_html( $message ) . '</strong></p></div>';
         }
-
-
-        echo '<div class="card">';
-        echo '<h2>' . esc_html__( 'Acceso rápido', 'agrocampo-post-venta' ) . '</h2>';
-        echo '<p>' . esc_html__( 'Abre el formulario público de Informe Técnico en una nueva pestaña.', 'agrocampo-post-venta' ) . '</p>';
-        echo '<p><a class="button button-secondary" target="_blank" rel="noopener noreferrer" href="' . esc_url( home_url( '/post-venta/' ) ) . '">' . esc_html__( 'Ir al Informe Técnico', 'agrocampo-post-venta' ) . '</a></p>';
-        echo '</div>';
-
-        $logo_id = absint( get_option( 'agp_pv_logo_attachment_id', 0 ) );
-        $logo_width = (float) get_option( 'agp_pv_logo_width_mm', 38 );
-        $logo_url = $logo_id ? wp_get_attachment_url( $logo_id ) : '';
-
-        echo '<div class="card">';
-        echo '<h2>' . esc_html__( 'Logo PDF', 'agrocampo-post-venta' ) . '</h2>';
-        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
-        echo '<input type="hidden" name="action" value="agp_pv_save_logo">';
-        wp_nonce_field( 'agp_pv_save_logo' );
-        echo '<input type="hidden" name="agp_pv_logo_attachment_id" id="agp-pv-logo-attachment-id" value="' . esc_attr( (string) $logo_id ) . '">';
-        echo '<p><img id="agp-pv-logo-preview" src="' . esc_url( $logo_url ) . '" style="max-width:200px;display:' . ( $logo_url ? 'block' : 'none' ) . ';" alt=""></p>';
-        echo '<p><button type="button" class="button" id="agp-pv-logo-select">' . esc_html__( 'Seleccionar logo', 'agrocampo-post-venta' ) . '</button> ';
-        echo '<button type="button" class="button" id="agp-pv-logo-remove">' . esc_html__( 'Quitar logo', 'agrocampo-post-venta' ) . '</button></p>';
-        echo '<p><label for="agp-pv-logo-width">' . esc_html__( 'Ancho máximo (mm)', 'agrocampo-post-venta' ) . '</label> ';
-        echo '<input type="number" step="0.1" min="10" max="80" id="agp-pv-logo-width" name="agp_pv_logo_width_mm" value="' . esc_attr( (string) $logo_width ) . '"></p>';
-        echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Guardar logo', 'agrocampo-post-venta' ) . '</button></p>';
-        echo '</form>';
-        echo '</div>';
-
-        echo '<div class="card">';
-        echo '<h2>' . esc_html__( 'Destinatarios de correo', 'agrocampo-post-venta' ) . '</h2>';
-        echo '<p>' . esc_html__( 'Define los correos que recibirán el informe. Sepáralos por coma.', 'agrocampo-post-venta' ) . '</p>';
-        $recipients = AGP_PV_Email::get_configured_recipients();
-        $recipients_value = implode( ', ', $recipients );
-        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
-        echo '<input type="hidden" name="action" value="agp_pv_save_recipients">';
-        wp_nonce_field( 'agp_pv_save_recipients' );
-        echo '<textarea name="agp_pv_recipients" rows="3" class="large-text">' . esc_textarea( $recipients_value ) . '</textarea>';
-        echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Guardar destinatarios', 'agrocampo-post-venta' ) . '</button></p>';
-        echo '</form>';
-        echo '</div>';
-
-        echo '<div class="card">';
-        echo '<h2>' . esc_html__( 'Requisito de correo', 'agrocampo-post-venta' ) . '</h2>';
-        echo '<p>' . esc_html__( 'Si tu hosting no tiene habilitada la función mail(), necesitas configurar SMTP con un plugin como WP Mail SMTP (u otro). Solicita al proveedor: host SMTP, puerto, cifrado TLS/SSL, usuario y contraseña (o app password).', 'agrocampo-post-venta' ) . '</p>';
-        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
-        echo '<input type="hidden" name="action" value="agp_pv_send_test_email">';
-        wp_nonce_field( 'agp_pv_send_test_email' );
-        echo '<label for="agp-pv-test-email">' . esc_html__( 'Enviar correo de prueba a:', 'agrocampo-post-venta' ) . '</label> ';
-        echo '<input type="email" id="agp-pv-test-email" name="test_email" required> ';
-        echo '<button type="submit" class="button button-secondary">' . esc_html__( 'Enviar correo de prueba', 'agrocampo-post-venta' ) . '</button>';
-        echo '</form>';
-        echo '</div>';
-
-        echo '</div>';
     }
 
     public function handle_resend_email(): void {
@@ -190,15 +204,38 @@ class AGP_PV_Admin {
             if ( empty( $result['mail_sent'] ) ) {
                 $message = $result['mail_error'] ?? __( 'No se pudo enviar el correo.', 'agrocampo-post-venta' );
                 wp_safe_redirect(
-                    admin_url(
-                        'admin.php?page=agp-pv-submissions&agp_pv_notice=mail_failed&agp_pv_notice_message=' . rawurlencode( $message )
-                    )
+                    admin_url( 'admin.php?page=agp-pv-submissions&agp_pv_notice=mail_failed&agp_pv_notice_message=' . rawurlencode( $message ) )
                 );
                 exit;
             }
         }
 
         wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-submissions&agp_pv_notice=mail_sent' ) );
+        exit;
+    }
+
+    public function handle_regenerate_pdf(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ) );
+        }
+
+        check_admin_referer( 'agp_pv_regenerate_pdf' );
+
+        $submission_id = isset( $_GET['submission_id'] ) ? absint( $_GET['submission_id'] ) : 0;
+        if ( ! $submission_id ) {
+            wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-submissions' ) );
+            exit;
+        }
+
+        $result = AGP_PV_PDF::regenerate_pdf_attachment( $submission_id );
+        if ( empty( $result['ok'] ) ) {
+            wp_safe_redirect(
+                admin_url( 'admin.php?page=agp-pv-submissions&agp_pv_notice=pdf_failed&agp_pv_notice_message=' . rawurlencode( $result['message'] ?? '' ) )
+            );
+            exit;
+        }
+
+        wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-submissions&agp_pv_notice=pdf_regenerated' ) );
         exit;
     }
 
@@ -219,9 +256,7 @@ class AGP_PV_Admin {
 
         $message = $result['message'] ?? __( 'No se pudo enviar el correo de prueba.', 'agrocampo-post-venta' );
         wp_safe_redirect(
-            admin_url(
-                'admin.php?page=agp-pv-settings&agp_pv_notice=test_failed&agp_pv_notice_message=' . rawurlencode( $message )
-            )
+            admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=test_failed&agp_pv_notice_message=' . rawurlencode( $message ) )
         );
         exit;
     }
@@ -258,7 +293,23 @@ class AGP_PV_Admin {
     }
 
     public function enqueue_admin_assets( string $hook ): void {
-        if ( empty( $_GET['page'] ) || 'agp-pv-settings' !== $_GET['page'] ) {
+        if ( empty( $_GET['page'] ) ) {
+            return;
+        }
+
+        $page = sanitize_key( wp_unslash( $_GET['page'] ) );
+        if ( 'agp-pv-settings' !== $page && 'agp-pv-submissions' !== $page ) {
+            return;
+        }
+
+        wp_enqueue_style(
+            'agp-pv-admin',
+            AGP_PV_PLUGIN_URL . 'assets/css/admin.css',
+            array(),
+            AGP_PV_VERSION
+        );
+
+        if ( 'agp-pv-settings' !== $page ) {
             return;
         }
 
@@ -274,70 +325,347 @@ class AGP_PV_Admin {
 }
 
 class AGP_PV_Submissions_Table extends WP_List_Table {
+    private array $filters = array();
+
+    public function __construct() {
+        parent::__construct(
+            array(
+                'singular' => 'agp_pv_submission',
+                'plural'   => 'agp_pv_submissions',
+                'ajax'     => false,
+            )
+        );
+    }
+
     public function get_columns(): array {
         return array(
+            'cb' => '<input type="checkbox" />',
             'id' => __( 'ID', 'agrocampo-post-venta' ),
             'tecnico' => __( 'Técnico', 'agrocampo-post-venta' ),
             'cliente' => __( 'Cliente', 'agrocampo-post-venta' ),
+            'email_cliente' => __( 'Correo cliente', 'agrocampo-post-venta' ),
             'serie' => __( 'Serie', 'agrocampo-post-venta' ),
-            'tipo_servicio' => __( 'Tipo de Servicio', 'agrocampo-post-venta' ),
+            'tipo_servicio' => __( 'Tipo de servicio', 'agrocampo-post-venta' ),
             'mail_status' => __( 'Correo', 'agrocampo-post-venta' ),
-            'mail_last_attempt_at' => __( 'Último intento', 'agrocampo-post-venta' ),
+            'pdf_status' => __( 'PDF', 'agrocampo-post-venta' ),
             'created_at' => __( 'Fecha', 'agrocampo-post-venta' ),
         );
     }
 
+    protected function get_sortable_columns(): array {
+        return array(
+            'id' => array( 'id', false ),
+            'tecnico' => array( 'tecnico', false ),
+            'cliente' => array( 'cliente', false ),
+            'created_at' => array( 'created_at', true ),
+            'mail_status' => array( 'mail_status', false ),
+            'pdf_status' => array( 'pdf_status', false ),
+        );
+    }
+
+    public function get_bulk_actions(): array {
+        return array(
+            'bulk_resend' => __( 'Reintentar envío de correo', 'agrocampo-post-venta' ),
+            'bulk_regenerate_pdf' => __( 'Regenerar PDF', 'agrocampo-post-venta' ),
+            'bulk_export_csv' => __( 'Exportar CSV', 'agrocampo-post-venta' ),
+            'bulk_delete' => __( 'Eliminar', 'agrocampo-post-venta' ),
+        );
+    }
+
+    public function no_items(): void {
+        esc_html_e( 'No hay informes para los filtros seleccionados.', 'agrocampo-post-venta' );
+    }
+
+    public function column_cb( $item ): string {
+        return sprintf( '<input type="checkbox" name="submission[]" value="%d" />', absint( $item['id'] ) );
+    }
+
     public function prepare_items(): void {
         global $wpdb;
+
         $table = AGP_PV_DB::table_name();
+        $this->filters = $this->get_filters_from_request();
+
+        $this->process_bulk_action();
 
         $per_page = 20;
         $current_page = $this->get_pagenum();
         $offset = ( $current_page - 1 ) * $per_page;
 
-        $search = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
-        $where = '';
-        $args = array();
+        $where_data = $this->build_where_clause( $this->filters );
+        $where = $where_data['sql'];
+        $where_values = $where_data['values'];
 
-        if ( $search ) {
-            $where = "WHERE tecnico LIKE %s OR cliente LIKE %s OR serie LIKE %s";
-            $like = '%' . $wpdb->esc_like( $search ) . '%';
-            $args = array( $like, $like, $like );
-        }
+        $order_by = $this->get_order_by();
+        $order = $this->get_order_direction();
 
-        $items_sql = "SELECT * FROM {$table} {$where} ORDER BY created_at DESC LIMIT %d OFFSET %d";
-        $items_query = $wpdb->prepare( $items_sql, array_merge( $args, array( $per_page, $offset ) ) );
+        $items_sql = "SELECT * FROM {$table} {$where} ORDER BY {$order_by} {$order} LIMIT %d OFFSET %d";
+        $items_query = $wpdb->prepare( $items_sql, array_merge( $where_values, array( $per_page, $offset ) ) );
         $this->items = $wpdb->get_results( $items_query, ARRAY_A );
 
         $count_sql = "SELECT COUNT(*) FROM {$table} {$where}";
-        if ( $args ) {
-            $count_query = $wpdb->prepare( $count_sql, $args );
-        } else {
-            $count_query = $count_sql;
-        }
+        $count_query = empty( $where_values ) ? $count_sql : $wpdb->prepare( $count_sql, $where_values );
         $total_items = (int) $wpdb->get_var( $count_query );
 
         $this->set_pagination_args(
             array(
                 'total_items' => $total_items,
                 'per_page' => $per_page,
+                'total_pages' => (int) ceil( $total_items / $per_page ),
             )
         );
 
-        $this->_column_headers = array( $this->get_columns(), array(), array() );
+        $this->_column_headers = array( $this->get_columns(), array(), $this->get_sortable_columns() );
+    }
+
+    public function render_filters(): void {
+        $mail_status = $this->filters['mail_status'];
+        $pdf_status = $this->filters['pdf_status'];
+        $email = $this->filters['email'];
+        $date_from = $this->filters['date_from'];
+        $date_to = $this->filters['date_to'];
+
+        echo '<div class="agp-pv-toolbar">';
+        echo '<div class="agp-pv-filter-row">';
+
+        echo '<label for="agp-pv-filter-mail"><strong>' . esc_html__( 'Estado correo', 'agrocampo-post-venta' ) . '</strong></label>';
+        echo '<select id="agp-pv-filter-mail" name="mail_status">';
+        echo '<option value="">' . esc_html__( 'Todos', 'agrocampo-post-venta' ) . '</option>';
+        echo '<option value="pending" ' . selected( $mail_status, 'pending', false ) . '>' . esc_html__( 'Pendiente', 'agrocampo-post-venta' ) . '</option>';
+        echo '<option value="sent" ' . selected( $mail_status, 'sent', false ) . '>' . esc_html__( 'Enviado', 'agrocampo-post-venta' ) . '</option>';
+        echo '<option value="failed" ' . selected( $mail_status, 'failed', false ) . '>' . esc_html__( 'Falló', 'agrocampo-post-venta' ) . '</option>';
+        echo '</select>';
+
+        echo '<label for="agp-pv-filter-pdf"><strong>' . esc_html__( 'Estado PDF', 'agrocampo-post-venta' ) . '</strong></label>';
+        echo '<select id="agp-pv-filter-pdf" name="pdf_status">';
+        echo '<option value="">' . esc_html__( 'Todos', 'agrocampo-post-venta' ) . '</option>';
+        echo '<option value="pending" ' . selected( $pdf_status, 'pending', false ) . '>' . esc_html__( 'Pendiente', 'agrocampo-post-venta' ) . '</option>';
+        echo '<option value="ready" ' . selected( $pdf_status, 'ready', false ) . '>' . esc_html__( 'Listo', 'agrocampo-post-venta' ) . '</option>';
+        echo '<option value="failed" ' . selected( $pdf_status, 'failed', false ) . '>' . esc_html__( 'Falló', 'agrocampo-post-venta' ) . '</option>';
+        echo '</select>';
+
+        echo '<label for="agp-pv-filter-email"><strong>' . esc_html__( 'Correo', 'agrocampo-post-venta' ) . '</strong></label>';
+        echo '<input type="text" id="agp-pv-filter-email" name="email" value="' . esc_attr( $email ) . '" placeholder="cliente@correo.cl">';
+
+        echo '<label for="agp-pv-filter-date-from"><strong>' . esc_html__( 'Desde', 'agrocampo-post-venta' ) . '</strong></label>';
+        echo '<input type="date" id="agp-pv-filter-date-from" name="date_from" value="' . esc_attr( $date_from ) . '">';
+
+        echo '<label for="agp-pv-filter-date-to"><strong>' . esc_html__( 'Hasta', 'agrocampo-post-venta' ) . '</strong></label>';
+        echo '<input type="date" id="agp-pv-filter-date-to" name="date_to" value="' . esc_attr( $date_to ) . '">';
+
+        echo '<button type="submit" class="button button-primary">' . esc_html__( 'Aplicar filtros', 'agrocampo-post-venta' ) . '</button>';
+        echo '<a class="button button-secondary" href="' . esc_url( admin_url( 'admin.php?page=agp-pv-submissions' ) ) . '">' . esc_html__( 'Limpiar', 'agrocampo-post-venta' ) . '</a>';
+
+        echo '</div>';
+        echo '</div>';
+    }
+
+    private function get_filters_from_request(): array {
+        return array(
+            'search' => isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '',
+            'mail_status' => isset( $_GET['mail_status'] ) ? sanitize_key( wp_unslash( $_GET['mail_status'] ) ) : '',
+            'pdf_status' => isset( $_GET['pdf_status'] ) ? sanitize_key( wp_unslash( $_GET['pdf_status'] ) ) : '',
+            'email' => isset( $_GET['email'] ) ? sanitize_text_field( wp_unslash( $_GET['email'] ) ) : '',
+            'date_from' => isset( $_GET['date_from'] ) ? sanitize_text_field( wp_unslash( $_GET['date_from'] ) ) : '',
+            'date_to' => isset( $_GET['date_to'] ) ? sanitize_text_field( wp_unslash( $_GET['date_to'] ) ) : '',
+        );
+    }
+
+    private function build_where_clause( array $filters ): array {
+        global $wpdb;
+
+        $clauses = array();
+        $values = array();
+
+        if ( '' !== $filters['search'] ) {
+            $like = '%' . $wpdb->esc_like( $filters['search'] ) . '%';
+            $clauses[] = '(tecnico LIKE %s OR cliente LIKE %s OR serie LIKE %s OR numero_interno LIKE %s)';
+            array_push( $values, $like, $like, $like, $like );
+        }
+
+        if ( in_array( $filters['mail_status'], array( 'pending', 'sent', 'failed' ), true ) ) {
+            $clauses[] = 'mail_status = %s';
+            $values[] = $filters['mail_status'];
+        }
+
+        if ( in_array( $filters['pdf_status'], array( 'pending', 'ready', 'failed' ), true ) ) {
+            $clauses[] = 'pdf_status = %s';
+            $values[] = $filters['pdf_status'];
+        }
+
+        if ( '' !== $filters['email'] ) {
+            $like = '%' . $wpdb->esc_like( $filters['email'] ) . '%';
+            $clauses[] = '(email_cliente LIKE %s OR correo_copia LIKE %s)';
+            $values[] = $like;
+            $values[] = $like;
+        }
+
+        if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $filters['date_from'] ) ) {
+            $clauses[] = 'DATE(created_at) >= %s';
+            $values[] = $filters['date_from'];
+        }
+
+        if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $filters['date_to'] ) ) {
+            $clauses[] = 'DATE(created_at) <= %s';
+            $values[] = $filters['date_to'];
+        }
+
+        $sql = '';
+        if ( ! empty( $clauses ) ) {
+            $sql = 'WHERE ' . implode( ' AND ', $clauses );
+        }
+
+        return array(
+            'sql' => $sql,
+            'values' => $values,
+        );
+    }
+
+    private function get_order_by(): string {
+        $allowed = array( 'id', 'tecnico', 'cliente', 'created_at', 'mail_status', 'pdf_status' );
+        $orderby = isset( $_GET['orderby'] ) ? sanitize_key( wp_unslash( $_GET['orderby'] ) ) : 'created_at';
+        return in_array( $orderby, $allowed, true ) ? $orderby : 'created_at';
+    }
+
+    private function get_order_direction(): string {
+        $order = isset( $_GET['order'] ) ? strtoupper( sanitize_key( wp_unslash( $_GET['order'] ) ) ) : 'DESC';
+        return in_array( $order, array( 'ASC', 'DESC' ), true ) ? $order : 'DESC';
+    }
+
+    private function process_bulk_action(): void {
+        $action = $this->current_action();
+        if ( ! $action ) {
+            return;
+        }
+
+        check_admin_referer( 'bulk-' . $this->_args['plural'] );
+
+        $ids = isset( $_REQUEST['submission'] ) ? array_map( 'absint', (array) wp_unslash( $_REQUEST['submission'] ) ) : array();
+        $ids = array_values( array_filter( $ids ) );
+
+        if ( empty( $ids ) ) {
+            return;
+        }
+
+        if ( 'bulk_delete' === $action ) {
+            $this->bulk_delete( $ids );
+            return;
+        }
+
+        if ( 'bulk_resend' === $action ) {
+            $this->bulk_resend_email( $ids );
+            return;
+        }
+
+        if ( 'bulk_regenerate_pdf' === $action ) {
+            $this->bulk_regenerate_pdf( $ids );
+            return;
+        }
+
+        if ( 'bulk_export_csv' === $action ) {
+            $this->bulk_export_csv( $ids );
+            return;
+        }
+    }
+
+    private function bulk_delete( array $ids ): void {
+        global $wpdb;
+        $table = AGP_PV_DB::table_name();
+
+        $deleted = 0;
+        foreach ( $ids as $id ) {
+            $submission = AGP_PV_Email::get_submission( $id );
+            if ( ! $submission ) {
+                continue;
+            }
+
+            if ( ! empty( $submission['pdf_attachment_id'] ) ) {
+                wp_delete_attachment( (int) $submission['pdf_attachment_id'], true );
+            }
+
+            $result = $wpdb->delete( $table, array( 'id' => $id ), array( '%d' ) );
+            if ( false !== $result ) {
+                $deleted++;
+            }
+        }
+
+        wp_safe_redirect(
+            admin_url( 'admin.php?page=agp-pv-submissions&agp_pv_notice=bulk_deleted&agp_pv_notice_count=' . $deleted )
+        );
+        exit;
+    }
+
+    private function bulk_resend_email( array $ids ): void {
+        $processed = 0;
+        foreach ( $ids as $id ) {
+            $result = AGP_PV_Email::send_submission_email( $id );
+            if ( ! empty( $result['mail_sent'] ) ) {
+                $processed++;
+            }
+        }
+
+        wp_safe_redirect(
+            admin_url( 'admin.php?page=agp-pv-submissions&agp_pv_notice=bulk_resend&agp_pv_notice_count=' . $processed )
+        );
+        exit;
+    }
+
+    private function bulk_regenerate_pdf( array $ids ): void {
+        $processed = 0;
+        foreach ( $ids as $id ) {
+            $result = AGP_PV_PDF::regenerate_pdf_attachment( $id );
+            if ( ! empty( $result['ok'] ) ) {
+                $processed++;
+            }
+        }
+
+        wp_safe_redirect(
+            admin_url( 'admin.php?page=agp-pv-submissions&agp_pv_notice=bulk_regenerated&agp_pv_notice_count=' . $processed )
+        );
+        exit;
+    }
+
+    private function bulk_export_csv( array $ids ): void {
+        global $wpdb;
+        $table = AGP_PV_DB::table_name();
+
+        $ids_placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+        $query = $wpdb->prepare( "SELECT * FROM {$table} WHERE id IN ({$ids_placeholders}) ORDER BY created_at DESC", $ids );
+        $rows = $wpdb->get_results( $query, ARRAY_A );
+
+        if ( empty( $rows ) ) {
+            return;
+        }
+
+        nocache_headers();
+        header( 'Content-Type: text/csv; charset=utf-8' );
+        header( 'Content-Disposition: attachment; filename=informes-tecnicos-' . gmdate( 'Ymd-His' ) . '.csv' );
+
+        $output = fopen( 'php://output', 'w' );
+        if ( false === $output ) {
+            return;
+        }
+
+        fputcsv( $output, array_keys( $rows[0] ) );
+        foreach ( $rows as $row ) {
+            fputcsv( $output, $row );
+        }
+
+        fclose( $output );
+        exit;
     }
 
     public function column_default( $item, $column_name ) {
         if ( 'mail_status' === $column_name ) {
-            return esc_html( $this->format_mail_status( (string) ( $item['mail_status'] ?? '' ) ) );
+            return '<span class="agp-pv-status agp-pv-status-' . esc_attr( $item['mail_status'] ?? '' ) . '">' . esc_html( $this->format_status( (string) ( $item['mail_status'] ?? '' ) ) ) . '</span>';
         }
 
-        if ( 'mail_last_attempt_at' === $column_name ) {
-            return esc_html( $item['mail_last_attempt_at'] ?? '' );
+        if ( 'pdf_status' === $column_name ) {
+            return '<span class="agp-pv-status agp-pv-status-' . esc_attr( $item['pdf_status'] ?? '' ) . '">' . esc_html( $this->format_status( (string) ( $item['pdf_status'] ?? '' ) ) ) . '</span>';
         }
 
         if ( 'created_at' === $column_name ) {
-            return esc_html( $item['created_at'] );
+            return esc_html( $item['created_at'] ?? '' );
         }
 
         return esc_html( $item[ $column_name ] ?? '' );
@@ -345,21 +673,27 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
 
     public function column_id( $item ): string {
         $actions = array();
+        $submission_id = absint( $item['id'] );
 
         $actions['view'] = sprintf(
             '<a href="%s">%s</a>',
-            esc_url( admin_url( 'admin.php?page=agp-pv-submissions&submission_id=' . absint( $item['id'] ) ) ),
+            esc_url( admin_url( 'admin.php?page=agp-pv-submissions&submission_id=' . $submission_id ) ),
             esc_html__( 'Ver detalle', 'agrocampo-post-venta' )
         );
 
         $actions['resend'] = sprintf(
             '<a href="%s">%s</a>',
-            esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=agp_pv_resend_email&submission_id=' . absint( $item['id'] ) ), 'agp_pv_resend_email' ) ),
-            esc_html__( 'Reenviar correo', 'agrocampo-post-venta' )
+            esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=agp_pv_resend_email&submission_id=' . $submission_id ), 'agp_pv_resend_email' ) ),
+            esc_html__( 'Reintentar correo', 'agrocampo-post-venta' )
         );
 
-        $value = esc_html( (string) $item['id'] );
-        return $value . $this->row_actions( $actions );
+        $actions['regenerate_pdf'] = sprintf(
+            '<a href="%s">%s</a>',
+            esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=agp_pv_regenerate_pdf&submission_id=' . $submission_id ), 'agp_pv_regenerate_pdf' ) ),
+            esc_html__( 'Regenerar PDF', 'agrocampo-post-venta' )
+        );
+
+        return esc_html( (string) $submission_id ) . $this->row_actions( $actions );
     }
 
     public function single_row( $item ): void {
@@ -368,7 +702,7 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
         echo '</tr>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 
         if ( isset( $_GET['submission_id'] ) && absint( $_GET['submission_id'] ) === (int) $item['id'] ) {
-            echo '<tr class="agp-pv-detail"><td colspan="8">'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            echo '<tr class="agp-pv-detail"><td colspan="10">'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
             echo wp_kses_post( $this->render_detail( (int) $item['id'] ) );
             echo '</td></tr>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         }
@@ -410,9 +744,9 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
         return $output;
     }
 
-    private function format_mail_status( string $status ): string {
-        if ( 'sent' === $status ) {
-            return __( 'Enviado', 'agrocampo-post-venta' );
+    private function format_status( string $status ): string {
+        if ( 'sent' === $status || 'ready' === $status ) {
+            return __( 'Listo', 'agrocampo-post-venta' );
         }
         if ( 'failed' === $status ) {
             return __( 'Falló', 'agrocampo-post-venta' );
@@ -420,6 +754,7 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
         if ( 'pending' === $status ) {
             return __( 'Pendiente', 'agrocampo-post-venta' );
         }
+
         return $status;
     }
 }

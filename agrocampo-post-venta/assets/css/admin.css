@@ -1,0 +1,67 @@
+.agp-pv-admin .notice {
+    border-left-width: 4px;
+}
+
+.agp-pv-admin .agp-pv-settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 16px;
+    margin-top: 14px;
+}
+
+.agp-pv-admin .agp-pv-card h2 {
+    margin-top: 0;
+}
+
+.agp-pv-admin .agp-pv-toolbar {
+    margin: 14px 0;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #dcdcde;
+}
+
+.agp-pv-admin .agp-pv-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 8px;
+}
+
+.agp-pv-admin .agp-pv-filter-row input,
+.agp-pv-admin .agp-pv-filter-row select {
+    min-width: 140px;
+}
+
+.agp-pv-admin .wp-list-table th,
+.agp-pv-admin .wp-list-table td {
+    vertical-align: middle;
+}
+
+.agp-pv-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #f0f0f1;
+}
+
+.agp-pv-status-sent,
+.agp-pv-status-ready {
+    background: #d1e7dd;
+    color: #0f5132;
+}
+
+.agp-pv-status-failed {
+    background: #f8d7da;
+    color: #842029;
+}
+
+.agp-pv-status-pending {
+    background: #fff3cd;
+    color: #664d03;
+}
+
+.agp-pv-detail td {
+    background: #f6f7f7;
+}
