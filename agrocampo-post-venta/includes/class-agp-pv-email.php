@@ -218,8 +218,8 @@ class AGP_PV_Email {
         add_action( 'wp_mail_failed', $failed_callback );
         $sent = wp_mail(
             $email,
-            __( 'Prueba de correo Post Venta', 'agrocampo-post-venta' ),
-            __( 'Este es un correo de prueba del plugin Agrocampo Post Venta.', 'agrocampo-post-venta' ),
+            __( 'Prueba de correo Informe Técnico', 'agrocampo-post-venta' ),
+            __( 'Este es un correo de prueba del plugin Agrocampo Informe Técnico.', 'agrocampo-post-venta' ),
             array( 'Content-Type: text/plain; charset=UTF-8' )
         );
         remove_action( 'wp_mail_failed', $failed_callback );

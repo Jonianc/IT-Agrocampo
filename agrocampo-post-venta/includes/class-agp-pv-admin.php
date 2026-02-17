@@ -29,8 +29,8 @@ class AGP_PV_Admin {
 
     public function register_menu(): void {
         add_menu_page(
-            __( 'Post Venta', 'agrocampo-post-venta' ),
-            __( 'Post Venta', 'agrocampo-post-venta' ),
+            __( 'Informe Técnico', 'agrocampo-post-venta' ),
+            __( 'Informe Técnico', 'agrocampo-post-venta' ),
             'manage_options',
             'agp-pv-submissions',
             array( $this, 'render_list_page' ),
@@ -56,7 +56,7 @@ class AGP_PV_Admin {
         $table->prepare_items();
 
         echo '<div class="wrap">';
-        echo '<h1>' . esc_html__( 'Envíos Post Venta', 'agrocampo-post-venta' ) . '</h1>';
+        echo '<h1>' . esc_html__( 'Envíos Informe Técnico', 'agrocampo-post-venta' ) . '</h1>';
 
         if ( isset( $_GET['agp_pv_notice'] ) ) {
             $notice = sanitize_text_field( wp_unslash( $_GET['agp_pv_notice'] ) );
@@ -117,11 +117,18 @@ class AGP_PV_Admin {
         }
 
         echo '<div class="wrap">';
-        echo '<h1>' . esc_html__( 'Ajustes Post Venta', 'agrocampo-post-venta' ) . '</h1>';
+        echo '<h1>' . esc_html__( 'Ajustes Informe Técnico', 'agrocampo-post-venta' ) . '</h1>';
 
         if ( $message ) {
             echo '<div class="notice ' . esc_attr( $class ) . '"><p>' . esc_html( $message ) . '</p></div>';
         }
+
+
+        echo '<div class="card">';
+        echo '<h2>' . esc_html__( 'Acceso rápido', 'agrocampo-post-venta' ) . '</h2>';
+        echo '<p>' . esc_html__( 'Abre el formulario público de Informe Técnico en una nueva pestaña.', 'agrocampo-post-venta' ) . '</p>';
+        echo '<p><a class="button button-secondary" target="_blank" rel="noopener noreferrer" href="' . esc_url( home_url( '/post-venta/' ) ) . '">' . esc_html__( 'Ir al Informe Técnico', 'agrocampo-post-venta' ) . '</a></p>';
+        echo '</div>';
 
         $logo_id = absint( get_option( 'agp_pv_logo_attachment_id', 0 ) );
         $logo_width = (float) get_option( 'agp_pv_logo_width_mm', 38 );

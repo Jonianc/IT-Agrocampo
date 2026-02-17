@@ -9,12 +9,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 <head>
     <meta charset="<?php bloginfo( 'charset' ); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?php esc_html_e( 'Post Venta', 'agrocampo-post-venta' ); ?></title>
+    <title><?php esc_html_e( 'Informe Técnico', 'agrocampo-post-venta' ); ?></title>
     <?php wp_head(); ?>
 </head>
 <body class="agp-pv-standalone">
 <div class="agp-pv-standalone__wrapper">
-    <h1><?php esc_html_e( 'Post Venta', 'agrocampo-post-venta' ); ?></h1>
+    <h1><?php esc_html_e( 'Informe Técnico', 'agrocampo-post-venta' ); ?></h1>
 
     <form id="agp-pv-form" enctype="multipart/form-data">
         <input type="text" name="agp_pv_hp" class="agp-pv-honeypot" tabindex="-1" autocomplete="off">
