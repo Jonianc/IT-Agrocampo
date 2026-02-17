@@ -96,3 +96,122 @@
 [data-condition="cantidad-horas"] {
     display: none;
 }
+
+
+
+/* Section titles */
+.agp-pv-section-title {
+    margin: 22px 0 12px;
+    font-size: 18px;
+    line-height: 1.2;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+.agp-pv-help {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+}
+
+/* Invalid states */
+.agp-pv-invalid {
+    border-color: #b00020 !important;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(176, 0, 32, 0.12);
+}
+
+.agp-pv-error {
+    min-height: 14px;
+}
+
+/* Submit button states */
+.agp-pv-submit[disabled] {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+/* Signature hint */
+.agp-pv-signature {
+    position: relative;
+}
+
+.agp-pv-signature-hint {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px;
+    color: #666;
+    opacity: 0.45;
+    pointer-events: none;
+    user-select: none;
+}
+
+.agp-pv-signature.has-signature .agp-pv-signature-hint {
+    display: none;
+}
+
+/* Photos preview */
+.agp-pv-files-meta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.agp-pv-files-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: #333;
+}
+
+.agp-pv-files {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.agp-pv-file {
+    border: 1px solid #e6e6e6;
+    border-radius: 6px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.agp-pv-file img {
+    width: 100%;
+    height: 90px;
+    object-fit: cover;
+    display: block;
+}
+
+.agp-pv-file-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px;
+}
+
+.agp-pv-file-name {
+    font-size: 11px;
+    color: #444;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.agp-pv-file-remove {
+    background: #777;
+    color: #fff;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+}
+

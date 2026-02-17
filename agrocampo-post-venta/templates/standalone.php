@@ -19,7 +19,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     <form id="agp-pv-form" enctype="multipart/form-data">
         <input type="text" name="agp_pv_hp" class="agp-pv-honeypot" tabindex="-1" autocomplete="off">
 
-        <div class="agp-pv-field">
+        
+        <h2 class="agp-pv-section-title"><?php esc_html_e( 'Datos del servicio', 'agrocampo-post-venta' ); ?></h2>
+<div class="agp-pv-field">
             <label for="agp-pv-tecnico"><?php esc_html_e( 'Técnico', 'agrocampo-post-venta' ); ?> *</label>
             <select id="agp-pv-tecnico" name="tecnico" required>
                 <option value=""><?php esc_html_e( 'Seleccione su nombre', 'agrocampo-post-venta' ); ?></option>
@@ -86,7 +88,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             </div>
             <div class="agp-pv-field agp-pv-field--date" data-condition="fecha">
                 <label for="agp-pv-fecha"><?php esc_html_e( 'Fecha', 'agrocampo-post-venta' ); ?> *</label>
-                <input id="agp-pv-fecha" name="fecha" type="date">
+                <input id="agp-pv-fecha" name="fecha" type="date" required>
                 <span class="agp-pv-error" data-error-for="fecha"></span>
             </div>
         </div>
@@ -94,7 +96,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         <div class="agp-pv-grid">
             <div class="agp-pv-field">
                 <label for="agp-pv-horas"><?php esc_html_e( 'Horas', 'agrocampo-post-venta' ); ?> *</label>
-                <input id="agp-pv-horas" name="horas" type="text" required>
+                <input id="agp-pv-horas" name="horas" type="number" inputmode="numeric" min="0" step="1" required>
                 <span class="agp-pv-error" data-error-for="horas"></span>
             </div>
             <div class="agp-pv-field">
@@ -115,7 +117,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         <div class="agp-pv-grid">
             <div class="agp-pv-field" data-condition="tipo-mantencion">
                 <label for="agp-pv-tipo-mantencion"><?php esc_html_e( 'Tipo de Mantención', 'agrocampo-post-venta' ); ?> *</label>
-                <select id="agp-pv-tipo-mantencion" name="tipo_mantencion">
+                <select id="agp-pv-tipo-mantencion" name="tipo_mantencion" required>
                     <option value=""><?php esc_html_e( 'Seleccione', 'agrocampo-post-venta' ); ?></option>
                     <option value="one">100 Horas</option>
                     <option value="two">400 Horas</option>
@@ -130,7 +132,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             </div>
             <div class="agp-pv-field" data-condition="cantidad-horas">
                 <label for="agp-pv-cantidad-horas"><?php esc_html_e( 'CANTIDAD DE HORAS', 'agrocampo-post-venta' ); ?> *</label>
-                <input id="agp-pv-cantidad-horas" name="cantidad_horas" type="text">
+                <input id="agp-pv-cantidad-horas" name="cantidad_horas" type="number" inputmode="numeric" min="0" step="1" required>
                 <span class="agp-pv-error" data-error-for="cantidad_horas"></span>
             </div>
         </div>
@@ -138,7 +140,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         <div class="agp-pv-grid" data-condition="garantia">
             <div class="agp-pv-field">
                 <label for="agp-pv-fecha-reparacion"><?php esc_html_e( 'Fecha Reparación', 'agrocampo-post-venta' ); ?> *</label>
-                <input id="agp-pv-fecha-reparacion" name="fecha_reparacion" type="date">
+                <input id="agp-pv-fecha-reparacion" name="fecha_reparacion" type="date" required>
                 <span class="agp-pv-error" data-error-for="fecha_reparacion"></span>
             </div>
             <div class="agp-pv-field">
@@ -146,6 +148,8 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <input id="agp-pv-fecha-cierre" name="fecha_cierre" type="date">
             </div>
         </div>
+
+        <h2 class="agp-pv-section-title"><?php esc_html_e( 'Detalle de trabajo', 'agrocampo-post-venta' ); ?></h2>
 
         <div class="agp-pv-field">
             <label for="agp-pv-lubricantes"><?php esc_html_e( 'Lubricantes', 'agrocampo-post-venta' ); ?></label>
@@ -172,10 +176,13 @@ if ( ! defined( 'ABSPATH' ) ) {
             <textarea id="agp-pv-observaciones" name="observaciones" rows="3"></textarea>
         </div>
 
+        <h2 class="agp-pv-section-title"><?php esc_html_e( 'Firmas', 'agrocampo-post-venta' ); ?></h2>
+
         <div class="agp-pv-field">
             <label><?php esc_html_e( 'Firma Cliente', 'agrocampo-post-venta' ); ?></label>
             <div class="agp-pv-signature" data-signature="cliente">
                 <canvas width="600" height="200"></canvas>
+                <div class="agp-pv-signature-hint"><?php esc_html_e( 'Firme aquí', 'agrocampo-post-venta' ); ?></div>
                 <button type="button" class="agp-pv-signature-clear" data-signature-clear="cliente"><?php esc_html_e( 'Limpiar', 'agrocampo-post-venta' ); ?></button>
             </div>
             <input type="hidden" name="firma_cliente" id="agp-pv-firma-cliente">
@@ -185,14 +192,24 @@ if ( ! defined( 'ABSPATH' ) ) {
             <label><?php esc_html_e( 'Firma Técnico', 'agrocampo-post-venta' ); ?></label>
             <div class="agp-pv-signature" data-signature="tecnico">
                 <canvas width="600" height="200"></canvas>
+                <div class="agp-pv-signature-hint"><?php esc_html_e( 'Firme aquí', 'agrocampo-post-venta' ); ?></div>
                 <button type="button" class="agp-pv-signature-clear" data-signature-clear="tecnico"><?php esc_html_e( 'Limpiar', 'agrocampo-post-venta' ); ?></button>
             </div>
             <input type="hidden" name="firma_tecnico" id="agp-pv-firma-tecnico">
         </div>
 
+        <h2 class="agp-pv-section-title"><?php esc_html_e( 'Adjuntos y envío', 'agrocampo-post-venta' ); ?></h2>
+
         <div class="agp-pv-field">
             <label for="agp-pv-fotos"><?php esc_html_e( 'Fotos (máx 10)', 'agrocampo-post-venta' ); ?></label>
             <input id="agp-pv-fotos" name="fotos[]" type="file" multiple accept="image/*">
+        
+            <div class="agp-pv-files-meta">
+                <span id="agp-pv-fotos-count" class="agp-pv-files-count">0/10</span>
+                <span class="agp-pv-help"><?php esc_html_e( 'Puede seleccionar fotos en varias tandas.', 'agrocampo-post-venta' ); ?></span>
+            </div>
+            <div id="agp-pv-fotos-preview" class="agp-pv-files"></div>
+            <span class="agp-pv-error" data-error-for="fotos"></span>
         </div>
 
         <div class="agp-pv-field">

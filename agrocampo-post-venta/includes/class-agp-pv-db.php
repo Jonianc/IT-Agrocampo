@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class AGP_PV_DB {
-    public const VERSION = '1.3.0';
+    public const VERSION = '1.4.0';
     public const OPTION_KEY = 'agp_pv_db_version';
 
     public static function table_name(): string {
