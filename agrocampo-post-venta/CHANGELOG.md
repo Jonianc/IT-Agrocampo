@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.5] - 2026-02-17
+
+### Fixed
+- Se evita el fatal error por redeclaración de `FPDF` cargando la librería solo cuando la clase no existe.
+
 ## [1.4.4] - 2026-02-17
 
 ### Changed

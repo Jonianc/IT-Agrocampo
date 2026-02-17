@@ -4,7 +4,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-require_once AGP_PV_PLUGIN_DIR . 'includes/fpdf/fpdf.php';
+if ( ! class_exists( 'FPDF' ) ) {
+    require_once AGP_PV_PLUGIN_DIR . 'includes/fpdf/fpdf.php';
+}
 
 /**
  * PDF document for Post Venta.
