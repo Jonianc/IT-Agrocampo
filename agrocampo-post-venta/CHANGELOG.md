@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.13] - 2026-02-21
+
+### Changed
+- Se mejora el layout del PDF con render adaptativo en campos de detalle: valores cortos se muestran en fila compacta y textos extensos en bloque con borde.
+- Se preservan saltos de línea en campos narrativos (`lubricantes`, `filtros`, `componentes`, `trabajos realizados`, `observaciones`) para evitar párrafos aplastados.
+- Se evita generar cajas grandes innecesarias para placeholders como `No informado`, mejorando equilibrio visual y paginación.
+
 ## [1.4.12] - 2026-02-21
 
 ### Changed

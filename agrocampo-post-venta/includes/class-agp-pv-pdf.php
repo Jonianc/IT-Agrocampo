@@ -236,6 +236,25 @@ class AGP_PV_PDF_Document extends FPDF {
 
         $this->SetXY( $this->lMargin, $y + $box_h + 2 );
     }
+    /**
+     * Render text as compact row or boxed block depending on length/content.
+     */
+    public function adaptive_text( string $title, string $text ): void {
+        $trimmed = trim( $text );
+        if ( '' === $trimmed ) {
+            return;
+        }
+
+        $is_placeholder = strtolower( $trimmed ) === strtolower( __( 'No informado', 'agrocampo-post-venta' ) );
+        $is_short_single_line = strlen( $trimmed ) <= 90 && false === strpos( $trimmed, "\n" );
+
+        if ( $is_placeholder || $is_short_single_line ) {
+            $this->row2( $title, $trimmed );
+            return;
+        }
+
+        $this->box_text( $title, $trimmed );
+    }
 
     public function signature_row( array $left, array $right ): void {
         $gap       = 6.0;
@@ -584,36 +603,24 @@ class AGP_PV_PDF {
 
             $document->section_title( __( 'Detalle', 'agrocampo-post-venta' ) );
 
-            $lub = self::normalize_pdf_value( $submission['lubricantes'] ?? '' );
-            $fil = self::normalize_pdf_value( $submission['filtros_utilizados'] ?? '' );
-            $com = self::normalize_pdf_value( $submission['componentes_utilizados'] ?? '' );
+            $lub = self::normalize_pdf_value( $submission['lubricantes'] ?? '', '', true );
+            $fil = self::normalize_pdf_value( $submission['filtros_utilizados'] ?? '', '', true );
+            $com = self::normalize_pdf_value( $submission['componentes_utilizados'] ?? '', '', true );
 
-            if ( strlen( trim( $lub ) ) > 0 ) {
-                if ( strlen( $lub ) <= 80 && false === strpos( $lub, "\n" ) ) {
-                    $document->row2( __( 'Lubricantes', 'agrocampo-post-venta' ), $lub );
-                } else {
-                    $document->box_text( __( 'Lubricantes', 'agrocampo-post-venta' ), $lub );
-                }
+            if ( '' !== trim( $lub ) ) {
+                $document->adaptive_text( __( 'Lubricantes', 'agrocampo-post-venta' ), $lub );
             }
 
-            if ( strlen( trim( $fil ) ) > 0 ) {
-                if ( strlen( $fil ) <= 80 && false === strpos( $fil, "\n" ) ) {
-                    $document->row2( __( 'Filtros', 'agrocampo-post-venta' ), $fil );
-                } else {
-                    $document->box_text( __( 'Filtros Utilizados', 'agrocampo-post-venta' ), $fil );
-                }
+            if ( '' !== trim( $fil ) ) {
+                $document->adaptive_text( __( 'Filtros Utilizados', 'agrocampo-post-venta' ), $fil );
             }
 
-            if ( strlen( trim( $com ) ) > 0 ) {
-                if ( strlen( $com ) <= 80 && false === strpos( $com, "\n" ) ) {
-                    $document->row2( __( 'Componentes', 'agrocampo-post-venta' ), $com );
-                } else {
-                    $document->box_text( __( 'Componentes Utilizados', 'agrocampo-post-venta' ), $com );
-                }
+            if ( '' !== trim( $com ) ) {
+                $document->adaptive_text( __( 'Componentes Utilizados', 'agrocampo-post-venta' ), $com );
             }
 
-            $document->box_text( __( 'Trabajos Realizados', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['trabajos_realizados'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
-            $document->box_text( __( 'Observaciones', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['observaciones'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
+            $document->adaptive_text( __( 'Trabajos Realizados', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['trabajos_realizados'] ?? '', __( 'No informado', 'agrocampo-post-venta' ), true ) );
+            $document->adaptive_text( __( 'Observaciones', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['observaciones'] ?? '', __( 'No informado', 'agrocampo-post-venta' ), true ) );
 
 $document->section_title( __( 'Firmas', 'agrocampo-post-venta' ) );
             $document->signature_row(
@@ -982,7 +989,7 @@ $document->section_title( __( 'Firmas', 'agrocampo-post-venta' ) );
      * - Limpia placeholders tipo NULL/null.
      * - Retorna fallback cuando no hay dato útil.
      */
-    private static function normalize_pdf_value( $value, string $fallback = '' ): string {
+    private static function normalize_pdf_value( $value, string $fallback = '', bool $preserve_line_breaks = false ): string {
         if ( is_string( $value ) ) {
             $maybe = maybe_unserialize( $value );
             if ( $maybe !== $value ) {
@@ -1007,15 +1014,30 @@ $document->section_title( __( 'Firmas', 'agrocampo-post-venta' ) );
             }
         }
 
-        $normalized = trim( (string) $value );
-        $normalized = preg_replace( '/\s+/u', ' ', $normalized );
-        $normalized = is_string( $normalized ) ? trim( $normalized ) : '';
+        if ( $preserve_line_breaks ) {
+            $text = str_replace( array( "\r\n", "\r" ), "\n", (string) $value );
+            $lines = explode( "\n", $text );
+            $clean_lines = array();
+
+            foreach ( $lines as $line ) {
+                $line = preg_replace( '/[ \t]+/u', ' ', trim( (string) $line ) );
+                if ( is_string( $line ) && '' !== $line ) {
+                    $clean_lines[] = $line;
+                }
+            }
+
+            $normalized = trim( implode( "\n", $clean_lines ) );
+        } else {
+            $normalized = trim( (string) $value );
+            $normalized = preg_replace( '/\s+/u', ' ', $normalized );
+            $normalized = is_string( $normalized ) ? trim( $normalized ) : '';
+        }
 
         if ( '' === $normalized ) {
             return $fallback;
         }
 
-        $lower = strtolower( $normalized );
+        $lower = strtolower( preg_replace( '/\s+/u', ' ', $normalized ) );
         if ( in_array( $lower, array( 'null', '(null)', 'n/a', 'na', 'none', '-' ), true ) ) {
             return $fallback;
         }
