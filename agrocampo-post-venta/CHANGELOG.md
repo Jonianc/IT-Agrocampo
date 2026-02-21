@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.12] - 2026-02-21
+
+### Changed
+- Se normaliza la salida del PDF para evitar valores crudos como `NULL`, placeholders y estructuras serializadas en campos de texto.
+- Se aplica fallback `No informado` en campos clave del PDF cuando no existe dato útil, mejorando legibilidad del reporte final.
+- Se agrega extracción legible de datos serializados (por ejemplo `street_address`) y aplanado de arreglos para impresión en PDF.
+
 ## [1.4.11] - 2026-02-17
 
 ### Added
