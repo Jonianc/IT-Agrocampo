@@ -985,18 +985,10 @@ $document->section_title( __( 'Firmas', 'agrocampo-post-venta' ) );
     /**
      * Normaliza valores para salida en PDF.
      *
-     * - Convierte serializados a texto legible.
      * - Limpia placeholders tipo NULL/null.
      * - Retorna fallback cuando no hay dato útil.
      */
     private static function normalize_pdf_value( $value, string $fallback = '', bool $preserve_line_breaks = false ): string {
-        if ( is_string( $value ) ) {
-            $maybe = maybe_unserialize( $value );
-            if ( $maybe !== $value ) {
-                $value = $maybe;
-            }
-        }
-
         if ( is_array( $value ) ) {
             if ( isset( $value['street_address'] ) ) {
                 $value = $value['street_address'];
