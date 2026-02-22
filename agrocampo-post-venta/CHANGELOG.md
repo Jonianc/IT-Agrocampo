@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.21] - 2026-02-22
+
+### Changed
+- Se ajusta la compresión de fotos a un modo de compresión alta más agresivo (doble perfil de dimensión/calidad) para acercar resultados de peso a versiones previas.
+- La selección final ahora prioriza explícitamente el archivo más liviano y evita conservar variantes comprimidas cuando no existe ahorro real frente al original.
+- Se mantiene y mejora la vista previa de peso antes de enviar, mostrando claramente ahorro por imagen y total comprimido.
+
 ## [1.4.20] - 2026-02-22
 
 ### Changed

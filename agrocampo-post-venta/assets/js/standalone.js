@@ -274,10 +274,12 @@ function initPhotos() {
         var MAX_FILES = 10;
         var MAX_FILE_BYTES = 5 * 1024 * 1024;
         var MAX_TOTAL_BYTES = 20 * 1024 * 1024;
-        var MAX_DIMENSION = 2200;
-        var QUALITY_START = 0.92;
-        var QUALITY_MIN = 0.72;
-        var QUALITY_STEP = 0.06;
+        var MIN_SAVING_RATIO = 0.08;
+
+        var COMPRESSION_PROFILES = [
+            { maxDimension: 1800, qualityStart: 0.88, qualityMin: 0.62, qualityStep: 0.05 },
+            { maxDimension: 1400, qualityStart: 0.78, qualityMin: 0.50, qualityStep: 0.04 }
+        ];
 
         var $input = $('#agp-pv-fotos');
         var $preview = $('#agp-pv-fotos-preview');
@@ -336,7 +338,7 @@ function initPhotos() {
             return /^image\//.test(file.type || '');
         }
 
-        function drawToCanvasFromFile(file) {
+        function drawToCanvasFromFile(file, maxDimension) {
             return new Promise(function (resolve) {
                 var reader = new FileReader();
                 reader.onload = function (event) {
@@ -344,7 +346,7 @@ function initPhotos() {
                     img.onload = function () {
                         var width = img.width;
                         var height = img.height;
-                        var ratio = Math.min(1, MAX_DIMENSION / Math.max(width, height));
+                        var ratio = Math.min(1, maxDimension / Math.max(width, height));
                         var targetW = Math.max(1, Math.round(width * ratio));
                         var targetH = Math.max(1, Math.round(height * ratio));
 
@@ -381,56 +383,69 @@ function initPhotos() {
             });
         }
 
+        async function runProfile(canvas, mime, profile, originalBytes) {
+            var bestBlob = null;
+            var bestBytes = originalBytes;
+
+            for (var quality = profile.qualityStart; quality >= profile.qualityMin; quality -= profile.qualityStep) {
+                var blob = await canvasToBlob(canvas, mime, quality);
+                if (!blob) {
+                    continue;
+                }
+                if (blob.size < bestBytes) {
+                    bestBlob = blob;
+                    bestBytes = blob.size;
+                }
+                if (bestBytes <= (MAX_FILE_BYTES * 0.60)) {
+                    break;
+                }
+            }
+
+            return bestBlob;
+        }
+
         async function compressImageFile(file) {
             if (!isSupportedImage(file)) {
                 return { file: file, originalBytes: file.size || 0, compressed: false };
             }
 
-            var canvas = await drawToCanvasFromFile(file);
-            if (!canvas) {
-                return { file: file, originalBytes: file.size || 0, compressed: false };
-            }
-
             var originalBytes = file.size || 0;
-            var targetMime = /image\/(jpeg|jpg|webp)/.test(file.type || '') ? file.type : 'image/jpeg';
             var baseName = file.name.replace(/\.[^/.]+$/, '');
-            var ext = targetMime === 'image/webp' ? 'webp' : 'jpg';
-
+            var mime = 'image/jpeg';
+            var ext = 'jpg';
             var bestBlob = null;
             var bestBytes = originalBytes;
 
-            for (var quality = QUALITY_START; quality >= QUALITY_MIN; quality -= QUALITY_STEP) {
-                var blob = await canvasToBlob(canvas, targetMime, quality);
-                if (!blob) {
+            for (var p = 0; p < COMPRESSION_PROFILES.length; p++) {
+                var profile = COMPRESSION_PROFILES[p];
+                var canvas = await drawToCanvasFromFile(file, profile.maxDimension);
+                if (!canvas) {
                     continue;
                 }
-
-                if (blob.size < bestBytes) {
+                var blob = await runProfile(canvas, mime, profile, originalBytes);
+                if (blob && blob.size < bestBytes) {
                     bestBlob = blob;
                     bestBytes = blob.size;
-                }
-
-                if (bestBytes <= MAX_FILE_BYTES * 0.75) {
-                    break;
                 }
             }
 
             if (!bestBlob) {
-                var fallbackBlob = await canvasToBlob(canvas, targetMime, QUALITY_START);
-                if (fallbackBlob && fallbackBlob.size < bestBytes) {
-                    bestBlob = fallbackBlob;
-                    bestBytes = fallbackBlob.size;
-                }
+                return { file: file, originalBytes: originalBytes, compressed: false };
             }
 
-            if (!bestBlob || bestBytes >= originalBytes) {
+            var savedRatio = originalBytes > 0 ? (1 - (bestBytes / originalBytes)) : 0;
+            if (savedRatio < MIN_SAVING_RATIO && bestBytes > (MAX_FILE_BYTES * 0.85)) {
                 return { file: file, originalBytes: originalBytes, compressed: false };
             }
 
             var compressedFile = new File([bestBlob], baseName + '.' + ext, {
-                type: targetMime,
+                type: mime,
                 lastModified: Date.now()
             });
+
+            if ((compressedFile.size || 0) >= originalBytes) {
+                return { file: file, originalBytes: originalBytes, compressed: false };
+            }
 
             return {
                 file: compressedFile,
