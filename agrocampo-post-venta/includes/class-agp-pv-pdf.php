@@ -603,9 +603,9 @@ class AGP_PV_PDF {
 
             $document->section_title( __( 'Detalle', 'agrocampo-post-venta' ) );
 
-            $lub = self::normalize_pdf_value( $submission['lubricantes'] ?? '', '', true );
-            $fil = self::normalize_pdf_value( $submission['filtros_utilizados'] ?? '', '', true );
-            $com = self::normalize_pdf_value( $submission['componentes_utilizados'] ?? '', '', true );
+            $lub = self::limit_pdf_block_text( self::normalize_pdf_value( $submission['lubricantes'] ?? '', '', true ) );
+            $fil = self::limit_pdf_block_text( self::normalize_pdf_value( $submission['filtros_utilizados'] ?? '', '', true ) );
+            $com = self::limit_pdf_block_text( self::normalize_pdf_value( $submission['componentes_utilizados'] ?? '', '', true ) );
 
             if ( '' !== trim( $lub ) ) {
                 $document->adaptive_text( __( 'Lubricantes', 'agrocampo-post-venta' ), $lub );
@@ -619,10 +619,13 @@ class AGP_PV_PDF {
                 $document->adaptive_text( __( 'Componentes Utilizados', 'agrocampo-post-venta' ), $com );
             }
 
-            $document->adaptive_text( __( 'Trabajos Realizados', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['trabajos_realizados'] ?? '', __( 'No informado', 'agrocampo-post-venta' ), true ) );
-            $document->adaptive_text( __( 'Observaciones', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['observaciones'] ?? '', __( 'No informado', 'agrocampo-post-venta' ), true ) );
+            $trabajos = self::limit_pdf_block_text( self::normalize_pdf_value( $submission['trabajos_realizados'] ?? '', __( 'No informado', 'agrocampo-post-venta' ), true ) );
+            $observaciones = self::limit_pdf_block_text( self::normalize_pdf_value( $submission['observaciones'] ?? '', __( 'No informado', 'agrocampo-post-venta' ), true ) );
 
-$document->section_title( __( 'Firmas', 'agrocampo-post-venta' ) );
+            $document->adaptive_text( __( 'Trabajos Realizados', 'agrocampo-post-venta' ), $trabajos );
+            $document->adaptive_text( __( 'Observaciones', 'agrocampo-post-venta' ), $observaciones );
+
+            $document->section_title( __( 'Firmas', 'agrocampo-post-venta' ) );
             $document->signature_row(
                 array(
                     'label' => __( 'Firma Cliente', 'agrocampo-post-venta' ),
@@ -1042,6 +1045,89 @@ $document->section_title( __( 'Firmas', 'agrocampo-post-venta' ) );
         }
 
         return $normalized;
+    }
+
+    /**
+     * Limita bloques de texto largos para preservar legibilidad y paginación.
+     */
+    private static function limit_pdf_block_text( string $text, int $max_lines = 14, int $max_chars = 1200 ): string {
+        $text = trim( str_replace( array( "\r\n", "\r" ), "\n", $text ) );
+        if ( '' === $text ) {
+            return '';
+        }
+
+        $suffix = __( '... (continúa)', 'agrocampo-post-venta' );
+
+        if ( self::text_length( $text ) > $max_chars ) {
+            $text = self::text_substr( $text, 0, $max_chars );
+            $text = rtrim( $text );
+            $text = self::trim_to_last_word( $text );
+            $text = '' === $text ? $suffix : $text . ' ' . $suffix;
+        }
+
+        $lines = explode( "\n", $text );
+        $clean_lines = array();
+
+        foreach ( $lines as $line ) {
+            $line = trim( preg_replace( '/[ \t]+/u', ' ', (string) $line ) );
+            if ( '' === $line ) {
+                continue;
+            }
+
+            if ( self::text_length( $line ) > 140 ) {
+                $line = self::text_substr( $line, 0, 140 );
+                $line = self::trim_to_last_word( rtrim( $line ) );
+            }
+
+            $clean_lines[] = $line;
+
+            if ( count( $clean_lines ) >= $max_lines ) {
+                break;
+            }
+        }
+
+        if ( empty( $clean_lines ) ) {
+            return '';
+        }
+
+        if ( count( $lines ) > $max_lines || self::text_length( implode( "\n", $clean_lines ) ) < self::text_length( $text ) ) {
+            $last_index = count( $clean_lines ) - 1;
+            $last_line = rtrim( (string) $clean_lines[ $last_index ], ' .,:;' );
+            if ( ! str_contains( $last_line, $suffix ) ) {
+                $clean_lines[ $last_index ] = $last_line . ' ' . $suffix;
+            }
+        }
+
+        return trim( implode( "\n", $clean_lines ) );
+    }
+
+    private static function text_length( string $text ): int {
+        if ( function_exists( 'mb_strlen' ) ) {
+            return (int) mb_strlen( $text );
+        }
+
+        return strlen( $text );
+    }
+
+    private static function text_substr( string $text, int $start, int $length ): string {
+        if ( function_exists( 'mb_substr' ) ) {
+            return (string) mb_substr( $text, $start, $length );
+        }
+
+        return (string) substr( $text, $start, $length );
+    }
+
+    private static function trim_to_last_word( string $text ): string {
+        $text = trim( $text );
+        if ( '' === $text ) {
+            return '';
+        }
+
+        if ( preg_match( '/^(.*)\s+[^\s]+$/u', $text, $matches ) ) {
+            return trim( (string) $matches[1] );
+        }
+
+        return $text;
     }
 
     /**

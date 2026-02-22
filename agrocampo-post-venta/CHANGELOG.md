@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.16] - 2026-02-22
+
+### Changed
+- Se agrega límite y truncado elegante en bloques de detalle del PDF (lubricantes, filtros, componentes, trabajos y observaciones) para evitar cajas desproporcionadas y mejorar paginación.
+- Los textos largos ahora se recortan sin quebrar lectura y añaden sufijo `... (continúa)` cuando corresponde.
+
 ## [1.4.15] - 2026-02-22
 
 ### Fixed
