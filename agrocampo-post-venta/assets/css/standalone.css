@@ -294,6 +294,19 @@
     text-overflow: ellipsis;
 }
 
+.agp-pv-file-text {
+    min-width: 0;
+}
+
+.agp-pv-file-meta-size {
+    font-size: 10px;
+    color: #2e6f40;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .agp-pv-file-remove {
     background: #777;
     color: #fff;

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.20] - 2026-02-22
+
+### Changed
+- Se mejora la compresión de fotos en cliente con estrategia iterativa (calidad/dimensión) para reducir peso al máximo sin degradación perceptible.
+- En la previsualización ahora se muestra el tamaño comprimido por imagen antes de enviar, incluyendo comparación contra el tamaño original y porcentaje de ahorro.
+- El indicador de tamaño total de adjuntos ahora informa el total comprimido y el total original cuando hay ahorro.
+
 ## [1.4.19] - 2026-02-22
 
 ### Changed

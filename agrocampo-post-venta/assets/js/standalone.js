@@ -274,8 +274,10 @@ function initPhotos() {
         var MAX_FILES = 10;
         var MAX_FILE_BYTES = 5 * 1024 * 1024;
         var MAX_TOTAL_BYTES = 20 * 1024 * 1024;
-        var MAX_DIMENSION = 1920;
-        var JPEG_QUALITY = 0.82;
+        var MAX_DIMENSION = 2200;
+        var QUALITY_START = 0.92;
+        var QUALITY_MIN = 0.72;
+        var QUALITY_STEP = 0.06;
 
         var $input = $('#agp-pv-fotos');
         var $preview = $('#agp-pv-fotos-preview');
@@ -288,6 +290,11 @@ function initPhotos() {
         }
 
         var dt = new DataTransfer();
+        var fileMetaByKey = {};
+
+        function makeFileKey(file) {
+            return [file.name, file.size, file.lastModified].join('::');
+        }
 
         function formatBytes(bytes) {
             if (!bytes || bytes <= 0) {
@@ -302,12 +309,26 @@ function initPhotos() {
             }, 0);
         }
 
+        function getOriginalTotalBytes(files) {
+            return Array.from(files || []).reduce(function (sum, file) {
+                var meta = fileMetaByKey[makeFileKey(file)];
+                return sum + (meta ? meta.originalBytes : (file.size || 0));
+            }, 0);
+        }
+
         function updateMeta() {
             if ($count.length) {
                 $count.text(dt.files.length + '/' + MAX_FILES);
             }
             if ($size.length) {
-                $size.text(formatBytes(getTotalBytes(dt.files)));
+                var finalBytes = getTotalBytes(dt.files);
+                var originalBytes = getOriginalTotalBytes(dt.files);
+                if (originalBytes > finalBytes) {
+                    var saved = Math.max(0, Math.round((1 - (finalBytes / originalBytes)) * 100));
+                    $size.text(formatBytes(finalBytes) + ' comprimido (antes ' + formatBytes(originalBytes) + ', -' + saved + '%)');
+                } else {
+                    $size.text(formatBytes(finalBytes));
+                }
             }
         }
 
@@ -315,13 +336,8 @@ function initPhotos() {
             return /^image\//.test(file.type || '');
         }
 
-        function compressImageFile(file) {
+        function drawToCanvasFromFile(file) {
             return new Promise(function (resolve) {
-                if (!isSupportedImage(file) || file.size <= MAX_FILE_BYTES) {
-                    resolve(file);
-                    return;
-                }
-
                 var reader = new FileReader();
                 reader.onload = function (event) {
                     var img = new Image();
@@ -338,37 +354,89 @@ function initPhotos() {
 
                         var ctx = canvas.getContext('2d');
                         if (!ctx) {
-                            resolve(file);
+                            resolve(null);
                             return;
                         }
 
                         ctx.drawImage(img, 0, 0, targetW, targetH);
-
-                        canvas.toBlob(function (blob) {
-                            if (!blob) {
-                                resolve(file);
-                                return;
-                            }
-
-                            var ext = (file.name.split('.').pop() || '').toLowerCase();
-                            var compressedName = ext ? file.name.replace(/\.[^/.]+$/, '') + '.jpg' : file.name + '.jpg';
-                            var compressed = new File([blob], compressedName, {
-                                type: 'image/jpeg',
-                                lastModified: Date.now()
-                            });
-                            resolve(compressed.size < file.size ? compressed : file);
-                        }, 'image/jpeg', JPEG_QUALITY);
+                        resolve(canvas);
                     };
                     img.onerror = function () {
-                        resolve(file);
+                        resolve(null);
                     };
                     img.src = event.target.result;
                 };
                 reader.onerror = function () {
-                    resolve(file);
+                    resolve(null);
                 };
                 reader.readAsDataURL(file);
             });
+        }
+
+        function canvasToBlob(canvas, mime, quality) {
+            return new Promise(function (resolve) {
+                canvas.toBlob(function (blob) {
+                    resolve(blob || null);
+                }, mime, quality);
+            });
+        }
+
+        async function compressImageFile(file) {
+            if (!isSupportedImage(file)) {
+                return { file: file, originalBytes: file.size || 0, compressed: false };
+            }
+
+            var canvas = await drawToCanvasFromFile(file);
+            if (!canvas) {
+                return { file: file, originalBytes: file.size || 0, compressed: false };
+            }
+
+            var originalBytes = file.size || 0;
+            var targetMime = /image\/(jpeg|jpg|webp)/.test(file.type || '') ? file.type : 'image/jpeg';
+            var baseName = file.name.replace(/\.[^/.]+$/, '');
+            var ext = targetMime === 'image/webp' ? 'webp' : 'jpg';
+
+            var bestBlob = null;
+            var bestBytes = originalBytes;
+
+            for (var quality = QUALITY_START; quality >= QUALITY_MIN; quality -= QUALITY_STEP) {
+                var blob = await canvasToBlob(canvas, targetMime, quality);
+                if (!blob) {
+                    continue;
+                }
+
+                if (blob.size < bestBytes) {
+                    bestBlob = blob;
+                    bestBytes = blob.size;
+                }
+
+                if (bestBytes <= MAX_FILE_BYTES * 0.75) {
+                    break;
+                }
+            }
+
+            if (!bestBlob) {
+                var fallbackBlob = await canvasToBlob(canvas, targetMime, QUALITY_START);
+                if (fallbackBlob && fallbackBlob.size < bestBytes) {
+                    bestBlob = fallbackBlob;
+                    bestBytes = fallbackBlob.size;
+                }
+            }
+
+            if (!bestBlob || bestBytes >= originalBytes) {
+                return { file: file, originalBytes: originalBytes, compressed: false };
+            }
+
+            var compressedFile = new File([bestBlob], baseName + '.' + ext, {
+                type: targetMime,
+                lastModified: Date.now()
+            });
+
+            return {
+                file: compressedFile,
+                originalBytes: originalBytes,
+                compressed: true
+            };
         }
 
         if (typeof DataTransfer === 'undefined') {
@@ -424,14 +492,26 @@ function initPhotos() {
             $preview.empty();
 
             Array.from(dt.files).forEach(function (file, index) {
+                var key = makeFileKey(file);
+                var meta = fileMetaByKey[key] || { originalBytes: file.size || 0, compressed: false };
+                var savedPercent = meta.originalBytes > 0
+                    ? Math.max(0, Math.round((1 - ((file.size || 0) / meta.originalBytes)) * 100))
+                    : 0;
+
                 var $card = $('<div class="agp-pv-file"></div>');
                 var $img = $('<img alt="">');
                 var $footer = $('<div class="agp-pv-file-footer"></div>');
                 var $name = $('<div class="agp-pv-file-name"></div>').text(file.name);
+                var $meta = $('<div class="agp-pv-file-meta-size"></div>').text(
+                    meta.originalBytes > (file.size || 0)
+                        ? (formatBytes(file.size || 0) + ' (antes ' + formatBytes(meta.originalBytes) + ', -' + savedPercent + '%)')
+                        : formatBytes(file.size || 0)
+                );
                 var $remove = $('<button type="button" class="agp-pv-file-remove">Quitar</button>');
 
                 $remove.on('click', function () {
                     dt.items.remove(index);
+                    delete fileMetaByKey[key];
                     $input.get(0).files = dt.files;
                     $error.text('');
                     renderPreview();
@@ -444,7 +524,8 @@ function initPhotos() {
                 };
                 reader.readAsDataURL(file);
 
-                $footer.append($name).append($remove);
+                var $textWrap = $('<div class="agp-pv-file-text"></div>').append($name).append($meta);
+                $footer.append($textWrap).append($remove);
                 $card.append($img).append($footer);
                 $preview.append($card);
             });
@@ -480,7 +561,8 @@ function initPhotos() {
                     continue;
                 }
 
-                var processedFile = await compressImageFile(originalFile);
+                var result = await compressImageFile(originalFile);
+                var processedFile = result.file;
 
                 if ((processedFile.size || 0) > MAX_FILE_BYTES) {
                     $error.text('Se omitió "' + originalFile.name + '": supera 5 MB.');
@@ -493,6 +575,10 @@ function initPhotos() {
                 }
 
                 dt.items.add(processedFile);
+                fileMetaByKey[makeFileKey(processedFile)] = {
+                    originalBytes: result.originalBytes,
+                    compressed: result.compressed
+                };
                 currentTotal += processedFile.size;
             }
 
@@ -503,6 +589,7 @@ function initPhotos() {
 
         $input.data('agpPvReset', function () {
             dt = new DataTransfer();
+            fileMetaByKey = {};
             $input.get(0).files = dt.files;
             $preview.empty();
             $error.text('');

@@ -237,7 +237,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <div class="agp-pv-files-meta">
                     <span id="agp-pv-fotos-count" class="agp-pv-files-count">0/10</span>
                     <span id="agp-pv-fotos-size" class="agp-pv-files-size">0 MB</span>
-                    <span class="agp-pv-help"><?php esc_html_e( 'Puede seleccionar fotos en varias tandas. Máx. 5 MB por foto y 20 MB en total.', 'agrocampo-post-venta' ); ?></span>
+                    <span class="agp-pv-help"><?php esc_html_e( 'Puede seleccionar fotos en varias tandas. Se muestra tamaño comprimido antes de enviar (máx. 5 MB por foto y 20 MB total).', 'agrocampo-post-venta' ); ?></span>
                 </div>
                 <div id="agp-pv-fotos-preview" class="agp-pv-files"></div>
                 <span class="agp-pv-error" data-error-for="fotos"></span>
