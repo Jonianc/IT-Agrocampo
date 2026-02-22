@@ -989,6 +989,13 @@ $document->section_title( __( 'Firmas', 'agrocampo-post-venta' ) );
      * - Retorna fallback cuando no hay dato útil.
      */
     private static function normalize_pdf_value( $value, string $fallback = '', bool $preserve_line_breaks = false ): string {
+        if ( is_string( $value ) ) {
+            $legacy_address = self::extract_legacy_street_address( $value );
+            if ( '' !== $legacy_address ) {
+                $value = $legacy_address;
+            }
+        }
+
         if ( is_array( $value ) ) {
             if ( isset( $value['street_address'] ) ) {
                 $value = $value['street_address'];
@@ -1035,6 +1042,27 @@ $document->section_title( __( 'Firmas', 'agrocampo-post-venta' ) );
         }
 
         return $normalized;
+    }
+
+    /**
+     * Extrae dirección desde payload legacy serializado sin deserializar objetos.
+     */
+    private static function extract_legacy_street_address( string $value ): string {
+        $value = trim( $value );
+        if ( '' === $value ) {
+            return '';
+        }
+
+        if ( ! preg_match( '/^a:\d+:\{.*\}$/s', $value ) ) {
+            return '';
+        }
+
+        if ( ! preg_match( '/s:\d+:"street_address";s:\d+:"([^"]*)";/u', $value, $matches ) ) {
+            return '';
+        }
+
+        $street = trim( wp_strip_all_tags( (string) $matches[1] ) );
+        return $street;
     }
 
     /**

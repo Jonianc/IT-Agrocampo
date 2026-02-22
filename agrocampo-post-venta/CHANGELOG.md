@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.15] - 2026-02-22
+
+### Fixed
+- Se corrige la salida de `Faena / Lugar` en PDF para payloads legacy serializados (`street_address`), extrayendo texto legible sin usar deserialización PHP.
+- Se mantiene la mitigación de seguridad: no se reintroduce `unserialize`/`maybe_unserialize` sobre entradas controladas por usuario.
+
 ## [1.4.14] - 2026-02-22
 
 ### Added
