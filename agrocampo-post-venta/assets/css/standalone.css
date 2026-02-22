@@ -1,30 +1,38 @@
+
 .agp-pv-standalone {
     font-family: Arial, sans-serif;
     background: #f6f6f6;
     margin: 0;
-    padding: 20px;
+    padding: 16px;
+    color: #1d1d1d;
 }
 
 .agp-pv-standalone__wrapper {
     max-width: 960px;
     margin: 0 auto;
     background: #fff;
-    padding: 24px;
-    border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 16px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.agp-pv-standalone__wrapper h1 {
+    margin: 0 0 14px;
+    font-size: 24px;
+    line-height: 1.2;
 }
 
 .agp-pv-grid {
     display: grid;
-    gap: 16px;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+    grid-template-columns: 1fr;
 }
 
 .agp-pv-field {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
 }
 
 .agp-pv-field label {
@@ -35,26 +43,40 @@
 .agp-pv-field input,
 .agp-pv-field select,
 .agp-pv-field textarea {
-    padding: 10px;
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
     border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 14px;
+    border-radius: 6px;
+    font-size: 16px;
+    box-sizing: border-box;
+    background: #fff;
+}
+
+.agp-pv-field textarea {
+    min-height: 100px;
+    resize: vertical;
 }
 
 .agp-pv-field button.agp-pv-submit {
     background: #2e6f40;
     color: #fff;
     border: none;
+    min-height: 46px;
     padding: 12px 20px;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 700;
+    width: 100%;
 }
 
 .agp-pv-status {
     display: block;
     margin-top: 8px;
-    font-size: 14px;
+    font-size: 13px;
+    text-align: center;
+    color: #333;
 }
 
 .agp-pv-error {
@@ -70,23 +92,26 @@
 .agp-pv-signature {
     border: 1px solid #ccc;
     padding: 8px;
-    border-radius: 4px;
+    border-radius: 6px;
     background: #fafafa;
 }
 
 .agp-pv-signature canvas {
     width: 100%;
-    max-width: 600px;
+    max-width: 100%;
+    height: 180px;
     border: 1px dashed #999;
     display: block;
+    border-radius: 4px;
 }
 
 .agp-pv-signature-clear {
     margin-top: 8px;
-    background: #777;
+    background: #666;
     color: #fff;
     border: none;
-    padding: 6px 12px;
+    min-height: 40px;
+    padding: 8px 12px;
     border-radius: 4px;
     cursor: pointer;
 }
@@ -97,13 +122,10 @@
     display: none;
 }
 
-
-
-/* Section titles */
 .agp-pv-section-title {
-    margin: 22px 0 12px;
-    font-size: 18px;
-    line-height: 1.2;
+    margin: 20px 0 12px;
+    font-size: 17px;
+    line-height: 1.25;
     padding-bottom: 8px;
     border-bottom: 1px solid #e6e6e6;
 }
@@ -115,7 +137,6 @@
     margin-top: 4px;
 }
 
-/* Invalid states */
 .agp-pv-invalid {
     border-color: #b00020 !important;
     outline: none;
@@ -126,13 +147,11 @@
     min-height: 14px;
 }
 
-/* Submit button states */
 .agp-pv-submit[disabled] {
     opacity: 0.65;
     cursor: not-allowed;
 }
 
-/* Signature hint */
 .agp-pv-signature {
     position: relative;
 }
@@ -153,7 +172,6 @@
     display: none;
 }
 
-/* Photos preview */
 .agp-pv-files-meta {
     display: flex;
     gap: 12px;
@@ -170,7 +188,7 @@
 
 .agp-pv-files {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
     margin-top: 10px;
 }
@@ -209,9 +227,60 @@
     background: #777;
     color: #fff;
     border: none;
-    padding: 4px 8px;
+    padding: 6px 8px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 11px;
 }
 
+.agp-pv-actions {
+    position: sticky;
+    bottom: 0;
+    padding: 10px;
+    margin: 16px -16px -16px;
+    background: rgba(255, 255, 255, 0.98);
+    border-top: 1px solid #ececec;
+    z-index: 20;
+}
+
+@media (min-width: 600px) {
+    .agp-pv-standalone {
+        padding: 20px;
+    }
+
+    .agp-pv-standalone__wrapper {
+        padding: 22px;
+    }
+
+    .agp-pv-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .agp-pv-files {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+
+    .agp-pv-actions {
+        margin: 20px 0 0;
+        padding: 0;
+        position: static;
+        border-top: 0;
+        background: transparent;
+    }
+
+    .agp-pv-field button.agp-pv-submit {
+        width: auto;
+        min-width: 220px;
+    }
+
+    .agp-pv-status {
+        text-align: left;
+    }
+}
+
+@media (min-width: 960px) {
+    .agp-pv-standalone__wrapper {
+        padding: 24px;
+    }
+}

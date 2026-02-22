@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.17] - 2026-02-22
+
+### Changed
+- Se aplica un rediseño mobile-first del formulario público: mejor jerarquía visual, campos táctiles más cómodos y espaciado optimizado para pantallas pequeñas.
+- Se agrega una barra de acción sticky en móvil para mantener visible el botón de envío durante todo el llenado del informe.
+- Se ajusta el comportamiento responsivo de grillas, bloques de firma y previsualización de fotos para reducir fricción en uso desde terreno.
+
 ## [1.4.16] - 2026-02-22
 
 ### Changed

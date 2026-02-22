@@ -217,7 +217,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             <input id="agp-pv-correo-copia" name="correo_copia" type="email">
         </div>
 
-        <div class="agp-pv-field">
+        <div class="agp-pv-field agp-pv-actions">
             <button type="submit" class="agp-pv-submit">Enviar mensaje</button>
             <span class="agp-pv-status" role="status" aria-live="polite"></span>
         </div>
