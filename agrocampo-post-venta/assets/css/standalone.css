@@ -251,6 +251,12 @@
     color: #333;
 }
 
+.agp-pv-files-size {
+    font-size: 12px;
+    font-weight: 600;
+    color: #2e6f40;
+}
+
 .agp-pv-files {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

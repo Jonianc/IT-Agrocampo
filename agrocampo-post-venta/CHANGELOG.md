@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.19] - 2026-02-22
+
+### Changed
+- Se optimiza el flujo de fotos en móvil: compresión en cliente para imágenes pesadas antes del envío y control del peso total en interfaz.
+- Se agrega feedback visual del peso total seleccionado y reglas claras de límite (5 MB por foto, 20 MB total).
+
+### Security
+- Se refuerza la validación server-side de adjuntos de fotos: límite de tamaño por archivo y validación de tipo real mediante `wp_check_filetype_and_ext`.
+
 ## [1.4.18] - 2026-02-22
 
 ### Changed

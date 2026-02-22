@@ -271,9 +271,16 @@
     }
 
 function initPhotos() {
+        var MAX_FILES = 10;
+        var MAX_FILE_BYTES = 5 * 1024 * 1024;
+        var MAX_TOTAL_BYTES = 20 * 1024 * 1024;
+        var MAX_DIMENSION = 1920;
+        var JPEG_QUALITY = 0.82;
+
         var $input = $('#agp-pv-fotos');
         var $preview = $('#agp-pv-fotos-preview');
         var $count = $('#agp-pv-fotos-count');
+        var $size = $('#agp-pv-fotos-size');
         var $error = $('.agp-pv-error[data-error-for="fotos"]');
 
         if (!$input.length) {
@@ -282,36 +289,133 @@ function initPhotos() {
 
         var dt = new DataTransfer();
 
-        function updateCount() {
+        function formatBytes(bytes) {
+            if (!bytes || bytes <= 0) {
+                return '0 MB';
+            }
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function getTotalBytes(files) {
+            return Array.from(files || []).reduce(function (sum, file) {
+                return sum + (file.size || 0);
+            }, 0);
+        }
+
+        function updateMeta() {
             if ($count.length) {
-                $count.text(dt.files.length + '/10');
+                $count.text(dt.files.length + '/' + MAX_FILES);
+            }
+            if ($size.length) {
+                $size.text(formatBytes(getTotalBytes(dt.files)));
             }
         }
 
+        function isSupportedImage(file) {
+            return /^image\//.test(file.type || '');
+        }
+
+        function compressImageFile(file) {
+            return new Promise(function (resolve) {
+                if (!isSupportedImage(file) || file.size <= MAX_FILE_BYTES) {
+                    resolve(file);
+                    return;
+                }
+
+                var reader = new FileReader();
+                reader.onload = function (event) {
+                    var img = new Image();
+                    img.onload = function () {
+                        var width = img.width;
+                        var height = img.height;
+                        var ratio = Math.min(1, MAX_DIMENSION / Math.max(width, height));
+                        var targetW = Math.max(1, Math.round(width * ratio));
+                        var targetH = Math.max(1, Math.round(height * ratio));
+
+                        var canvas = document.createElement('canvas');
+                        canvas.width = targetW;
+                        canvas.height = targetH;
+
+                        var ctx = canvas.getContext('2d');
+                        if (!ctx) {
+                            resolve(file);
+                            return;
+                        }
+
+                        ctx.drawImage(img, 0, 0, targetW, targetH);
+
+                        canvas.toBlob(function (blob) {
+                            if (!blob) {
+                                resolve(file);
+                                return;
+                            }
+
+                            var ext = (file.name.split('.').pop() || '').toLowerCase();
+                            var compressedName = ext ? file.name.replace(/\.[^/.]+$/, '') + '.jpg' : file.name + '.jpg';
+                            var compressed = new File([blob], compressedName, {
+                                type: 'image/jpeg',
+                                lastModified: Date.now()
+                            });
+                            resolve(compressed.size < file.size ? compressed : file);
+                        }, 'image/jpeg', JPEG_QUALITY);
+                    };
+                    img.onerror = function () {
+                        resolve(file);
+                    };
+                    img.src = event.target.result;
+                };
+                reader.onerror = function () {
+                    resolve(file);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
         if (typeof DataTransfer === 'undefined') {
-            // Fallback: no preview/removal, keep native file input and enforce max 10
-            function updateCountFallback() {
+            function updateMetaFallback() {
+                var files = $input.get(0).files || [];
                 if ($count.length) {
-                    var n = ($input.get(0).files || []).length;
-                    $count.text(n + '/10');
+                    $count.text(files.length + '/' + MAX_FILES);
+                }
+                if ($size.length) {
+                    $size.text(formatBytes(getTotalBytes(files)));
                 }
             }
 
             $input.on('change', function () {
                 $error.text('');
-                var n = ($input.get(0).files || []).length;
-                if (n > 10) {
+                var files = Array.from($input.get(0).files || []);
+                if (files.length > MAX_FILES) {
                     $error.text('Máximo 10 fotos.');
                     $input.val('');
+                    updateMetaFallback();
+                    return;
                 }
-                updateCountFallback();
+
+                for (var i = 0; i < files.length; i++) {
+                    if (!isSupportedImage(files[i])) {
+                        $error.text('Solo se permiten archivos de imagen.');
+                        $input.val('');
+                        break;
+                    }
+                    if ((files[i].size || 0) > MAX_FILE_BYTES) {
+                        $error.text('Cada foto debe pesar máximo 5 MB.');
+                        $input.val('');
+                        break;
+                    }
+                }
+
+                if (getTotalBytes($input.get(0).files || []) > MAX_TOTAL_BYTES) {
+                    $error.text('El total de fotos no puede superar 20 MB.');
+                    $input.val('');
+                }
+
+                updateMetaFallback();
             });
 
-            updateCountFallback();
+            updateMetaFallback();
             return;
         }
-
-
 
         function renderPreview() {
             if (!$preview.length) {
@@ -331,10 +435,9 @@ function initPhotos() {
                     $input.get(0).files = dt.files;
                     $error.text('');
                     renderPreview();
-                    updateCount();
+                    updateMeta();
                 });
 
-                // preview image
                 var reader = new FileReader();
                 reader.onload = function (e) {
                     $img.attr('src', e.target.result);
@@ -347,45 +450,66 @@ function initPhotos() {
             });
         }
 
-        $input.on('change', function () {
+        $input.on('change', async function () {
             $error.text('');
 
-            var newFiles = Array.from($input.get(0).files || []);
-            if (!newFiles.length) {
+            var incoming = Array.from($input.get(0).files || []);
+            if (!incoming.length) {
                 return;
             }
 
-            var available = 10 - dt.files.length;
+            var available = MAX_FILES - dt.files.length;
             if (available <= 0) {
                 $error.text('Máximo 10 fotos.');
-                // keep existing selection
                 $input.get(0).files = dt.files;
                 return;
             }
 
-            if (newFiles.length > available) {
+            if (incoming.length > available) {
                 $error.text('Máximo 10 fotos. El resto fue descartado.');
+                incoming = incoming.slice(0, available);
             }
 
-            newFiles.slice(0, available).forEach(function (file) {
-                dt.items.add(file);
-            });
+            var currentTotal = getTotalBytes(dt.files);
+
+            for (var i = 0; i < incoming.length; i++) {
+                var originalFile = incoming[i];
+
+                if (!isSupportedImage(originalFile)) {
+                    $error.text('Se omitió "' + originalFile.name + '": formato no permitido.');
+                    continue;
+                }
+
+                var processedFile = await compressImageFile(originalFile);
+
+                if ((processedFile.size || 0) > MAX_FILE_BYTES) {
+                    $error.text('Se omitió "' + originalFile.name + '": supera 5 MB.');
+                    continue;
+                }
+
+                if (currentTotal + processedFile.size > MAX_TOTAL_BYTES) {
+                    $error.text('Límite total alcanzado: 20 MB.');
+                    break;
+                }
+
+                dt.items.add(processedFile);
+                currentTotal += processedFile.size;
+            }
 
             $input.get(0).files = dt.files;
             renderPreview();
-            updateCount();
+            updateMeta();
         });
 
-        // expose reset for form success
         $input.data('agpPvReset', function () {
             dt = new DataTransfer();
             $input.get(0).files = dt.files;
             $preview.empty();
             $error.text('');
-            updateCount();
+            updateMeta();
         });
 
-        updateCount();
+        updateMeta();
     }
 
     function highlightInvalidFromNative(formEl) {

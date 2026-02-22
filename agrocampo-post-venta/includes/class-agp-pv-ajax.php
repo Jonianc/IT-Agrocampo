@@ -281,6 +281,14 @@ class AGP_PV_Ajax {
             );
         }
 
+        $max_file_bytes = 5 * 1024 * 1024;
+        $allowed_mimes  = array(
+            'jpg|jpeg|jpe' => 'image/jpeg',
+            'png'          => 'image/png',
+            'gif'          => 'image/gif',
+            'webp'         => 'image/webp',
+        );
+
         require_once ABSPATH . 'wp-admin/includes/file.php';
         require_once ABSPATH . 'wp-admin/includes/media.php';
         require_once ABSPATH . 'wp-admin/includes/image.php';
@@ -290,12 +298,47 @@ class AGP_PV_Ajax {
                 continue;
             }
 
+            $name     = sanitize_file_name( $_FILES['fotos']['name'][ $i ] );
+            $type     = sanitize_text_field( $_FILES['fotos']['type'][ $i ] ?? '' );
+            $tmp_name = $_FILES['fotos']['tmp_name'][ $i ] ?? '';
+            $error    = (int) ( $_FILES['fotos']['error'][ $i ] ?? UPLOAD_ERR_NO_FILE );
+            $size     = (int) ( $_FILES['fotos']['size'][ $i ] ?? 0 );
+
+            if ( UPLOAD_ERR_OK !== $error ) {
+                return array(
+                    'success' => false,
+                    'message' => sprintf( __( 'Error al subir la foto: %s.', 'agrocampo-post-venta' ), $name ),
+                );
+            }
+
+            if ( $size <= 0 || $size > $max_file_bytes ) {
+                return array(
+                    'success' => false,
+                    'message' => sprintf( __( 'La foto %s supera el máximo de 5 MB.', 'agrocampo-post-venta' ), $name ),
+                );
+            }
+
+            $checked = wp_check_filetype_and_ext( $tmp_name, $name, $allowed_mimes );
+            if ( empty( $checked['type'] ) || ! str_starts_with( $checked['type'], 'image/' ) ) {
+                return array(
+                    'success' => false,
+                    'message' => sprintf( __( 'Formato no permitido para la foto: %s.', 'agrocampo-post-venta' ), $name ),
+                );
+            }
+
+            if ( ! str_starts_with( $type, 'image/' ) ) {
+                return array(
+                    'success' => false,
+                    'message' => sprintf( __( 'Tipo MIME inválido para la foto: %s.', 'agrocampo-post-venta' ), $name ),
+                );
+            }
+
             $file = array(
-                'name'     => sanitize_file_name( $_FILES['fotos']['name'][ $i ] ),
-                'type'     => $_FILES['fotos']['type'][ $i ],
-                'tmp_name' => $_FILES['fotos']['tmp_name'][ $i ],
-                'error'    => $_FILES['fotos']['error'][ $i ],
-                'size'     => $_FILES['fotos']['size'][ $i ],
+                'name'     => $name,
+                'type'     => $checked['type'],
+                'tmp_name' => $tmp_name,
+                'error'    => $error,
+                'size'     => $size,
             );
 
             $attachment_id = media_handle_sideload( $file, 0 );
