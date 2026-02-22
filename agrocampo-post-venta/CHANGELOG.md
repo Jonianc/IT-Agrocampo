@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.14] - 2026-02-22
+
+### Added
+- Se agrega en la pantalla principal del gestor un botón "Regenerar todos los PDF" para reprocesar todos los registros históricos.
+- Se incorpora procesamiento por lotes vía AJAX con barra de progreso y contador de resultados (OK/Fallidos), evitando bloqueos por timeout en operaciones masivas.
+
+### Security
+- La regeneración masiva exige permisos de administración (`manage_options`) y valida nonce en cada lote AJAX.
+
 ## [1.4.13] - 2026-02-21
 
 ### Changed

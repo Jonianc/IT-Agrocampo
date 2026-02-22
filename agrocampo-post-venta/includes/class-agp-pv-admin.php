@@ -29,6 +29,7 @@ class AGP_PV_Admin {
         add_action( 'admin_post_agp_pv_delete_all_submissions', array( $this, 'handle_delete_all_submissions' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
         add_action( 'admin_init', array( $this, 'handle_view_pdf_request' ) );
+        add_action( 'wp_ajax_agp_pv_regenerate_all_pdf_batch', array( $this, 'handle_regenerate_all_pdf_batch' ) );
     }
 
     public function register_menu(): void {
@@ -64,6 +65,16 @@ class AGP_PV_Admin {
         echo '<p class="description">' . esc_html__( 'Busca, filtra y ejecuta acciones sobre los informes enviados.', 'agrocampo-post-venta' ) . '</p>';
 
         $this->render_admin_notice();
+
+        echo '<section class="agp-pv-bulk-pdf card">';
+        echo '<h2>' . esc_html__( 'Regeneración masiva de PDF', 'agrocampo-post-venta' ) . '</h2>';
+        echo '<p>' . esc_html__( 'Regenera los PDF de todos los informes históricos en lotes para evitar timeouts.', 'agrocampo-post-venta' ) . '</p>';
+        echo '<p><button type="button" class="button button-primary" id="agp-pv-regenerate-all-pdf">' . esc_html__( 'Regenerar todos los PDF', 'agrocampo-post-venta' ) . '</button></p>';
+        echo '<div id="agp-pv-regenerate-progress" class="agp-pv-regenerate-progress" hidden>';
+        echo '<progress id="agp-pv-regenerate-progress-bar" max="100" value="0"></progress>';
+        echo '<p id="agp-pv-regenerate-progress-text" aria-live="polite"></p>';
+        echo '</div>';
+        echo '</section>';
 
         echo '<form method="get" class="agp-pv-filters">';
         echo '<input type="hidden" name="page" value="agp-pv-submissions">';
@@ -343,6 +354,61 @@ class AGP_PV_Admin {
 
         echo $pdf_bytes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         exit;
+    }
+
+
+    public function handle_regenerate_all_pdf_batch(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( array( 'message' => __( 'No autorizado.', 'agrocampo-post-venta' ) ), 403 );
+        }
+
+        check_ajax_referer( 'agp_pv_regenerate_all_pdf', 'nonce' );
+
+        global $wpdb;
+        $table = AGP_PV_DB::table_name();
+
+        $offset = isset( $_POST['offset'] ) ? max( 0, absint( wp_unslash( $_POST['offset'] ) ) ) : 0;
+        $limit = isset( $_POST['limit'] ) ? max( 1, min( 100, absint( wp_unslash( $_POST['limit'] ) ) ) ) : 25;
+
+        $total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
+        if ( 0 === $total ) {
+            wp_send_json_success(
+                array(
+                    'processed' => 0,
+                    'total' => 0,
+                    'success' => 0,
+                    'failed' => 0,
+                    'done' => true,
+                    'next_offset' => 0,
+                )
+            );
+        }
+
+        $ids = $wpdb->get_col( $wpdb->prepare( "SELECT id FROM {$table} ORDER BY id ASC LIMIT %d OFFSET %d", $limit, $offset ) );
+
+        $success = 0;
+        $failed = 0;
+
+        foreach ( $ids as $id ) {
+            $result = AGP_PV_PDF::regenerate_pdf_attachment( (int) $id );
+            if ( ! empty( $result['ok'] ) ) {
+                $success++;
+            } else {
+                $failed++;
+            }
+        }
+
+        $next_offset = $offset + count( $ids );
+        wp_send_json_success(
+            array(
+                'processed' => $next_offset,
+                'total' => $total,
+                'success' => $success,
+                'failed' => $failed,
+                'done' => $next_offset >= $total || count( $ids ) < $limit,
+                'next_offset' => $next_offset,
+            )
+        );
     }
 
     public function handle_send_test_email(): void {
@@ -733,6 +799,37 @@ class AGP_PV_Admin {
             array(),
             AGP_PV_VERSION
         );
+
+        if ( 'agp-pv-submissions' === $page ) {
+            wp_enqueue_script(
+                'agp-pv-admin-submissions',
+                AGP_PV_PLUGIN_URL . 'assets/js/admin-submissions.js',
+                array( 'jquery' ),
+                AGP_PV_VERSION,
+                true
+            );
+
+            wp_localize_script(
+                'agp-pv-admin-submissions',
+                'agpPvAdminSubmissions',
+                array(
+                    'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+                    'nonce' => wp_create_nonce( 'agp_pv_regenerate_all_pdf' ),
+                    'batchSize' => 25,
+                    'messages' => array(
+                        'running' => __( 'Regenerando PDF... %1$d/%2$d (ok: %3$d, fallidos: %4$d)', 'agrocampo-post-venta' ),
+                        'done' => __( 'Regeneración completada. Procesados: %1$d, OK: %2$d, Fallidos: %3$d.', 'agrocampo-post-venta' ),
+                        'error' => __( 'No fue posible completar la regeneración masiva de PDF.', 'agrocampo-post-venta' ),
+                        'starting' => __( 'Iniciando...', 'agrocampo-post-venta' ),
+                    ),
+                    'labels' => array(
+                        'buttonDefault' => __( 'Regenerar todos los PDF', 'agrocampo-post-venta' ),
+                        'buttonRunning' => __( 'Regenerando...', 'agrocampo-post-venta' ),
+                        'confirm' => __( '¿Regenerar todos los PDF históricos? Esta acción puede tardar varios minutos.', 'agrocampo-post-venta' ),
+                    ),
+                )
+            );
+        }
 
         if ( 'agp-pv-settings' !== $page ) {
             return;

@@ -65,3 +65,17 @@
 .agp-pv-detail td {
     background: #f6f7f7;
 }
+
+.agp-pv-admin .agp-pv-bulk-pdf {
+    margin: 16px 0;
+    padding: 16px;
+}
+
+.agp-pv-admin .agp-pv-regenerate-progress progress {
+    width: 320px;
+    max-width: 100%;
+}
+
+.agp-pv-admin .agp-pv-regenerate-progress p {
+    margin: 8px 0 0;
+}
