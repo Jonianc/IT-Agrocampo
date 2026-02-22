@@ -416,6 +416,98 @@ function initPhotos() {
         }
     }
 
+
+    function initStepper() {
+        var $steps = $('.agp-pv-step');
+        var $indicators = $('[data-step-indicator]');
+        var currentStep = 1;
+
+        function getStep(step) {
+            return $steps.filter('[data-step="' + step + '"]');
+        }
+
+        function updateIndicators(step) {
+            $indicators.each(function () {
+                var $i = $(this);
+                var n = parseInt($i.attr('data-step-indicator'), 10);
+                $i.removeClass('is-active is-completed');
+                if (n < step) {
+                    $i.addClass('is-completed');
+                } else if (n === step) {
+                    $i.addClass('is-active');
+                }
+            });
+        }
+
+        function goTo(step) {
+            currentStep = step;
+            $steps.removeClass('is-active').attr('hidden', true);
+            var $target = getStep(step);
+            $target.addClass('is-active').removeAttr('hidden');
+            updateIndicators(step);
+
+            var $focus = $target.find('input, select, textarea, button').filter(':visible:not([disabled])').first();
+            if ($focus.length) {
+                $focus.trigger('focus');
+            }
+
+            $('html, body').animate({ scrollTop: $('#agp-pv-form').offset().top - 10 }, 120);
+        }
+
+        function validateCurrentStep() {
+            var valid = true;
+            var firstInvalid = null;
+            var $step = getStep(currentStep);
+
+            $step.find('input, select, textarea').each(function () {
+                var el = this;
+                if (el.disabled || $(el).is(':hidden')) {
+                    return;
+                }
+
+                if (typeof el.checkValidity === 'function' && !el.checkValidity()) {
+                    $(el).addClass('agp-pv-invalid').attr('aria-invalid', 'true');
+                    if (!firstInvalid) {
+                        firstInvalid = $(el);
+                    }
+                    valid = false;
+                }
+            });
+
+            if (!valid && firstInvalid) {
+                if (typeof firstInvalid.get(0).reportValidity === 'function') {
+                    firstInvalid.get(0).reportValidity();
+                }
+                firstInvalid.trigger('focus');
+                $('.agp-pv-status').text('Revisa los campos marcados antes de continuar.');
+            }
+
+            return valid;
+        }
+
+        $('#agp-pv-form').on('click', '.agp-pv-next', function () {
+            clearFieldErrors();
+            if (!validateCurrentStep()) {
+                return;
+            }
+            var step = parseInt($(this).attr('data-next-step'), 10);
+            if (step) {
+                goTo(step);
+            }
+        });
+
+        $('#agp-pv-form').on('click', '.agp-pv-prev', function () {
+            clearFieldErrors();
+            var step = parseInt($(this).attr('data-prev-step'), 10);
+            if (step) {
+                goTo(step);
+            }
+        });
+
+        $('#agp-pv-form').data('agpPvGoToStep', goTo);
+        goTo(1);
+    }
+
     function initForm() {
         ensureErrorIds();
 
@@ -432,6 +524,11 @@ function initPhotos() {
             e.preventDefault();
 
             clearFieldErrors();
+
+            var goToStep = $('#agp-pv-form').data('agpPvGoToStep');
+            if (typeof goToStep === 'function') {
+                goToStep(4);
+            }
 
             // Native validation first (works with conditional disable)
             var formEl = this;
@@ -490,6 +587,11 @@ function initPhotos() {
 
                         // Re-apply conditional logic after reset
                         $('#agp-pv-tipo-servicio').trigger('change');
+
+                        var goToStep = $('#agp-pv-form').data('agpPvGoToStep');
+                        if (typeof goToStep === 'function') {
+                            goToStep(1);
+                        }
                     } else {
                         // Field errors
                         if (response && response.data && response.data.errors) {
@@ -515,6 +617,7 @@ function initPhotos() {
         initConditionalFields();
         initSignatures();
         initPhotos();
+        initStepper();
         initForm();
     });
 })(jQuery);

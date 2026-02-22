@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.18] - 2026-02-22
+
+### Changed
+- Se implementa un stepper de 4 pasos en el formulario público (Datos, Detalle, Firmas y Adjuntos) para reducir scroll y carga cognitiva en móvil.
+- Se agregan controles de navegación Anterior/Siguiente con validación por paso antes de avanzar.
+- Al enviar exitosamente, el formulario vuelve al paso inicial y mantiene la lógica condicional existente para campos dinámicos.
+
 ## [1.4.17] - 2026-02-22
 
 ### Changed
