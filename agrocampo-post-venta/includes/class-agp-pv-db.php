@@ -72,6 +72,15 @@ class AGP_PV_DB {
         dbDelta( $sql );
     }
 
+    public static function get_visible_report_id( array $submission ): int {
+        $legacy_id = isset( $submission['legacy_id'] ) ? absint( $submission['legacy_id'] ) : 0;
+        if ( $legacy_id > 0 ) {
+            return $legacy_id;
+        }
+
+        return isset( $submission['id'] ) ? absint( $submission['id'] ) : 0;
+    }
+
     public static function update_mail_status( int $submission_id, string $status, string $error = '' ): void {
         global $wpdb;
         $table = self::table_name();

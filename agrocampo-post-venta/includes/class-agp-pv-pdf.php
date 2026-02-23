@@ -14,7 +14,7 @@ if ( ! class_exists( 'FPDF' ) ) {
  * Uses the official FPDF library (units in mm).
  */
 class AGP_PV_PDF_Document extends FPDF {
-    private int $submission_id = 0;
+    private int $report_id = 0;
     private string $issue_date = '';
     private string $logo_path = '';
     private float $logo_width_mm = 38.0;
@@ -24,8 +24,8 @@ class AGP_PV_PDF_Document extends FPDF {
     /** @var string[] */
     private array $warnings = array();
 
-    public function configure( int $submission_id, string $issue_date, string $logo_path, float $logo_width_mm ): void {
-        $this->submission_id  = $submission_id;
+    public function configure( int $report_id, string $issue_date, string $logo_path, float $logo_width_mm ): void {
+        $this->report_id      = $report_id;
         $this->issue_date     = $issue_date;
         $this->logo_path      = $logo_path;
         $this->logo_width_mm  = $logo_width_mm > 0 ? $logo_width_mm : 38.0;
@@ -87,7 +87,7 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->MultiCell(
             $right_w,
             5,
-            self::enc( sprintf( "IT: %d\n%s", $this->submission_id, $this->issue_date ) ),
+            self::enc( sprintf( "IT: %d\n%s", $this->report_id, $this->issue_date ) ),
             0,
             'R'
         );
@@ -495,7 +495,8 @@ class AGP_PV_PDF {
             );
         }
 
-        $filename = wp_unique_filename( $upload_dir['path'], 'agp-pv-' . $submission_id . '.pdf' );
+        $report_id = AGP_PV_DB::get_visible_report_id( $submission );
+        $filename = wp_unique_filename( $upload_dir['path'], 'agp-pv-' . ( $report_id > 0 ? $report_id : $submission_id ) . '.pdf' );
         $path     = trailingslashit( $upload_dir['path'] ) . $filename;
 
         $generated = self::generate_pdf_file( $submission_id, $submission, $path );
@@ -562,7 +563,8 @@ class AGP_PV_PDF {
             $issue_date  = date_i18n( 'd-m-Y' );
 
             $document = new AGP_PV_PDF_Document();
-            $document->configure( $submission_id, $issue_date, $logo_config['path'], (float) $logo_config['width_mm'] );
+            $report_id = AGP_PV_DB::get_visible_report_id( $submission );
+            $document->configure( $report_id > 0 ? $report_id : $submission_id, $issue_date, $logo_config['path'], (float) $logo_config['width_mm'] );
 
             // Map labels (avoid one/two).
             $tecnico_label = self::normalize_pdf_value( $submission['tecnico_label'] ?? ( $submission['tecnico'] ?? '' ) );

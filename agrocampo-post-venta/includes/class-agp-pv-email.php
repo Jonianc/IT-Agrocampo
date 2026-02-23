@@ -47,9 +47,11 @@ class AGP_PV_Email {
         }
         $recipients = array_values( array_unique( $recipients ) );
 
+        $report_id = AGP_PV_DB::get_visible_report_id( $submission );
+
         $subject = sprintf(
             'IT %d / %s / %s',
-            $submission_id,
+            $report_id > 0 ? $report_id : $submission_id,
             $submission['tecnico'],
             $submission['serie']
         );
@@ -115,7 +117,8 @@ class AGP_PV_Email {
             $body .= '<p>' . nl2br( esc_html( $submission['observaciones'] ) ) . '</p>';
         }
 
-        $body .= '<p>ID: ' . esc_html( (string) $submission_id ) . '</p>';
+        $report_id = AGP_PV_DB::get_visible_report_id( $submission );
+        $body .= '<p>ID: ' . esc_html( (string) ( $report_id > 0 ? $report_id : $submission_id ) ) . '</p>';
 
         $links = array();
         if ( ! empty( $submission['firma_cliente_id'] ) ) {

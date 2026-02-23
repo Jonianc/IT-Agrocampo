@@ -341,7 +341,8 @@ class AGP_PV_Admin {
             wp_die( esc_html__( 'No fue posible leer el PDF generado.', 'agrocampo-post-venta' ), esc_html__( 'Error de lectura', 'agrocampo-post-venta' ), array( 'response' => 500 ) );
         }
 
-        $filename = 'informe-tecnico-' . $view_id . '.pdf';
+        $report_id = AGP_PV_DB::get_visible_report_id( $submission );
+        $filename = 'informe-tecnico-' . ( $report_id > 0 ? $report_id : $view_id ) . '.pdf';
 
         while ( ob_get_level() ) {
             ob_end_clean();
@@ -1229,8 +1230,7 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
             esc_html__( 'Ver PDF', 'agrocampo-post-venta' )
         );
 
-        $legacy_id = isset( $item['legacy_id'] ) ? absint( $item['legacy_id'] ) : 0;
-        $display_id = $legacy_id > 0 ? $legacy_id : $submission_id;
+        $display_id = AGP_PV_DB::get_visible_report_id( $item );
 
         return esc_html( (string) $display_id ) . $this->row_actions( $actions );
     }

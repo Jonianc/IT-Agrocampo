@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.28] - 2026-02-23
+
+### Fixed
+- Se unifica el ID visible del informe en todos los puntos clave: listado, correo y PDF, priorizando `legacy_id` y usando `id` interno solo como fallback.
+- El encabezado del PDF (`IT:`) y el nombre del archivo PDF ahora usan el ID visible (legacy/secuencia importada) para mantener consistencia operativa.
+
 ## [1.4.27] - 2026-02-23
 
 ### Fixed
