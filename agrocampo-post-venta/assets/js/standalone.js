@@ -671,6 +671,7 @@ function initPhotos() {
             var $target = getStep(step);
             $target.addClass('is-active').removeAttr('hidden');
             updateIndicators(step);
+            $('#agp-pv-form').data('agpPvCurrentStep', step).trigger('agpPvStepChanged', [step]);
 
             var $focus = $target.find('input, select, textarea, button').filter(':visible:not([disabled])').first();
             if ($focus.length) {
@@ -732,6 +733,166 @@ function initPhotos() {
 
         $('#agp-pv-form').data('agpPvGoToStep', goTo);
         goTo(1);
+    }
+
+
+    function initDraftPersistence() {
+        var STORAGE_KEY = 'agp_pv_form_draft_v1';
+        var DRAFT_TTL_MS = 48 * 60 * 60 * 1000;
+        var $form = $('#agp-pv-form');
+
+        if (!$form.length || typeof window.localStorage === 'undefined') {
+            return;
+        }
+
+        function isDraftField(el) {
+            var name = (el && el.name) ? String(el.name) : '';
+            if (!name) {
+                return false;
+            }
+
+            if (
+                name === 'nonce'
+                || name === 'agp_pv_hp'
+                || name === 'firma_cliente'
+                || name === 'firma_tecnico'
+                || name === 'fotos[]'
+            ) {
+                return false;
+            }
+
+            return true;
+        }
+
+        function collectData() {
+            var payload = {
+                savedAt: Date.now(),
+                step: parseInt($form.data('agpPvCurrentStep'), 10) || 1,
+                fields: {}
+            };
+
+            $form.find('input, select, textarea').each(function () {
+                var el = this;
+                if (!isDraftField(el) || el.disabled) {
+                    return;
+                }
+
+                var $el = $(el);
+                var name = String(el.name);
+
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                    payload.fields[name] = payload.fields[name] || [];
+                    if ($el.is(':checked')) {
+                        payload.fields[name].push($el.val());
+                    }
+                    return;
+                }
+
+                payload.fields[name] = $el.val();
+            });
+
+            return payload;
+        }
+
+        function saveDraft() {
+            try {
+                var payload = collectData();
+                window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+            } catch (e) {
+                // ignore localStorage quota/access issues
+            }
+        }
+
+        function clearDraft() {
+            try {
+                window.localStorage.removeItem(STORAGE_KEY);
+            } catch (e) {
+                // ignore
+            }
+        }
+
+        function restoreDraft() {
+            var raw = null;
+            try {
+                raw = window.localStorage.getItem(STORAGE_KEY);
+            } catch (e) {
+                return;
+            }
+
+            if (!raw) {
+                return;
+            }
+
+            var parsed = null;
+            try {
+                parsed = JSON.parse(raw);
+            } catch (e) {
+                clearDraft();
+                return;
+            }
+
+            if (!parsed || !parsed.savedAt || (Date.now() - parsed.savedAt) > DRAFT_TTL_MS) {
+                clearDraft();
+                return;
+            }
+
+            var fields = parsed.fields || {};
+            Object.keys(fields).forEach(function (name) {
+                var value = fields[name];
+                var $targets = $form.find('[name="' + name + '"]');
+                if (!$targets.length) {
+                    return;
+                }
+
+                $targets.each(function () {
+                    var el = this;
+                    var $el = $(el);
+                    if (el.disabled || !isDraftField(el)) {
+                        return;
+                    }
+
+                    if (el.type === 'checkbox' || el.type === 'radio') {
+                        var list = Array.isArray(value) ? value : [];
+                        $el.prop('checked', list.indexOf($el.val()) !== -1);
+                        return;
+                    }
+
+                    $el.val(value);
+                });
+            });
+
+            $('#agp-pv-tipo-servicio').trigger('change');
+            $('#agp-pv-tipo-mantencion').trigger('change');
+
+            var goToStep = $form.data('agpPvGoToStep');
+            var restoredStep = parseInt(parsed.step, 10);
+            if (typeof goToStep === 'function' && restoredStep >= 1 && restoredStep <= 4) {
+                goToStep(restoredStep);
+            }
+
+            $('.agp-pv-status').text('Se recuperó un borrador local.');
+        }
+
+        $form.on('input change', 'input, select, textarea', function () {
+            if (!isDraftField(this)) {
+                return;
+            }
+            saveDraft();
+        });
+
+        $form.on('agpPvStepChanged', function (e, step) {
+            $form.data('agpPvCurrentStep', step || 1);
+            saveDraft();
+        });
+
+        $form.data('agpPvClearDraft', clearDraft);
+
+        $form.on('click', '.agp-pv-clear-draft', function () {
+            clearDraft();
+            $('.agp-pv-status').text('Borrador local eliminado.');
+        });
+
+        restoreDraft();
     }
 
     function initForm() {
@@ -821,6 +982,11 @@ function initPhotos() {
                         if (typeof goToStep === 'function') {
                             goToStep(1);
                         }
+
+                        var clearDraft = $('#agp-pv-form').data('agpPvClearDraft');
+                        if (typeof clearDraft === 'function') {
+                            clearDraft();
+                        }
                     } else {
                         // Field errors
                         if (response && response.data && response.data.errors) {
@@ -847,6 +1013,7 @@ function initPhotos() {
         initSignatures();
         initPhotos();
         initStepper();
+        initDraftPersistence();
         initForm();
     });
 })(jQuery);

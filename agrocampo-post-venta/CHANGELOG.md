@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.24] - 2026-02-23
+
+### Added
+- Se agrega guardado automático de borrador local del formulario (campos de texto/select/fecha/email/número) con restauración al volver a `/post-venta/`.
+- Se incorpora un botón "Limpiar borrador local" para eliminar manualmente el estado guardado desde interfaz.
+
+### Changed
+- El borrador ahora guarda también el paso activo del stepper y restaura la navegación al reingresar.
+- Se aplica expiración del borrador local (48 horas) y limpieza automática tras envío exitoso.
+
 ## [1.4.23] - 2026-02-23
 
 ### Security

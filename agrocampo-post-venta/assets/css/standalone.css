@@ -377,3 +377,22 @@
         padding: 24px;
     }
 }
+
+
+.agp-pv-clear-draft {
+    margin-top: 8px;
+    background: transparent;
+    border: 1px solid #b7bcc3;
+    color: #5f6368;
+    min-height: 36px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    align-self: flex-start;
+}
+
+.agp-pv-clear-draft:hover {
+    border-color: #90959c;
+    color: #333;
+}
