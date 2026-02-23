@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.25] - 2026-02-23
+
+### Changed
+- Se mejora el feedback de envío exitoso en el formulario con mensajes contextuales por resultado (`success`, `partial_mail`, `partial_pdf`).
+- El estado de éxito ahora muestra el ID del informe generado para facilitar seguimiento operativo en terreno.
+- Se agregan estilos visuales de estado (`success`, `warning`, `error`) para la barra de estado del formulario.
+
 ## [1.4.24] - 2026-02-23
 
 ### Added

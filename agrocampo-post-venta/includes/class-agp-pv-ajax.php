@@ -77,6 +77,7 @@ class AGP_PV_Ajax {
                     'mail_error' => $email_result['mail_error'] ?? __( 'No se pudo enviar el correo.', 'agrocampo-post-venta' ),
                     'admin_hint' => $email_result['admin_hint'] ?? __( 'Configura SMTP (WP Mail SMTP u otro).', 'agrocampo-post-venta' ),
                     'submission_id' => $submission_id,
+                    'status_type' => 'partial_mail',
                 )
             );
         }
@@ -87,6 +88,7 @@ class AGP_PV_Ajax {
                     'message' => __( 'Informe enviado, pero el PDF no pudo adjuntarse.', 'agrocampo-post-venta' ),
                     'pdf_warning' => $email_result['pdf_warning'],
                     'submission_id' => $submission_id,
+                    'status_type' => 'partial_pdf',
                 )
             );
         }
@@ -97,6 +99,7 @@ class AGP_PV_Ajax {
                 'autoclose' => true,
                 'autocloseDelay' => 5000,
                 'submission_id' => $submission_id,
+                'status_type' => 'success',
             )
         );
     }

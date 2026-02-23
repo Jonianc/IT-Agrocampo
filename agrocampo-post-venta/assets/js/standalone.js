@@ -895,6 +895,47 @@ function initPhotos() {
         restoreDraft();
     }
 
+
+    function setStatusMessage(text, type) {
+        var $status = $('.agp-pv-status');
+        $status.removeClass('is-success is-warning is-error');
+
+        if (type === 'success') {
+            $status.addClass('is-success');
+        } else if (type === 'warning') {
+            $status.addClass('is-warning');
+        } else if (type === 'error') {
+            $status.addClass('is-error');
+        }
+
+        $status.text(text || '');
+    }
+
+    function buildSuccessMessage(data) {
+        var statusType = data && data.status_type ? data.status_type : 'success';
+        var baseMessage = (data && data.message) || '';
+
+        if (!baseMessage) {
+            if (statusType === 'partial_mail') {
+                baseMessage = (agpPvData && agpPvData.messages && agpPvData.messages.successMailWarning) || 'Informe guardado correctamente, pero NO se pudo enviar el correo.';
+            } else if (statusType === 'partial_pdf') {
+                baseMessage = (agpPvData && agpPvData.messages && agpPvData.messages.successPdfWarning) || 'Informe enviado, pero el PDF no pudo adjuntarse.';
+            } else {
+                baseMessage = (agpPvData && agpPvData.messages && agpPvData.messages.success) || 'Informe enviado.';
+            }
+        }
+
+        if (data && data.submission_id) {
+            var idPrefix = (agpPvData && agpPvData.messages && agpPvData.messages.reportIdPrefix) || 'ID informe';
+            baseMessage += ' (' + idPrefix + ': ' + data.submission_id + ')';
+        }
+
+        return {
+            text: baseMessage,
+            type: statusType === 'success' ? 'success' : 'warning'
+        };
+    }
+
     function initForm() {
         ensureErrorIds();
 
@@ -924,7 +965,7 @@ function initPhotos() {
                     formEl.reportValidity();
                 }
                 highlightInvalidFromNative(formEl);
-                $('.agp-pv-status').text('Revisa los campos marcados.');
+                setStatusMessage('Revisa los campos marcados.', 'error');
                 return;
             }
 
@@ -939,7 +980,7 @@ function initPhotos() {
             formData.append('action', 'agp_pv_submit');
             formData.append('nonce', agpPvData.nonce);
 
-            $('.agp-pv-status').text('Enviando...');
+            setStatusMessage('Enviando...');
 
             $.ajax({
                 url: agpPvData.ajaxUrl,
@@ -950,18 +991,13 @@ function initPhotos() {
             })
                 .done(function (response) {
                     if (response && response.success) {
-                        if (response.data && response.data.mail_sent === false) {
-                            var mailMessage = response.data.message || 'Informe guardado, pero el correo falló.';
-                            if (response.data.mail_error) {
-                                mailMessage += ' ' + response.data.mail_error;
-                            }
-                            $('.agp-pv-status').text(mailMessage);
-                        } else {
-                            var successMessage = (response && response.data && response.data.message)
-                                || (agpPvData && agpPvData.messages && agpPvData.messages.success)
-                                || 'Informe enviado.';
-                            $('.agp-pv-status').text(successMessage);
+                        var successState = buildSuccessMessage(response.data || {});
+
+                        if (response.data && response.data.mail_sent === false && response.data.mail_error) {
+                            successState.text += ' ' + response.data.mail_error;
                         }
+
+                        setStatusMessage(successState.text, successState.type);
 
                         // Reset UI (keep status)
                         formEl.reset();
@@ -991,16 +1027,16 @@ function initPhotos() {
                         // Field errors
                         if (response && response.data && response.data.errors) {
                             showFieldErrors(response.data.errors);
-                            $('.agp-pv-status').text('Revisa los campos marcados.');
+                            setStatusMessage('Revisa los campos marcados.', 'error');
                         } else if (response && response.data && response.data.message) {
-                            $('.agp-pv-status').text(response.data.message);
+                            setStatusMessage(response.data.message, 'error');
                         } else {
-                            $('.agp-pv-status').text(agpPvData.messages.invalid);
+                            setStatusMessage(agpPvData.messages.invalid, 'error');
                         }
                     }
                 })
                 .fail(function () {
-                    $('.agp-pv-status').text(agpPvData.messages.invalid);
+                    setStatusMessage(agpPvData.messages.invalid, 'error');
                 })
                 .always(function () {
                     $submit.prop('disabled', false).text(originalText);

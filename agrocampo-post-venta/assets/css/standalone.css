@@ -150,6 +150,22 @@
     color: #333;
 }
 
+
+.agp-pv-status.is-success {
+    color: #1a4d2a;
+    font-weight: 600;
+}
+
+.agp-pv-status.is-warning {
+    color: #8a5a00;
+    font-weight: 600;
+}
+
+.agp-pv-status.is-error {
+    color: #b00020;
+    font-weight: 600;
+}
+
 .agp-pv-error {
     color: #b00020;
     font-size: 12px;

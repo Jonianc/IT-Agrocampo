@@ -96,6 +96,9 @@ class AGP_PV_Plugin {
                 'messages' => array(
                     'invalid' => __( 'Error: tu formulario no es válido, ¡por favor, corrige los errores!', 'agrocampo-post-venta' ),
                     'success' => __( 'Informe enviado.', 'agrocampo-post-venta' ),
+                    'successMailWarning' => __( 'Informe guardado correctamente, pero NO se pudo enviar el correo.', 'agrocampo-post-venta' ),
+                    'successPdfWarning' => __( 'Informe enviado, pero el PDF no pudo adjuntarse.', 'agrocampo-post-venta' ),
+                    'reportIdPrefix' => __( 'ID informe', 'agrocampo-post-venta' ),
                 ),
             )
         );
