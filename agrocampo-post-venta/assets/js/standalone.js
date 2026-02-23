@@ -796,7 +796,10 @@ function initPhotos() {
                             }
                             $('.agp-pv-status').text(mailMessage);
                         } else {
-                            $('.agp-pv-status').text(agpPvData.messages.success);
+                            var successMessage = (response && response.data && response.data.message)
+                                || (agpPvData && agpPvData.messages && agpPvData.messages.success)
+                                || 'Informe enviado.';
+                            $('.agp-pv-status').text(successMessage);
                         }
 
                         // Reset UI (keep status)

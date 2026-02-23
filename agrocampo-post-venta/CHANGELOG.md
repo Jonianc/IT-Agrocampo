@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.22] - 2026-02-23
+
+### Fixed
+- Se agrega el mensaje `success` en la configuración localizada del frontend para evitar estados vacíos tras envíos exitosos.
+- El estado final del formulario ahora prioriza el mensaje devuelto por backend y usa fallback seguro cuando falta configuración de mensajes.
+
 ## [1.4.21] - 2026-02-22
 
 ### Changed

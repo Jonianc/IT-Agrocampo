@@ -95,6 +95,7 @@ class AGP_PV_Plugin {
                 'nonce'    => wp_create_nonce( 'agp_pv_submit' ),
                 'messages' => array(
                     'invalid' => __( 'Error: tu formulario no es válido, ¡por favor, corrige los errores!', 'agrocampo-post-venta' ),
+                    'success' => __( 'Informe enviado.', 'agrocampo-post-venta' ),
                 ),
             )
         );
