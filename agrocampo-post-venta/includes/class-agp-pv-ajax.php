@@ -29,6 +29,17 @@ class AGP_PV_Ajax {
             wp_send_json_error( array( 'message' => __( 'Formulario inválido.', 'agrocampo-post-venta' ) ) );
         }
 
+        if ( $this->is_rate_limited() ) {
+            wp_send_json_error(
+                array(
+                    'message' => __( 'Demasiados intentos. Espera unos minutos e inténtalo nuevamente.', 'agrocampo-post-venta' ),
+                ),
+                429
+            );
+        }
+
+        $this->register_rate_limit_attempt();
+
         $data = $this->sanitize_submission( $_POST );
         $data['tipo_servicio_label'] = $this->get_tipo_servicio_label( $data['tipo_servicio'] );
         $data['tipo_mantencion_label'] = $this->get_tipo_mantencion_label( $data['tipo_mantencion'] );
@@ -444,4 +455,64 @@ class AGP_PV_Ajax {
 
         return (int) $wpdb->insert_id;
     }
+
+    private function is_rate_limited(): bool {
+        $max_attempts = (int) apply_filters( 'agp_pv_rate_limit_max_attempts', 5 );
+        $window_seconds = (int) apply_filters( 'agp_pv_rate_limit_window_seconds', 15 * MINUTE_IN_SECONDS );
+
+        if ( $max_attempts < 1 || $window_seconds < 1 ) {
+            return false;
+        }
+
+        $key = $this->get_rate_limit_key();
+        $attempts = (int) get_transient( $key );
+
+        return $attempts >= $max_attempts;
+    }
+
+    private function register_rate_limit_attempt(): void {
+        $window_seconds = (int) apply_filters( 'agp_pv_rate_limit_window_seconds', 15 * MINUTE_IN_SECONDS );
+        if ( $window_seconds < 1 ) {
+            return;
+        }
+
+        $key = $this->get_rate_limit_key();
+        $attempts = (int) get_transient( $key );
+        set_transient( $key, $attempts + 1, $window_seconds );
+    }
+
+    private function get_rate_limit_key(): string {
+        $ip = $this->get_request_ip();
+        $default = 'agp_pv_rate_limit_' . md5( $ip );
+
+        return (string) apply_filters( 'agp_pv_rate_limit_key', $default, $ip );
+    }
+
+    private function get_request_ip(): string {
+        $keys = array(
+            'HTTP_CF_CONNECTING_IP',
+            'HTTP_X_FORWARDED_FOR',
+            'REMOTE_ADDR',
+        );
+
+        foreach ( $keys as $key ) {
+            if ( empty( $_SERVER[ $key ] ) ) {
+                continue;
+            }
+
+            $raw = sanitize_text_field( wp_unslash( (string) $_SERVER[ $key ] ) );
+            if ( 'HTTP_X_FORWARDED_FOR' === $key ) {
+                $parts = array_map( 'trim', explode( ',', $raw ) );
+                $raw = $parts[0] ?? '';
+            }
+
+            $ip = filter_var( $raw, FILTER_VALIDATE_IP );
+            if ( false !== $ip ) {
+                return (string) $ip;
+            }
+        }
+
+        return 'unknown';
+    }
+
 }

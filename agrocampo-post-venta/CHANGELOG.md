@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.23] - 2026-02-23
+
+### Security
+- Se incorpora rate limiting por IP en el endpoint público `agp_pv_submit` para mitigar abuso del formulario.
+- El límite por defecto bloquea nuevos intentos al superar 5 envíos dentro de una ventana de 15 minutos.
+
+### Changed
+- Se agregan filtros `agp_pv_rate_limit_max_attempts`, `agp_pv_rate_limit_window_seconds` y `agp_pv_rate_limit_key` para ajustar umbrales y estrategia de clave sin modificar el core del plugin.
+
 ## [1.4.22] - 2026-02-23
 
 ### Fixed
