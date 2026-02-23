@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.27] - 2026-02-23
+
+### Fixed
+- El informe ahora usa como ID visible la secuencia de `legacy_id` cuando existen formularios importados, manteniendo continuidad con el último número importado.
+- Los nuevos envíos continúan desde el último ID importado (solo base importada), evitando mezclar la secuencia con IDs internos autoincrementales locales.
+
 ## [1.4.26] - 2026-02-23
 
 ### Fixed

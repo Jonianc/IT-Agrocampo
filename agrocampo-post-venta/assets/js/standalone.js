@@ -925,9 +925,11 @@ function initPhotos() {
             }
         }
 
-        if (data && data.submission_id) {
+        var reportId = data && data.report_id ? data.report_id : (data && data.submission_id ? data.submission_id : null);
+
+        if (reportId) {
             var idPrefix = (agpPvData && agpPvData.messages && agpPvData.messages.reportIdPrefix) || 'ID informe';
-            baseMessage += ' (' + idPrefix + ': ' + data.submission_id + ')';
+            baseMessage += ' (' + idPrefix + ': ' + reportId + ')';
         }
 
         return {

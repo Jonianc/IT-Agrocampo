@@ -63,7 +63,9 @@ class AGP_PV_Ajax {
         $data['firma_tecnico_id'] = $signature_result['firma_tecnico_id'];
         $data['fotos_ids'] = wp_json_encode( $upload_result['fotos_ids'] );
 
-        $submission_id = $this->insert_submission( $data );
+        $insert_result = $this->insert_submission( $data );
+        $submission_id = (int) ( $insert_result['submission_id'] ?? 0 );
+        $report_id = (int) ( $insert_result['report_id'] ?? 0 );
         if ( ! $submission_id ) {
             wp_send_json_error( array( 'message' => __( 'No se pudo guardar el envío.', 'agrocampo-post-venta' ) ) );
         }
@@ -77,6 +79,7 @@ class AGP_PV_Ajax {
                     'mail_error' => $email_result['mail_error'] ?? __( 'No se pudo enviar el correo.', 'agrocampo-post-venta' ),
                     'admin_hint' => $email_result['admin_hint'] ?? __( 'Configura SMTP (WP Mail SMTP u otro).', 'agrocampo-post-venta' ),
                     'submission_id' => $submission_id,
+                    'report_id' => $report_id > 0 ? $report_id : $submission_id,
                     'status_type' => 'partial_mail',
                 )
             );
@@ -88,6 +91,7 @@ class AGP_PV_Ajax {
                     'message' => __( 'Informe enviado, pero el PDF no pudo adjuntarse.', 'agrocampo-post-venta' ),
                     'pdf_warning' => $email_result['pdf_warning'],
                     'submission_id' => $submission_id,
+                    'report_id' => $report_id > 0 ? $report_id : $submission_id,
                     'status_type' => 'partial_pdf',
                 )
             );
@@ -99,6 +103,7 @@ class AGP_PV_Ajax {
                 'autoclose' => true,
                 'autocloseDelay' => 5000,
                 'submission_id' => $submission_id,
+                'report_id' => $report_id > 0 ? $report_id : $submission_id,
                 'status_type' => 'success',
             )
         );
@@ -369,14 +374,16 @@ class AGP_PV_Ajax {
         return $result;
     }
 
-    private function insert_submission( array $data ): int {
+    private function insert_submission( array $data ): array {
         global $wpdb;
         $table = AGP_PV_DB::table_name();
         $now = current_time( 'mysql' );
+        $report_id = $this->get_next_imported_report_id();
 
         $inserted = $wpdb->insert(
             $table,
             array(
+                'legacy_id' => $report_id,
                 'tecnico' => $data['tecnico'],
                 'cliente' => $data['cliente'],
                 'email_cliente' => $data['email_cliente'],
@@ -414,6 +421,7 @@ class AGP_PV_Ajax {
                 'updated_at' => $now,
             ),
             array(
+                '%d', // legacy_id
                 '%s', // tecnico
                 '%s', // cliente
                 '%s', // email_cliente
@@ -453,10 +461,29 @@ class AGP_PV_Ajax {
         );
 
         if ( false === $inserted ) {
+            return array(
+                'submission_id' => 0,
+                'report_id' => 0,
+            );
+        }
+
+        return array(
+            'submission_id' => (int) $wpdb->insert_id,
+            'report_id' => $report_id,
+        );
+    }
+
+    private function get_next_imported_report_id(): int {
+        global $wpdb;
+
+        $table = AGP_PV_DB::table_name();
+        $max_legacy_id = (int) $wpdb->get_var( "SELECT MAX(legacy_id) FROM {$table} WHERE legacy_id > 0" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+
+        if ( $max_legacy_id <= 0 ) {
             return 0;
         }
 
-        return (int) $wpdb->insert_id;
+        return $max_legacy_id + 1;
     }
 
     private function is_rate_limited(): bool {
