@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.26] - 2026-02-23
+
+### Fixed
+- Se corrige visibilidad del mensaje posterior al envío exitoso: el contenedor de estado se mueve fuera del paso 4 para mantenerse visible cuando el formulario vuelve al paso 1.
+- Se ajusta el estilo del estado global para mejorar lectura del resultado de envío en cualquier paso del formulario.
+
 ## [1.4.25] - 2026-02-23
 
 ### Changed

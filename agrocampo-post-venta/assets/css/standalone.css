@@ -150,6 +150,13 @@
     color: #333;
 }
 
+.agp-pv-status--global {
+    margin-top: 12px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: #f7f8fa;
+}
+
 
 .agp-pv-status.is-success {
     color: #1a4d2a;

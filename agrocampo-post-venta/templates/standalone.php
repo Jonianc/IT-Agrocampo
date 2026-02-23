@@ -253,11 +253,11 @@ if ( ! defined( 'ABSPATH' ) ) {
                     <button type="button" class="agp-pv-prev" data-prev-step="3"><?php esc_html_e( 'Anterior', 'agrocampo-post-venta' ); ?></button>
                     <button type="submit" class="agp-pv-submit">Enviar mensaje</button>
                 </div>
-                <span class="agp-pv-status" role="status" aria-live="polite"></span>
                 <button type="button" class="agp-pv-clear-draft"><?php esc_html_e( 'Limpiar borrador local', 'agrocampo-post-venta' ); ?></button>
             </div>
         </div>
     </form>
+    <span class="agp-pv-status agp-pv-status--global" role="status" aria-live="polite"></span>
 </div>
 
 <?php wp_footer(); ?>
