@@ -35,6 +35,9 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->SetAutoPageBreak( true, 18 );
         $this->AddPage( 'P', 'A4' );
         $this->SetFont( 'Helvetica', '', 10 );
+        $this->SetTextColor( 20, 20, 20 );
+        $this->SetDrawColor( 70, 70, 70 );
+        $this->SetLineWidth( 0.2 );
     }
 
     /**
@@ -71,50 +74,50 @@ class AGP_PV_PDF_Document extends FPDF {
         }
 
         // Title (center).
-        $this->SetFont( 'Helvetica', 'B', 13 );
+        $this->SetFont( 'Helvetica', 'B', 15 );
         $title      = self::enc( __( 'INFORME TÉCNICO', 'agrocampo-post-venta' ) );
         $title_w    = $this->GetStringWidth( $title );
         $center_x   = ( $this->w - $title_w ) / 2;
-        $title_y    = $start_y + 2;
+        $title_y    = $start_y + 3;
         $this->SetXY( $center_x, $title_y );
-        $this->Cell( $title_w, 7, $title, 0, 0, 'C' );
+        $this->Cell( $title_w, 7.5, $title, 0, 0, 'C' );
 
         // Right block (IT + date).
         $this->SetFont( 'Helvetica', '', 10 );
-        $right_w = 38;
+        $right_w = 40;
         $right_x = $this->w - $this->rMargin - $right_w;
         $this->SetXY( $right_x, $start_y );
         $this->MultiCell(
             $right_w,
-            5,
+            5.2,
             self::enc( sprintf( "IT: %d\n%s", $this->report_id, $this->issue_date ) ),
             0,
             'R'
         );
 
         // Separator line.
-        $header_h = max( $logo_h, 16.0 );
-        $line_y   = $start_y + $header_h + 3;
+        $header_h = max( $logo_h, 18.0 );
+        $line_y   = $start_y + $header_h + 4;
         $this->Line( $this->lMargin, $line_y, $this->w - $this->rMargin, $line_y );
-        $this->SetY( $line_y + 2.5 );
+        $this->SetY( $line_y + 4.2 );
     }
 
     public function Footer(): void { // phpcs:ignore WordPress.NamingConventions.ValidFunctionName.MethodNameInvalid
         $this->SetY( -12 );
-        $this->SetFont( 'Helvetica', '', 9 );
+        $this->SetFont( 'Helvetica', '', 9.5 );
         $footer_text = self::enc( __( 'Talca • Linares • Parral   |   +56 9 9748 5650', 'agrocampo-post-venta' ) );
         $page_text   = self::enc( sprintf( __( 'Página %d', 'agrocampo-post-venta' ), $this->PageNo() ) );
         $full        = $footer_text . self::enc( '   |   ' ) . $page_text;
-        $this->Cell( 0, 5, $full, 0, 0, 'C' );
+        $this->Cell( 0, 5.2, $full, 0, 0, 'C' );
     }
 
     public function section_title( string $text ): void {
-        $this->ensure_space( 10 );
-        $this->SetFont( 'Helvetica', 'B', 10.5 );
-        $this->Cell( 0, 5.2, self::enc( $text ), 0, 1, 'L' );
+        $this->ensure_space( 12 );
+        $this->SetFont( 'Helvetica', 'B', 11.5 );
+        $this->Cell( 0, 5.8, self::enc( $text ), 0, 1, 'L' );
         $y = $this->GetY();
         $this->Line( $this->lMargin, $y, $this->w - $this->rMargin, $y );
-        $this->Ln( 2.5 );
+        $this->Ln( 3.2 );
         $this->SetFont( 'Helvetica', '', 10 );
     }
 
@@ -126,7 +129,7 @@ class AGP_PV_PDF_Document extends FPDF {
         $gap     = $this->gap_mm;
         $value_w = $this->w - $this->lMargin - $this->rMargin - $label_w - $gap;
 
-        $line_h = 5.0;
+        $line_h = 5.3;
 
         $label = self::enc( $label );
         $value = self::enc( $value );
@@ -134,21 +137,21 @@ class AGP_PV_PDF_Document extends FPDF {
         $nb     = max( 1, $this->NbLines( $value_w, $value ) );
         $row_h  = $line_h * $nb;
 
-        $this->ensure_space( $row_h + 1 );
+        $this->ensure_space( $row_h + 1.5 );
 
         $x = $this->GetX();
         $y = $this->GetY();
 
         // Label.
-        $this->SetFont( 'Helvetica', 'B', 10 );
+        $this->SetFont( 'Helvetica', 'B', 10.2 );
         $this->Cell( $label_w, $row_h, $label, 0, 0, 'L' );
 
         // Value.
-        $this->SetFont( 'Helvetica', '', 10 );
+        $this->SetFont( 'Helvetica', '', 10.1 );
         $this->SetXY( $x + $label_w + $gap, $y );
         $this->MultiCell( $value_w, $line_h, $value, 0, 'L' );
 
-        $this->SetXY( $x, $y + $row_h + 1 );
+        $this->SetXY( $x, $y + $row_h + 1.4 );
     }
 
 
@@ -158,15 +161,15 @@ class AGP_PV_PDF_Document extends FPDF {
      */
     public function row4( string $label1, string $value1, string $label2, string $value2 ): void {
         $usable_w  = $this->w - $this->lMargin - $this->rMargin;
-        $pair_gap  = 6.0;
+        $pair_gap  = 7.0;
         $pair_w    = ( $usable_w - $pair_gap ) / 2;
 
         // Pair internal widths.
-        $label_w   = 22.0;
-        $gap       = 3.0;
+        $label_w   = 23.0;
+        $gap       = 3.2;
         $value_w   = $pair_w - $label_w - $gap;
 
-        $line_h = 4.5;
+        $line_h = 5.0;
 
         $label1 = self::enc( $label1 );
         $value1 = self::enc( $value1 );
@@ -177,31 +180,31 @@ class AGP_PV_PDF_Document extends FPDF {
         $nb2   = max( 1, $this->NbLines( $value_w, $value2 ) );
         $row_h = $line_h * max( $nb1, $nb2 );
 
-        $this->ensure_space( $row_h + 0.6 );
+        $this->ensure_space( $row_h + 1.2 );
 
         $x0 = $this->lMargin;
         $y0 = $this->GetY();
 
         // Left pair.
-        $this->SetFont( 'Helvetica', 'B', 10 );
+        $this->SetFont( 'Helvetica', 'B', 10.2 );
         $this->SetXY( $x0, $y0 );
         $this->Cell( $label_w, $row_h, $label1, 0, 0, 'L' );
 
-        $this->SetFont( 'Helvetica', '', 10 );
+        $this->SetFont( 'Helvetica', '', 10.1 );
         $this->SetXY( $x0 + $label_w + $gap, $y0 );
         $this->MultiCell( $value_w, $line_h, $value1, 0, 'L' );
 
         // Right pair.
         $x1 = $x0 + $pair_w + $pair_gap;
-        $this->SetFont( 'Helvetica', 'B', 10 );
+        $this->SetFont( 'Helvetica', 'B', 10.2 );
         $this->SetXY( $x1, $y0 );
         $this->Cell( $label_w, $row_h, $label2, 0, 0, 'L' );
 
-        $this->SetFont( 'Helvetica', '', 10 );
+        $this->SetFont( 'Helvetica', '', 10.1 );
         $this->SetXY( $x1 + $label_w + $gap, $y0 );
         $this->MultiCell( $value_w, $line_h, $value2, 0, 'L' );
 
-        $this->SetXY( $x0, $y0 + $row_h + 0.6 );
+        $this->SetXY( $x0, $y0 + $row_h + 1.2 );
     }
 
     /**
@@ -211,21 +214,21 @@ class AGP_PV_PDF_Document extends FPDF {
         $title = self::enc( $title );
         $text  = self::enc( $text );
 
-        $this->ensure_space( 12 );
+        $this->ensure_space( 14 );
 
-        $this->SetFont( 'Helvetica', 'B', 10 );
-        $this->Cell( 0, 6, $title, 0, 1, 'L' );
-        $this->SetFont( 'Helvetica', '', 10 );
+        $this->SetFont( 'Helvetica', 'B', 10.4 );
+        $this->Cell( 0, 6.3, $title, 0, 1, 'L' );
+        $this->SetFont( 'Helvetica', '', 10.1 );
 
         $box_w     = $this->w - $this->lMargin - $this->rMargin;
-        $line_h    = 4.4;
-        $padding   = 1.5;
+        $line_h    = 4.8;
+        $padding   = 2.1;
         $inner_w   = $box_w - ( 2 * $padding );
         $nb        = max( 1, $this->NbLines( $inner_w, $text ) );
         $text_h    = $nb * $line_h;
         $box_h     = $text_h + ( 2 * $padding );
 
-        $this->ensure_space( $box_h + 1 );
+        $this->ensure_space( $box_h + 2.2 );
 
         $x = $this->lMargin;
         $y = $this->GetY();
@@ -234,7 +237,7 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->SetXY( $x + $padding, $y + $padding );
         $this->MultiCell( $inner_w, $line_h, $text, 0, 'L' );
 
-        $this->SetXY( $this->lMargin, $y + $box_h + 2 );
+        $this->SetXY( $this->lMargin, $y + $box_h + 3.2 );
     }
     /**
      * Render text as compact row or boxed block depending on length/content.
@@ -257,11 +260,11 @@ class AGP_PV_PDF_Document extends FPDF {
     }
 
     public function signature_row( array $left, array $right ): void {
-        $gap       = 6.0;
-        $box_h     = 28.0;
+        $gap       = 6.5;
+        $box_h     = 32.0;
         $box_w     = ( $this->w - $this->lMargin - $this->rMargin - $gap ) / 2;
 
-        $this->ensure_space( $box_h + 8 );
+        $this->ensure_space( $box_h + 10 );
 
         $y = $this->GetY();
         $x = $this->lMargin;
@@ -269,20 +272,20 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->signature_box( (string) $left['label'], (string) $left['path'], $x, $y, $box_w, $box_h );
         $this->signature_box( (string) $right['label'], (string) $right['path'], $x + $box_w + $gap, $y, $box_w, $box_h );
 
-        $this->SetXY( $this->lMargin, $y + $box_h + 6 );
+        $this->SetXY( $this->lMargin, $y + $box_h + 7.5 );
     }
 
     private function signature_box( string $label, string $path, float $x, float $y, float $w, float $h ): void {
         $label = self::enc( $label );
 
-        $this->SetFont( 'Helvetica', 'B', 9 );
+        $this->SetFont( 'Helvetica', 'B', 10 );
         $this->SetXY( $x, $y );
-        $this->Cell( $w, 5, $label, 0, 0, 'L' );
+        $this->Cell( $w, 5.5, $label, 0, 0, 'L' );
 
         $box_y = $y + 6;
         $this->Rect( $x, $box_y, $w, $h );
 
-        $this->SetFont( 'Helvetica', '', 9 );
+        $this->SetFont( 'Helvetica', '', 9.5 );
 
         if ( $path && file_exists( $path ) ) {
             $prepared = AGP_PV_PDF::prepare_image_for_fpdf( $path, 'signature' );
@@ -319,7 +322,7 @@ class AGP_PV_PDF_Document extends FPDF {
         }
 
         $this->SetXY( $x, $box_y + ( $h / 2 ) - 2 );
-        $this->Cell( $w, 4, self::enc( __( 'Firma no disponible', 'agrocampo-post-venta' ) ), 0, 0, 'C' );
+        $this->Cell( $w, 4.2, self::enc( __( 'Firma no disponible', 'agrocampo-post-venta' ) ), 0, 0, 'C' );
     }
 
     /**

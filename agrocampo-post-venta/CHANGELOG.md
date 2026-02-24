@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.31] - 2026-02-24
+
+### Changed
+- Se aplica un refresh visual del PDF con estilo más aireado/premium: mayor jerarquía tipográfica en encabezado, mejor separación entre secciones y ritmo vertical más cómodo para lectura impresa.
+- Se ajustan filas compactas (`row2`/`row4`) y bloques narrativos con nuevos line-height, padding y espaciados para mejorar legibilidad sin perder contenido.
+- Se mejora la presentación del bloque de firmas (tamaño de caja, etiquetas y alineación) para un cierre visual más limpio del informe técnico.
+
 ## [1.4.30] - 2026-02-24
 
 ### Changed
