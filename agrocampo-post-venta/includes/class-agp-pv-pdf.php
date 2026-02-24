@@ -1048,56 +1048,25 @@ class AGP_PV_PDF {
 
         return $normalized;
     }
-
     /**
-     * Limita bloques de texto largos para preservar legibilidad y paginación.
+     * Normaliza bloques de texto para PDF sin truncar contenido.
      */
-    private static function limit_pdf_block_text( string $text, int $max_lines = 14, int $max_chars = 1200 ): string {
+    private static function limit_pdf_block_text( string $text ): string {
         $text = trim( str_replace( array( "\r\n", "\r" ), "\n", $text ) );
         if ( '' === $text ) {
             return '';
-        }
-
-        $suffix = __( '... (continúa)', 'agrocampo-post-venta' );
-
-        if ( self::text_length( $text ) > $max_chars ) {
-            $text = self::text_substr( $text, 0, $max_chars );
-            $text = rtrim( $text );
-            $text = self::trim_to_last_word( $text );
-            $text = '' === $text ? $suffix : $text . ' ' . $suffix;
         }
 
         $lines = explode( "\n", $text );
         $clean_lines = array();
 
         foreach ( $lines as $line ) {
-            $line = trim( preg_replace( '/[ \t]+/u', ' ', (string) $line ) );
+            $line = trim( preg_replace( '/[ 	]+/u', ' ', (string) $line ) );
             if ( '' === $line ) {
                 continue;
             }
 
-            if ( self::text_length( $line ) > 140 ) {
-                $line = self::text_substr( $line, 0, 140 );
-                $line = self::trim_to_last_word( rtrim( $line ) );
-            }
-
             $clean_lines[] = $line;
-
-            if ( count( $clean_lines ) >= $max_lines ) {
-                break;
-            }
-        }
-
-        if ( empty( $clean_lines ) ) {
-            return '';
-        }
-
-        if ( count( $lines ) > $max_lines || self::text_length( implode( "\n", $clean_lines ) ) < self::text_length( $text ) ) {
-            $last_index = count( $clean_lines ) - 1;
-            $last_line = rtrim( (string) $clean_lines[ $last_index ], ' .,:;' );
-            if ( ! str_contains( $last_line, $suffix ) ) {
-                $clean_lines[ $last_index ] = $last_line . ' ' . $suffix;
-            }
         }
 
         return trim( implode( "\n", $clean_lines ) );

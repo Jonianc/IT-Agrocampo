@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.30] - 2026-02-24
+
+### Changed
+- Se elimina el truncado automático con sufijo `... (continúa)` en bloques de detalle del PDF para mostrar mensajes completos.
+- Se mantiene la normalización de saltos y espacios en textos largos, pero sin recortar contenido de trabajos/observaciones/componentes/lubricantes/filtros.
+
 ## [1.4.29] - 2026-02-24
 
 ### Fixed
