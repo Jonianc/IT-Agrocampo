@@ -189,7 +189,7 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->Cell( $label_w, $row_h, $label, 0, 0, 'L' );
 
         // Value.
-        $value_is_placeholder = strtolower( trim( $value ) ) === strtolower( self::enc( __( 'No informado', 'agrocampo-post-venta' ) ) );
+        $value_is_placeholder = AGP_PV_PDF::is_missing_display_value( $value );
         if ( $value_is_placeholder ) {
             $this->SetTextColor( 115, 115, 115 );
         }
@@ -239,7 +239,7 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->SetXY( $x0, $y0 );
         $this->Cell( $label_w, $row_h, $label1, 0, 0, 'L' );
 
-        $value1_is_placeholder = strtolower( trim( $value1 ) ) === strtolower( self::enc( __( 'No informado', 'agrocampo-post-venta' ) ) );
+        $value1_is_placeholder = AGP_PV_PDF::is_missing_display_value( $value1 );
         if ( $value1_is_placeholder ) {
             $this->SetTextColor( 115, 115, 115 );
         }
@@ -256,7 +256,7 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->SetXY( $x1, $y0 );
         $this->Cell( $label_w, $row_h, $label2, 0, 0, 'L' );
 
-        $value2_is_placeholder = strtolower( trim( $value2 ) ) === strtolower( self::enc( __( 'No informado', 'agrocampo-post-venta' ) ) );
+        $value2_is_placeholder = AGP_PV_PDF::is_missing_display_value( $value2 );
         if ( $value2_is_placeholder ) {
             $this->SetTextColor( 115, 115, 115 );
         }
@@ -378,7 +378,7 @@ class AGP_PV_PDF_Document extends FPDF {
             $this->SetXY( $x + 2.6, $cursor_y );
             $this->Cell( $label_w, $row_h, $label, 0, 0, 'L' );
 
-            $value_is_placeholder = strtolower( trim( $value ) ) === strtolower( self::enc( __( 'No informado', 'agrocampo-post-venta' ) ) );
+            $value_is_placeholder = AGP_PV_PDF::is_missing_display_value( $value );
             if ( $value_is_placeholder ) {
                 $this->SetTextColor( 115, 115, 115 );
             }
@@ -437,7 +437,7 @@ class AGP_PV_PDF_Document extends FPDF {
             return;
         }
 
-        $is_placeholder = strtolower( $trimmed ) === strtolower( __( 'No informado', 'agrocampo-post-venta' ) );
+        $is_placeholder = AGP_PV_PDF::is_missing_display_value( $trimmed );
         $is_short_single_line = strlen( $trimmed ) <= 90 && false === strpos( $trimmed, "\n" );
 
         if ( $is_placeholder || $is_short_single_line ) {
@@ -635,7 +635,7 @@ class AGP_PV_PDF_Document extends FPDF {
             return 0.0;
         }
 
-        $is_placeholder = strtolower( $trimmed ) === strtolower( __( 'No informado', 'agrocampo-post-venta' ) );
+        $is_placeholder = AGP_PV_PDF::is_missing_display_value( $trimmed );
         $is_short_single_line = strlen( $trimmed ) <= 90 && false === strpos( $trimmed, "\n" );
 
         $row_h = $this->estimate_row2_value_height( $trimmed );
@@ -1076,7 +1076,7 @@ class AGP_PV_PDF {
 
             $visible_service_pairs = array();
             foreach ( $service_pairs as $pair ) {
-                if ( self::is_empty_pdf_display_value( (string) $pair[1] ) ) {
+                if ( self::is_missing_display_value( (string) $pair[1] ) ) {
                     continue;
                 }
 
@@ -1584,21 +1584,49 @@ class AGP_PV_PDF {
             return $fallback;
         }
 
-        $lower = strtolower( preg_replace( '/\s+/u', ' ', $normalized ) );
-        if ( in_array( $lower, array( 'null', '(null)', 'n/a', 'na', 'none', '-' ), true ) ) {
+        if ( self::is_missing_display_value( $normalized ) ) {
             return $fallback;
         }
 
         return $normalized;
     }
 
-    private static function is_empty_pdf_display_value( string $value ): bool {
-        $normalized = trim( self::normalize_pdf_value( $value, '' ) );
-        if ( '' === $normalized ) {
-            return true;
+    public static function is_missing_display_value( string $value ): bool {
+        $token = self::normalize_missing_token( $value );
+        return '' === $token || in_array( $token, self::missing_value_tokens(), true );
+    }
+
+    private static function normalize_missing_token( string $value ): string {
+        $normalized = strtolower( trim( preg_replace( '/\s+/u', ' ', (string) $value ) ) );
+        if ( function_exists( 'remove_accents' ) ) {
+            $normalized = strtolower( remove_accents( $normalized ) );
         }
 
-        return 0 === strcasecmp( $normalized, __( 'No informado', 'agrocampo-post-venta' ) );
+        return str_replace( '_', ' ', $normalized );
+    }
+
+    /**
+     * Canonical placeholder tokens considered as "dato ausente" in display.
+     *
+     * @return string[]
+     */
+    private static function missing_value_tokens(): array {
+        return array(
+            'no informado',
+            'no informada',
+            'sin informar',
+            'sin informacion',
+            'n/i',
+            'n.d.',
+            'n/d',
+            'null',
+            '(null)',
+            'n/a',
+            'na',
+            'none',
+            '-',
+            '',
+        );
     }
     /**
      * Normaliza bloques de texto para PDF sin truncar contenido.

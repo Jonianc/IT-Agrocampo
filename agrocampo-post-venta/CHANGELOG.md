@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.40] - 2026-02-24
+
+### Changed
+- Se unifica la semántica de “dato ausente” en el motor PDF con un helper central (`is_missing_display_value`) y un set canónico de placeholders (por ejemplo: `No informado`, `sin información`, `N/A`, `null`, `-`).
+- Se normaliza la detección de placeholders en `row2`, `row4`, layout 2-up y `adaptive_text`, evitando comparaciones ad-hoc y mejorando consistencia visual (gris/omisión) en todas las secciones.
+- `normalize_pdf_value` ahora usa la misma semántica central para decidir fallback, reduciendo discrepancias entre render y normalización de valores.
+
 ## [1.4.39] - 2026-02-24
 
 ### Changed
