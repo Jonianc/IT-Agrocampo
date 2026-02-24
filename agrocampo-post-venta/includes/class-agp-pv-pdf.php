@@ -1784,12 +1784,12 @@ class AGP_PV_PDF {
 
     private static function map_tipo_servicio( string $value ): string {
         $map = array(
-            'one' => 'Factura Cliente',
-            'two' => 'Garantía',
-            'Interno' => 'Mantención',
-            'Visita-de-Cortesía' => 'Visita de Cortesía',
-            'Diagnostico-Técnico' => 'Diagnóstico Técnico',
-            'Entrega-Técnica' => 'Entrega Técnica',
+            'one' => __( 'Factura Cliente', 'agrocampo-post-venta' ),
+            'two' => __( 'Garantía', 'agrocampo-post-venta' ),
+            'Interno' => __( 'Mantención', 'agrocampo-post-venta' ),
+            'Visita-de-Cortesía' => __( 'Visita de Cortesía', 'agrocampo-post-venta' ),
+            'Diagnostico-Técnico' => __( 'Diagnóstico Técnico', 'agrocampo-post-venta' ),
+            'Entrega-Técnica' => __( 'Entrega Técnica', 'agrocampo-post-venta' ),
         );
 
         return $map[ $value ] ?? $value;
@@ -1797,14 +1797,14 @@ class AGP_PV_PDF {
 
     private static function map_tipo_mantencion( string $value ): string {
         $map = array(
-            'one' => '100 Horas',
-            'two' => '400 Horas',
-            '500-Horas' => '500 Horas',
-            '800-Horas' => '800 Horas',
-            '1000-Horas' => '1000 Horas',
-            '1200' => '1200 Horas',
-            '1600-Horas' => '1500 Horas',
-            'OTRO' => 'OTRO',
+            'one' => __( '100 Horas', 'agrocampo-post-venta' ),
+            'two' => __( '400 Horas', 'agrocampo-post-venta' ),
+            '500-Horas' => __( '500 Horas', 'agrocampo-post-venta' ),
+            '800-Horas' => __( '800 Horas', 'agrocampo-post-venta' ),
+            '1000-Horas' => __( '1000 Horas', 'agrocampo-post-venta' ),
+            '1200' => __( '1200 Horas', 'agrocampo-post-venta' ),
+            '1600-Horas' => __( '1500 Horas', 'agrocampo-post-venta' ),
+            'OTRO' => __( 'OTRO', 'agrocampo-post-venta' ),
         );
 
         return $map[ $value ] ?? $value;

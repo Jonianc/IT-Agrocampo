@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.53] - 2026-02-24
+
+### i18n
+- Se internacionalizan los mapas de etiquetas de `tipo_servicio` y `tipo_mantencion` en backend (`AJAX` y render PDF), eliminando strings hardcodeados no traducibles.
+- Se corrige consistencia ortográfica/accentuada en labels de servicio (por ejemplo: `Garantía`, `Diagnóstico Técnico`) para salida unificada.
+
 ## [1.4.52] - 2026-02-24
 
 ### Added
