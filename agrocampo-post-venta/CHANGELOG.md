@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.34] - 2026-02-24
+
+### Fixed
+- Se ajusta la paginación de `Firmas` con modo compacto dinámico cuando queda poco espacio al final de página, evitando más casos donde esta sección quedaba aislada en una página nueva.
+- Se reduce la reserva mínima de la tarjeta `Firmas` y se adapta el espaciado de cierre para aprovechar mejor el espacio vertical disponible sin romper el layout tipo tarjeta.
+- Se agrega cálculo explícito de espacio restante en página para decidir compactación y reducir saltos innecesarios en escenarios de contenido variable.
+
 ## [1.4.33] - 2026-02-24
 
 ### Fixed

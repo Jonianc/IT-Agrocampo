@@ -294,9 +294,17 @@ class AGP_PV_PDF_Document extends FPDF {
     public function signature_row( array $left, array $right ): void {
         $gap       = 6.5;
         $box_h     = 27.0;
+        $tail_gap  = 5.2;
         $box_w     = ( $this->w - $this->lMargin - $this->rMargin - $gap ) / 2;
 
-        $this->ensure_space( $box_h + 7.5 );
+        $space_left = $this->space_left();
+        if ( $space_left < 36.0 && $space_left >= 30.0 ) {
+            // Compact mode to avoid pushing "Firmas" alone to a new page.
+            $box_h    = 22.0;
+            $tail_gap = 3.8;
+        }
+
+        $this->ensure_space( $box_h + 7.0 );
 
         $y = $this->GetY();
         $x = $this->lMargin;
@@ -304,7 +312,7 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->signature_box( (string) $left['label'], (string) $left['path'], $x, $y, $box_w, $box_h );
         $this->signature_box( (string) $right['label'], (string) $right['path'], $x + $box_w + $gap, $y, $box_w, $box_h );
 
-        $this->SetXY( $this->lMargin, $y + $box_h + 5.2 );
+        $this->SetXY( $this->lMargin, $y + $box_h + $tail_gap );
     }
 
     private function signature_box( string $label, string $path, float $x, float $y, float $w, float $h ): void {
@@ -364,6 +372,10 @@ class AGP_PV_PDF_Document extends FPDF {
         if ( ( $this->GetY() + $h ) > ( $this->h - $this->bMargin ) ) {
             $this->AddPage( 'P', 'A4' );
         }
+    }
+
+    private function space_left(): float {
+        return ( $this->h - $this->bMargin ) - $this->GetY();
     }
 
     /**
@@ -718,7 +730,7 @@ class AGP_PV_PDF {
             $document->adaptive_text( __( 'Observaciones', 'agrocampo-post-venta' ), $observaciones );
             $document->card_end();
 
-            $document->card_start( __( 'Firmas', 'agrocampo-post-venta' ), 34.0 );
+            $document->card_start( __( 'Firmas', 'agrocampo-post-venta' ), 28.0 );
             $document->signature_row(
                 array(
                     'label' => __( 'Firma Cliente', 'agrocampo-post-venta' ),
