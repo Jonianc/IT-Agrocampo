@@ -416,13 +416,13 @@ class AGP_PV_PDF_Document extends FPDF {
         }
 
         if ( $this->compact_density ) {
-            $box_h = min( $box_h, 20.0 );
-            $tail_gap = min( $tail_gap, 3.0 );
+            $box_h = min( $box_h, 19.0 );
+            $tail_gap = min( $tail_gap, 2.8 );
         }
 
         if ( $no_images ) {
-            $box_h = min( $box_h, $this->compact_density ? 14.0 : 16.5 );
-            $tail_gap = min( $tail_gap, $this->compact_density ? 2.0 : 2.6 );
+            $box_h = min( $box_h, $this->compact_density ? 12.5 : 15.0 );
+            $tail_gap = min( $tail_gap, $this->compact_density ? 1.6 : 2.2 );
         }
 
         $this->ensure_space( $box_h + 7.0 );
@@ -513,10 +513,27 @@ class AGP_PV_PDF_Document extends FPDF {
         $is_placeholder = strtolower( $trimmed ) === strtolower( __( 'No informado', 'agrocampo-post-venta' ) );
         $is_short_single_line = strlen( $trimmed ) <= 90 && false === strpos( $trimmed, "\n" );
 
+        $row_h = $this->estimate_row2_value_height( $trimmed );
         if ( $is_placeholder || $is_short_single_line ) {
-            return $this->compact_density ? 6.0 : 7.4;
+            return $row_h;
         }
 
+        $box_h = $this->estimate_box_text_height( $trimmed );
+        return max( $row_h, $box_h );
+    }
+
+    public function estimate_row2_value_height( string $value ): float {
+        $label_w = $this->label_width_mm;
+        $gap     = $this->gap_mm;
+        $value_w = $this->w - $this->lMargin - $this->rMargin - $label_w - $gap;
+        $line_h  = $this->compact_density ? 4.4 : 5.3;
+        $nb      = max( 1, $this->NbLines( $value_w, self::enc( $value ) ) );
+        $row_h   = $line_h * $nb;
+        $after   = $this->compact_density ? 0.9 : 1.4;
+        return $row_h + $after;
+    }
+
+    public function estimate_box_text_height( string $text ): float {
         $box_w = $this->w - $this->lMargin - $this->rMargin;
         $padding = $this->compact_density ? 1.3 : 2.1;
         $inner_w = $box_w - ( 2 * $padding );
@@ -545,12 +562,12 @@ class AGP_PV_PDF_Document extends FPDF {
             $tail_gap = 3.8;
         }
         if ( $this->compact_density ) {
-            $box_h = min( $box_h, 20.0 );
-            $tail_gap = min( $tail_gap, 3.0 );
+            $box_h = min( $box_h, 19.0 );
+            $tail_gap = min( $tail_gap, 2.8 );
         }
         if ( $no_images ) {
-            $box_h = min( $box_h, $this->compact_density ? 14.0 : 16.5 );
-            $tail_gap = min( $tail_gap, $this->compact_density ? 2.0 : 2.6 );
+            $box_h = min( $box_h, $this->compact_density ? 12.5 : 15.0 );
+            $tail_gap = min( $tail_gap, $this->compact_density ? 1.6 : 2.2 );
         }
 
         // signature_row places label + 6mm top before box.
@@ -870,7 +887,7 @@ class AGP_PV_PDF {
 
             $document->row4( __( 'Tipo de Servicio', 'agrocampo-post-venta' ), (string) $tipo_servicio_label, __( 'Cantidad de Horas', 'agrocampo-post-venta' ), $cantidad_horas );
             $document->row4( __( 'Tipo de Mantención', 'agrocampo-post-venta' ), (string) $mantencion_val, __( 'F. Reparación', 'agrocampo-post-venta' ), $fecha_reparacion );
-            $document->row4( __( 'F. Cierre', 'agrocampo-post-venta' ), $fecha_cierre, __( 'Mantención', 'agrocampo-post-venta' ), (string) $mantencion_val );
+            $document->row2( __( 'F. Cierre', 'agrocampo-post-venta' ), $fecha_cierre );
             $document->card_end();
 
             $document->card_start( __( 'Detalle', 'agrocampo-post-venta' ), 20.0 );
@@ -916,7 +933,9 @@ class AGP_PV_PDF {
             $signatures_no_images = ! $firma_cliente_path && ! $firma_tecnico_path;
 
             // Deterministic preflight for Observaciones + card close + Firmas.
-            $obs_h_normal = $document->estimate_adaptive_text_height( $observaciones );
+            $obs_h_row_normal = $document->estimate_row2_value_height( $observaciones );
+            $obs_h_box_normal = $document->estimate_box_text_height( $observaciones );
+            $obs_h_normal = min( $obs_h_row_normal, $obs_h_box_normal );
             $needed_normal = $obs_h_normal + $document->estimate_card_end_height() + $document->estimate_signature_section_height( false, $signatures_no_images );
             $space_left = $document->get_space_left();
 
@@ -926,7 +945,9 @@ class AGP_PV_PDF {
                     $document->set_signature_compact( true );
                 }
 
-                $obs_h_compact = $document->estimate_adaptive_text_height( $observaciones );
+                $obs_h_row_compact = $document->estimate_row2_value_height( $observaciones );
+                $obs_h_box_compact = $document->estimate_box_text_height( $observaciones );
+                $obs_h_compact = min( $obs_h_row_compact, $obs_h_box_compact );
                 $needed_compact = $obs_h_compact + $document->estimate_card_end_height() + $document->estimate_signature_section_height( true, $signatures_no_images );
 
                 if ( $space_left < $needed_compact ) {

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.37] - 2026-02-24
+
+### Fixed
+- Se recalibra el preflight determinístico de `Observaciones + Firmas` para estimar de forma más fiel alturas en modo fila/caja y decidir compactación progresiva antes de cortar página.
+- Se afina el modo global `compact_density` y los límites de compactación de `Firmas` (incluyendo caso sin imágenes) para reducir mejor el desperdicio vertical al cierre del informe.
+- Se ajusta la sección `Servicio` para mantener grilla consistente y compacta sin redundancias visuales que inflen altura innecesaria.
+
 ## [1.4.36] - 2026-02-24
 
 ### Changed
