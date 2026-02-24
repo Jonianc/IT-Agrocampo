@@ -24,6 +24,7 @@ class AGP_PV_PDF_Document extends FPDF {
     private float $card_y = 0.0;
     private float $card_w = 0.0;
     private bool $card_open = false;
+    private bool $compact_density = false;
     private bool $force_signature_compact = false;
 
     /** @var string[] */
@@ -126,7 +127,7 @@ class AGP_PV_PDF_Document extends FPDF {
     }
 
     public function card_start( string $title, float $min_content_height = 20.0 ): void {
-        $header_h = 11.5;
+        $header_h = $this->compact_density ? 10.2 : 11.5;
         $this->ensure_space( $header_h + max( 8.0, $min_content_height ) );
 
         $this->card_x = $this->lMargin;
@@ -134,13 +135,18 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->card_w = $this->w - $this->lMargin - $this->rMargin;
         $this->card_open = true;
 
-        $this->SetXY( $this->card_x + 3, $this->card_y + 3.2 );
-        $this->SetFont( 'Helvetica', 'B', 12 );
-        $this->Cell( $this->card_w - 6, 5.2, self::enc( $title ), 0, 1, 'L' );
+        $title_top = $this->compact_density ? 2.5 : 3.2;
+        $title_h   = $this->compact_density ? 4.6 : 5.2;
+        $line_gap  = $this->compact_density ? 0.45 : 0.6;
+        $body_gap  = $this->compact_density ? 1.3 : 2.1;
 
-        $line_y = $this->GetY() + 0.6;
+        $this->SetXY( $this->card_x + 3, $this->card_y + $title_top );
+        $this->SetFont( 'Helvetica', 'B', $this->compact_density ? 11.2 : 12 );
+        $this->Cell( $this->card_w - 6, $title_h, self::enc( $title ), 0, 1, 'L' );
+
+        $line_y = $this->GetY() + $line_gap;
         $this->Line( $this->card_x + 2.8, $line_y, $this->card_x + $this->card_w - 2.8, $line_y );
-        $this->SetXY( $this->card_x + 3, $line_y + 2.1 );
+        $this->SetXY( $this->card_x + 3, $line_y + $body_gap );
     }
 
     public function card_end( float $bottom_padding = 2.2 ): void {
@@ -148,9 +154,12 @@ class AGP_PV_PDF_Document extends FPDF {
             return;
         }
 
-        $end_y = $this->GetY() + $bottom_padding;
+        $effective_bottom = $this->compact_density ? max( 1.2, $bottom_padding - 0.8 ) : $bottom_padding;
+        $after_gap = $this->compact_density ? 0.9 : 1.5;
+
+        $end_y = $this->GetY() + $effective_bottom;
         $this->RoundedRect( $this->card_x, $this->card_y, $this->card_w, $end_y - $this->card_y, 3.2, 'D' );
-        $this->SetXY( $this->lMargin, $end_y + 1.5 );
+        $this->SetXY( $this->lMargin, $end_y + $after_gap );
         $this->card_open = false;
     }
 
@@ -162,7 +171,7 @@ class AGP_PV_PDF_Document extends FPDF {
         $gap     = $this->gap_mm;
         $value_w = $this->w - $this->lMargin - $this->rMargin - $label_w - $gap;
 
-        $line_h = 5.3;
+        $line_h = $this->compact_density ? 4.4 : 5.3;
 
         $label = self::enc( $label );
         $value = self::enc( $value );
@@ -170,21 +179,28 @@ class AGP_PV_PDF_Document extends FPDF {
         $nb     = max( 1, $this->NbLines( $value_w, $value ) );
         $row_h  = $line_h * $nb;
 
-        $this->ensure_space( $row_h + 1.5 );
+        $this->ensure_space( $row_h + ( $this->compact_density ? 0.9 : 1.5 ) );
 
         $x = $this->GetX();
         $y = $this->GetY();
 
         // Label.
-        $this->SetFont( 'Helvetica', 'B', 10.2 );
+        $this->SetFont( 'Helvetica', 'B', $this->compact_density ? 9.8 : 10.2 );
         $this->Cell( $label_w, $row_h, $label, 0, 0, 'L' );
 
         // Value.
-        $this->SetFont( 'Helvetica', '', 10.1 );
+        $value_is_placeholder = strtolower( trim( $value ) ) === strtolower( self::enc( __( 'No informado', 'agrocampo-post-venta' ) ) );
+        if ( $value_is_placeholder ) {
+            $this->SetTextColor( 115, 115, 115 );
+        }
+        $this->SetFont( 'Helvetica', '', $this->compact_density ? 9.7 : 10.1 );
         $this->SetXY( $x + $label_w + $gap, $y );
         $this->MultiCell( $value_w, $line_h, $value, 0, 'L' );
+        if ( $value_is_placeholder ) {
+            $this->SetTextColor( 20, 20, 20 );
+        }
 
-        $this->SetXY( $x, $y + $row_h + 1.4 );
+        $this->SetXY( $x, $y + $row_h + ( $this->compact_density ? 0.9 : 1.4 ) );
     }
 
 
@@ -202,7 +218,7 @@ class AGP_PV_PDF_Document extends FPDF {
         $gap       = 3.2;
         $value_w   = $pair_w - $label_w - $gap;
 
-        $line_h = 5.0;
+        $line_h = $this->compact_density ? 4.2 : 5.0;
 
         $label1 = self::enc( $label1 );
         $value1 = self::enc( $value1 );
@@ -213,31 +229,45 @@ class AGP_PV_PDF_Document extends FPDF {
         $nb2   = max( 1, $this->NbLines( $value_w, $value2 ) );
         $row_h = $line_h * max( $nb1, $nb2 );
 
-        $this->ensure_space( $row_h + 1.2 );
+        $this->ensure_space( $row_h + ( $this->compact_density ? 0.8 : 1.2 ) );
 
         $x0 = $this->lMargin;
         $y0 = $this->GetY();
 
         // Left pair.
-        $this->SetFont( 'Helvetica', 'B', 10.2 );
+        $this->SetFont( 'Helvetica', 'B', $this->compact_density ? 9.8 : 10.2 );
         $this->SetXY( $x0, $y0 );
         $this->Cell( $label_w, $row_h, $label1, 0, 0, 'L' );
 
-        $this->SetFont( 'Helvetica', '', 10.1 );
+        $value1_is_placeholder = strtolower( trim( $value1 ) ) === strtolower( self::enc( __( 'No informado', 'agrocampo-post-venta' ) ) );
+        if ( $value1_is_placeholder ) {
+            $this->SetTextColor( 115, 115, 115 );
+        }
+        $this->SetFont( 'Helvetica', '', $this->compact_density ? 9.7 : 10.1 );
         $this->SetXY( $x0 + $label_w + $gap, $y0 );
         $this->MultiCell( $value_w, $line_h, $value1, 0, 'L' );
+        if ( $value1_is_placeholder ) {
+            $this->SetTextColor( 20, 20, 20 );
+        }
 
         // Right pair.
         $x1 = $x0 + $pair_w + $pair_gap;
-        $this->SetFont( 'Helvetica', 'B', 10.2 );
+        $this->SetFont( 'Helvetica', 'B', $this->compact_density ? 9.8 : 10.2 );
         $this->SetXY( $x1, $y0 );
         $this->Cell( $label_w, $row_h, $label2, 0, 0, 'L' );
 
-        $this->SetFont( 'Helvetica', '', 10.1 );
+        $value2_is_placeholder = strtolower( trim( $value2 ) ) === strtolower( self::enc( __( 'No informado', 'agrocampo-post-venta' ) ) );
+        if ( $value2_is_placeholder ) {
+            $this->SetTextColor( 115, 115, 115 );
+        }
+        $this->SetFont( 'Helvetica', '', $this->compact_density ? 9.7 : 10.1 );
         $this->SetXY( $x1 + $label_w + $gap, $y0 );
         $this->MultiCell( $value_w, $line_h, $value2, 0, 'L' );
+        if ( $value2_is_placeholder ) {
+            $this->SetTextColor( 20, 20, 20 );
+        }
 
-        $this->SetXY( $x0, $y0 + $row_h + 1.2 );
+        $this->SetXY( $x0, $y0 + $row_h + ( $this->compact_density ? 0.8 : 1.2 ) );
     }
 
     /**
@@ -249,19 +279,20 @@ class AGP_PV_PDF_Document extends FPDF {
 
         $this->ensure_space( 14 );
 
-        $this->SetFont( 'Helvetica', 'B', 10.4 );
-        $this->Cell( 0, 6.3, $title, 0, 1, 'L' );
-        $this->SetFont( 'Helvetica', '', 10.1 );
+        $title_h = $this->compact_density ? 5.0 : 6.3;
+        $this->SetFont( 'Helvetica', 'B', $this->compact_density ? 9.9 : 10.4 );
+        $this->Cell( 0, $title_h, $title, 0, 1, 'L' );
+        $this->SetFont( 'Helvetica', '', $this->compact_density ? 9.7 : 10.1 );
 
         $box_w     = $this->w - $this->lMargin - $this->rMargin;
-        $line_h    = 4.8;
-        $padding   = 2.1;
+        $line_h    = $this->compact_density ? 4.1 : 4.8;
+        $padding   = $this->compact_density ? 1.3 : 2.1;
         $inner_w   = $box_w - ( 2 * $padding );
         $nb        = max( 1, $this->NbLines( $inner_w, $text ) );
         $text_h    = $nb * $line_h;
         $box_h     = $text_h + ( 2 * $padding );
 
-        $this->ensure_space( $box_h + 2.2 );
+        $this->ensure_space( $box_h + ( $this->compact_density ? 1.2 : 2.2 ) );
 
         $x = $this->lMargin;
         $y = $this->GetY();
@@ -270,7 +301,7 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->SetXY( $x + $padding, $y + $padding );
         $this->MultiCell( $inner_w, $line_h, $text, 0, 'L' );
 
-        $this->SetXY( $this->lMargin, $y + $box_h + 3.2 );
+        $this->SetXY( $this->lMargin, $y + $box_h + ( $this->compact_density ? 1.3 : 3.2 ) );
     }
     /**
      * Render text as compact row or boxed block depending on length/content.
@@ -360,17 +391,38 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->force_signature_compact = $compact;
     }
 
+    public function set_compact_density( bool $compact ): void {
+        $this->compact_density = $compact;
+    }
+
+    public function is_compact_density(): bool {
+        return $this->compact_density;
+    }
+
     public function signature_row( array $left, array $right ): void {
         $gap       = 6.5;
         $box_h     = 27.0;
         $tail_gap  = 5.2;
         $box_w     = ( $this->w - $this->lMargin - $this->rMargin - $gap ) / 2;
+        $left_has_image = ! empty( $left['path'] ) && file_exists( (string) $left['path'] );
+        $right_has_image = ! empty( $right['path'] ) && file_exists( (string) $right['path'] );
+        $no_images = ! $left_has_image && ! $right_has_image;
 
         $space_left = $this->space_left();
         if ( $this->force_signature_compact || ( $space_left < 36.0 && $space_left >= 30.0 ) ) {
             // Compact mode to avoid pushing "Firmas" alone to a new page.
             $box_h    = 22.0;
             $tail_gap = 3.8;
+        }
+
+        if ( $this->compact_density ) {
+            $box_h = min( $box_h, 20.0 );
+            $tail_gap = min( $tail_gap, 3.0 );
+        }
+
+        if ( $no_images ) {
+            $box_h = min( $box_h, $this->compact_density ? 14.0 : 16.5 );
+            $tail_gap = min( $tail_gap, $this->compact_density ? 2.0 : 2.6 );
         }
 
         $this->ensure_space( $box_h + 7.0 );
@@ -450,6 +502,60 @@ class AGP_PV_PDF_Document extends FPDF {
 
     public function get_space_left(): float {
         return $this->space_left();
+    }
+
+    public function estimate_adaptive_text_height( string $text ): float {
+        $trimmed = trim( $text );
+        if ( '' === $trimmed ) {
+            return 0.0;
+        }
+
+        $is_placeholder = strtolower( $trimmed ) === strtolower( __( 'No informado', 'agrocampo-post-venta' ) );
+        $is_short_single_line = strlen( $trimmed ) <= 90 && false === strpos( $trimmed, "\n" );
+
+        if ( $is_placeholder || $is_short_single_line ) {
+            return $this->compact_density ? 6.0 : 7.4;
+        }
+
+        $box_w = $this->w - $this->lMargin - $this->rMargin;
+        $padding = $this->compact_density ? 1.3 : 2.1;
+        $inner_w = $box_w - ( 2 * $padding );
+        $line_h = $this->compact_density ? 4.1 : 4.8;
+        $nb = max( 1, $this->NbLines( $inner_w, self::enc( $trimmed ) ) );
+        $box_h = ( $nb * $line_h ) + ( 2 * $padding );
+        $title_h = $this->compact_density ? 5.0 : 6.3;
+        $after_h = $this->compact_density ? 1.3 : 3.2;
+        return $title_h + $box_h + $after_h;
+    }
+
+    public function estimate_card_end_height(): float {
+        $bottom = $this->compact_density ? 1.4 : 2.2;
+        $after  = $this->compact_density ? 0.9 : 1.5;
+        return $bottom + $after;
+    }
+
+    public function estimate_signature_section_height( bool $force_compact, bool $no_images ): float {
+        $header_h = $this->compact_density ? 10.2 : 11.5;
+        $body_top = $this->compact_density ? 1.3 : 2.1;
+        $box_h = 27.0;
+        $tail_gap = 5.2;
+
+        if ( $force_compact ) {
+            $box_h = 22.0;
+            $tail_gap = 3.8;
+        }
+        if ( $this->compact_density ) {
+            $box_h = min( $box_h, 20.0 );
+            $tail_gap = min( $tail_gap, 3.0 );
+        }
+        if ( $no_images ) {
+            $box_h = min( $box_h, $this->compact_density ? 14.0 : 16.5 );
+            $tail_gap = min( $tail_gap, $this->compact_density ? 2.0 : 2.6 );
+        }
+
+        // signature_row places label + 6mm top before box.
+        $row_h = 6.0 + $box_h + $tail_gap;
+        return $header_h + $body_top + $row_h + $this->estimate_card_end_height();
     }
 
     /**
@@ -757,26 +863,14 @@ class AGP_PV_PDF {
             $document->card_end();
 
             $document->card_start( __( 'Servicio', 'agrocampo-post-venta' ), 16.0 );
-            $document->row2( __( 'Tipo de Servicio', 'agrocampo-post-venta' ), (string) $tipo_servicio_label );
+            $cantidad_horas = self::normalize_pdf_value( $submission['cantidad_horas'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) );
+            $fecha_reparacion = self::normalize_pdf_value( $submission['fecha_reparacion'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) );
+            $fecha_cierre = self::normalize_pdf_value( $submission['fecha_cierre'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) );
+            $mantencion_val = ! empty( $tipo_mantencion_label ) ? $tipo_mantencion_label : __( 'No informado', 'agrocampo-post-venta' );
 
-            // Mantención.
-            if ( ! empty( $tipo_mantencion_label ) && ! empty( $submission['cantidad_horas'] ) ) {
-                $document->row4( __( 'Mantención', 'agrocampo-post-venta' ), $tipo_mantencion_label, __( 'Cant. Horas', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['cantidad_horas'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
-            } elseif ( ! empty( $tipo_mantencion_label ) ) {
-                $document->row2( __( 'Tipo de Mantención', 'agrocampo-post-venta' ), $tipo_mantencion_label );
-            } elseif ( ! empty( $submission['cantidad_horas'] ) ) {
-                $document->row2( __( 'Cantidad de Horas', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['cantidad_horas'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
-            }
-
-            // Garantía.
-            if ( ! empty( $submission['fecha_reparacion'] ) || ! empty( $submission['fecha_cierre'] ) ) {
-                $document->row4(
-                    __( 'F. Reparación', 'agrocampo-post-venta' ),
-                    self::normalize_pdf_value( $submission['fecha_reparacion'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ),
-                    __( 'F. Cierre', 'agrocampo-post-venta' ),
-                    self::normalize_pdf_value( $submission['fecha_cierre'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) )
-                );
-            }
+            $document->row4( __( 'Tipo de Servicio', 'agrocampo-post-venta' ), (string) $tipo_servicio_label, __( 'Cantidad de Horas', 'agrocampo-post-venta' ), $cantidad_horas );
+            $document->row4( __( 'Tipo de Mantención', 'agrocampo-post-venta' ), (string) $mantencion_val, __( 'F. Reparación', 'agrocampo-post-venta' ), $fecha_reparacion );
+            $document->row4( __( 'F. Cierre', 'agrocampo-post-venta' ), $fecha_cierre, __( 'Mantención', 'agrocampo-post-venta' ), (string) $mantencion_val );
             $document->card_end();
 
             $document->card_start( __( 'Detalle', 'agrocampo-post-venta' ), 20.0 );
@@ -815,13 +909,30 @@ class AGP_PV_PDF {
 
             $document->adaptive_text( __( 'Trabajos Realizados', 'agrocampo-post-venta' ), $trabajos );
 
-            // If Observaciones is short, force compact signatures mode so both
-            // sections are more likely to fit on the same page before breaking.
             $obs_trimmed = trim( $observaciones );
-            $obs_short = strlen( $obs_trimmed ) <= 180 && false === strpos( $obs_trimmed, "\n" );
+            $obs_short = strlen( $obs_trimmed ) <= 220 && false === strpos( $obs_trimmed, "\n" );
+            $firma_cliente_path = self::resolve_attachment_path( (int) ( $submission['firma_cliente_id'] ?? 0 ) );
+            $firma_tecnico_path = self::resolve_attachment_path( (int) ( $submission['firma_tecnico_id'] ?? 0 ) );
+            $signatures_no_images = ! $firma_cliente_path && ! $firma_tecnico_path;
+
+            // Deterministic preflight for Observaciones + card close + Firmas.
+            $obs_h_normal = $document->estimate_adaptive_text_height( $observaciones );
+            $needed_normal = $obs_h_normal + $document->estimate_card_end_height() + $document->estimate_signature_section_height( false, $signatures_no_images );
             $space_left = $document->get_space_left();
-            if ( $obs_short && $space_left < 58.0 ) {
-                $document->set_signature_compact( true );
+
+            if ( $space_left < $needed_normal ) {
+                $document->set_compact_density( true );
+                if ( $obs_short ) {
+                    $document->set_signature_compact( true );
+                }
+
+                $obs_h_compact = $document->estimate_adaptive_text_height( $observaciones );
+                $needed_compact = $obs_h_compact + $document->estimate_card_end_height() + $document->estimate_signature_section_height( true, $signatures_no_images );
+
+                if ( $space_left < $needed_compact ) {
+                    // Still does not fit: keep compact mode but allow natural page break.
+                    $document->set_signature_compact( true );
+                }
             }
 
             $document->adaptive_text( __( 'Observaciones', 'agrocampo-post-venta' ), $observaciones );
@@ -831,11 +942,11 @@ class AGP_PV_PDF {
             $document->signature_row(
                 array(
                     'label' => __( 'Firma Cliente', 'agrocampo-post-venta' ),
-                    'path'  => self::resolve_attachment_path( (int) ( $submission['firma_cliente_id'] ?? 0 ) ),
+                    'path'  => $firma_cliente_path,
                 ),
                 array(
                     'label' => __( 'Firma Técnico', 'agrocampo-post-venta' ),
-                    'path'  => self::resolve_attachment_path( (int) ( $submission['firma_tecnico_id'] ?? 0 ) ),
+                    'path'  => $firma_tecnico_path,
                 )
             );
             $document->card_end();

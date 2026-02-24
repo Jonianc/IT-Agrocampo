@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.4.36] - 2026-02-24
+
+### Changed
+- Se incorpora un modo global de densidad compacta del PDF (paddings, gaps, line-height y spacing de cierre) que se activa solo cuando el preflight detecta riesgo de salto innecesario antes del cierre `Observaciones + Firmas`.
+- Se agrega preflight determinístico para estimar `Observaciones` (adaptativa) + cierre de card + `Firmas` (normal/compacta), activando compactación progresiva y dejando el salto de página como último recurso.
+- La sección `Servicio` ahora se renderiza en grilla 2 columnas (`row4`) de forma consistente, manteniendo campos críticos visibles y mostrando placeholders de forma más compacta/atenuada.
+- Se optimiza `Firmas` cuando no hay imágenes disponibles (solo `Firma no disponible`) reduciendo altura de cajas y `tail gap` para evitar desperdicio vertical.
+
+### Fixed
+- Se mejora el objetivo de 1 página agresiva sin incoherencias visuales en escenarios de contenido variable, especialmente en el tramo final del informe técnico.
+
 ## [1.4.35] - 2026-02-24
 
 ### Changed
