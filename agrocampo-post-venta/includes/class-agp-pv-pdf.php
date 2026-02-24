@@ -847,6 +847,18 @@ class AGP_PV_PDF_Document extends FPDF {
 class AGP_PV_PDF {
     private static string $last_pdf_error = '';
 
+    private static function now_ms(): float {
+        if ( function_exists( 'hrtime' ) ) {
+            return hrtime( true ) / 1000000;
+        }
+
+        return microtime( true ) * 1000;
+    }
+
+    private static function persist_pdf_metrics( int $submission_id, array $metrics ): void {
+        AGP_PV_DB::update_pdf_metrics( $submission_id, $metrics );
+    }
+
     public static function regenerate_pdf_attachment( int $submission_id ): array {
         $submission = AGP_PV_Email::get_submission( $submission_id );
         if ( ! $submission ) {
@@ -878,8 +890,20 @@ class AGP_PV_PDF {
     }
 
     public static function ensure_pdf_attachment( int $submission_id, array $submission ): array {
+        $started_ms = self::now_ms();
+
         if ( ! class_exists( 'FPDF' ) ) {
             self::update_pdf_status( $submission_id, 'failed', __( 'No se encontró FPDF para generar el PDF.', 'agrocampo-post-venta' ) );
+            self::persist_pdf_metrics(
+                $submission_id,
+                array(
+                    'elapsed_ms' => (int) round( self::now_ms() - $started_ms ),
+                    'size_bytes' => 0,
+                    'page_count' => 0,
+                    'warnings' => array(),
+                )
+            );
+
             return array(
                 'status' => 'failed',
                 'message' => __( 'No se encontró FPDF para generar el PDF.', 'agrocampo-post-venta' ),
@@ -892,6 +916,16 @@ class AGP_PV_PDF {
             $existing_path = get_attached_file( (int) $submission['pdf_attachment_id'] );
             if ( $existing_path && file_exists( $existing_path ) ) {
                 self::update_pdf_status( $submission_id, 'ready', '' );
+                self::persist_pdf_metrics(
+                    $submission_id,
+                    array(
+                        'elapsed_ms' => 0,
+                        'size_bytes' => (int) filesize( $existing_path ),
+                        'page_count' => 0,
+                        'warnings' => array(),
+                    )
+                );
+
                 return array(
                     'status' => 'ready',
                     'message' => '',
@@ -904,6 +938,15 @@ class AGP_PV_PDF {
         $upload_dir = wp_upload_dir();
         if ( empty( $upload_dir['path'] ) || empty( $upload_dir['url'] ) ) {
             self::update_pdf_status( $submission_id, 'failed', __( 'No se pudo obtener el directorio de uploads.', 'agrocampo-post-venta' ) );
+            self::persist_pdf_metrics(
+                $submission_id,
+                array(
+                    'elapsed_ms' => (int) round( self::now_ms() - $started_ms ),
+                    'size_bytes' => 0,
+                    'page_count' => 0,
+                    'warnings' => array(),
+                )
+            );
             return array(
                 'status' => 'failed',
                 'message' => __( 'No se pudo obtener el directorio de uploads.', 'agrocampo-post-venta' ),
@@ -914,6 +957,15 @@ class AGP_PV_PDF {
 
         if ( ! wp_mkdir_p( $upload_dir['path'] ) ) {
             self::update_pdf_status( $submission_id, 'failed', __( 'No se pudo crear el directorio de uploads.', 'agrocampo-post-venta' ) );
+            self::persist_pdf_metrics(
+                $submission_id,
+                array(
+                    'elapsed_ms' => (int) round( self::now_ms() - $started_ms ),
+                    'size_bytes' => 0,
+                    'page_count' => 0,
+                    'warnings' => array(),
+                )
+            );
             return array(
                 'status' => 'failed',
                 'message' => __( 'No se pudo crear el directorio de uploads.', 'agrocampo-post-venta' ),
@@ -927,9 +979,19 @@ class AGP_PV_PDF {
         $path     = trailingslashit( $upload_dir['path'] ) . $filename;
 
         $generated = self::generate_pdf_file( $submission_id, $submission, $path );
-        if ( ! $generated ) {
+        if ( empty( $generated['ok'] ) ) {
             $err = self::$last_pdf_error ? self::$last_pdf_error : __( 'No se pudo generar el PDF.', 'agrocampo-post-venta' );
             self::update_pdf_status( $submission_id, 'failed', $err );
+            self::persist_pdf_metrics(
+                $submission_id,
+                array(
+                    'elapsed_ms' => (int) ( $generated['elapsed_ms'] ?? round( self::now_ms() - $started_ms ) ),
+                    'size_bytes' => 0,
+                    'page_count' => 0,
+                    'warnings' => $generated['warnings'] ?? array(),
+                )
+            );
+
             return array(
                 'status' => 'failed',
                 'message' => $err,
@@ -942,6 +1004,16 @@ class AGP_PV_PDF {
         self::log( sprintf( 'PDF %s generado en %s (%d bytes). Validación: %s.', $submission_id, $path, (int) ( $validation['size'] ?? 0 ), $validation['message'] ?? '' ) );
         if ( empty( $validation['valid'] ) ) {
             self::update_pdf_status( $submission_id, 'failed', $validation['message'] ?? __( 'Validación de PDF fallida.', 'agrocampo-post-venta' ) );
+            self::persist_pdf_metrics(
+                $submission_id,
+                array(
+                    'elapsed_ms' => (int) ( $generated['elapsed_ms'] ?? round( self::now_ms() - $started_ms ) ),
+                    'size_bytes' => (int) ( $validation['size'] ?? 0 ),
+                    'page_count' => (int) ( $generated['page_count'] ?? 0 ),
+                    'warnings' => $generated['warnings'] ?? array(),
+                )
+            );
+
             return array(
                 'status' => 'failed',
                 'message' => $validation['message'] ?? __( 'Validación de PDF fallida.', 'agrocampo-post-venta' ),
@@ -960,6 +1032,16 @@ class AGP_PV_PDF {
         $attach_id = wp_insert_attachment( $attachment, $path );
         if ( ! $attach_id ) {
             self::update_pdf_status( $submission_id, 'failed', __( 'No se pudo registrar el PDF en la biblioteca de medios.', 'agrocampo-post-venta' ) );
+            self::persist_pdf_metrics(
+                $submission_id,
+                array(
+                    'elapsed_ms' => (int) ( $generated['elapsed_ms'] ?? round( self::now_ms() - $started_ms ) ),
+                    'size_bytes' => (int) ( $validation['size'] ?? 0 ),
+                    'page_count' => (int) ( $generated['page_count'] ?? 0 ),
+                    'warnings' => $generated['warnings'] ?? array(),
+                )
+            );
+
             return array(
                 'status' => 'failed',
                 'message' => __( 'No se pudo registrar el PDF en la biblioteca de medios.', 'agrocampo-post-venta' ),
@@ -974,6 +1056,15 @@ class AGP_PV_PDF {
 
         AGP_PV_DB::update_pdf_attachment( $submission_id, (int) $attach_id );
         self::update_pdf_status( $submission_id, 'ready', '' );
+        self::persist_pdf_metrics(
+            $submission_id,
+            array(
+                'elapsed_ms' => (int) ( $generated['elapsed_ms'] ?? round( self::now_ms() - $started_ms ) ),
+                'size_bytes' => (int) ( $validation['size'] ?? 0 ),
+                'page_count' => (int) ( $generated['page_count'] ?? 0 ),
+                'warnings' => $generated['warnings'] ?? array(),
+            )
+        );
 
         return array(
             'status'        => 'ready',
@@ -983,8 +1074,10 @@ class AGP_PV_PDF {
         );
     }
 
-    private static function generate_pdf_file( int $submission_id, array $submission, string $path ): bool {
+    private static function generate_pdf_file( int $submission_id, array $submission, string $path ): array {
         self::$last_pdf_error = '';
+        $started_ms = self::now_ms();
+
         try {
             $logo_config = self::get_logo_config();
             $issue_date  = date_i18n( 'd-m-Y' );
@@ -1219,16 +1312,29 @@ class AGP_PV_PDF {
 
             $document->Output( 'F', $path );
 
+            $warnings = $document->get_warnings();
+
             // Log non-fatal warnings.
-            foreach ( $document->get_warnings() as $warning ) {
+            foreach ( $warnings as $warning ) {
                 self::log( $warning );
             }
 
-            return file_exists( $path );
+            return array(
+                'ok' => file_exists( $path ),
+                'elapsed_ms' => (int) round( self::now_ms() - $started_ms ),
+                'page_count' => $document->PageNo(),
+                'warnings' => $warnings,
+            );
         } catch ( Exception $e ) {
             self::$last_pdf_error = $e->getMessage();
             self::log( 'PDF generation failed: ' . $e->getMessage() );
-            return false;
+
+            return array(
+                'ok' => false,
+                'elapsed_ms' => (int) round( self::now_ms() - $started_ms ),
+                'page_count' => 0,
+                'warnings' => array(),
+            );
         }
     }
 

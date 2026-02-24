@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class AGP_PV_DB {
-    public const VERSION = '1.5.0';
+    public const VERSION = '1.5.1';
     public const OPTION_KEY = 'agp_pv_db_version';
 
     public static function table_name(): string {
@@ -58,6 +58,10 @@ class AGP_PV_DB {
             pdf_status VARCHAR(20) DEFAULT 'pending',
             pdf_error VARCHAR(255) DEFAULT '',
             pdf_last_attempt_at DATETIME NULL,
+            pdf_generated_ms INT UNSIGNED DEFAULT 0,
+            pdf_size_bytes BIGINT UNSIGNED DEFAULT 0,
+            pdf_page_count SMALLINT UNSIGNED DEFAULT 0,
+            pdf_warnings LONGTEXT,
             correo_copia VARCHAR(255) DEFAULT '',
             mail_status VARCHAR(20) DEFAULT 'pending',
             mail_error VARCHAR(255) DEFAULT '',
@@ -130,6 +134,35 @@ class AGP_PV_DB {
             ),
             array( 'id' => $submission_id ),
             array( '%s', '%s', '%s', '%s' ),
+            array( '%d' )
+        );
+    }
+
+    public static function update_pdf_metrics( int $submission_id, array $metrics ): void {
+        global $wpdb;
+        $table = self::table_name();
+
+        $warnings = array();
+        if ( isset( $metrics['warnings'] ) && is_array( $metrics['warnings'] ) ) {
+            $warnings = array_map( 'strval', $metrics['warnings'] );
+        }
+
+        $warnings_json = wp_json_encode( $warnings, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+        if ( false === $warnings_json ) {
+            $warnings_json = '[]';
+        }
+
+        $wpdb->update(
+            $table,
+            array(
+                'pdf_generated_ms' => max( 0, (int) ( $metrics['elapsed_ms'] ?? 0 ) ),
+                'pdf_size_bytes' => max( 0, (int) ( $metrics['size_bytes'] ?? 0 ) ),
+                'pdf_page_count' => max( 0, (int) ( $metrics['page_count'] ?? 0 ) ),
+                'pdf_warnings' => $warnings_json,
+                'updated_at' => current_time( 'mysql' ),
+            ),
+            array( 'id' => $submission_id ),
+            array( '%d', '%d', '%d', '%s', '%s' ),
             array( '%d' )
         );
     }

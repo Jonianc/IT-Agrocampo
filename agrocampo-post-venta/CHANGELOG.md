@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.47] - 2026-02-24
+
+### Added
+- Se agregan métricas persistentes de generación PDF por informe (`pdf_generated_ms`, `pdf_size_bytes`, `pdf_page_count`, `pdf_warnings`) para mejorar trazabilidad operativa y diagnóstico.
+
+### Changed
+- La generación/regeneración de PDF ahora persiste telemetría de ejecución (tiempo, tamaño, páginas y warnings no fatales) tanto en éxito como en escenarios de fallo.
+- El listado y detalle admin incorporan una vista resumida de métricas PDF para soporte técnico sin revisar logs del servidor.
+
 ## [1.4.46] - 2026-02-24
 
 ### Changed

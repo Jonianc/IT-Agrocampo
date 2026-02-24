@@ -754,6 +754,10 @@ class AGP_PV_Admin {
             'pdf_status' => 'pending',
             'pdf_error' => '',
             'pdf_last_attempt_at' => null,
+            'pdf_generated_ms' => 0,
+            'pdf_size_bytes' => 0,
+            'pdf_page_count' => 0,
+            'pdf_warnings' => wp_json_encode( array() ),
             'correo_copia' => sanitize_email( $this->legacy_value( $row, 'correo copia' ) ),
             'mail_status' => 'pending',
             'mail_error' => '',
@@ -765,10 +769,46 @@ class AGP_PV_Admin {
 
     private function submission_insert_formats(): array {
         return array(
-            '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s',
-            '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s',
-            '%s', '%s', '%d', '%d', '%s', '%d', '%s', '%s', '%s', '%s',
-            '%s', '%s', '%s', '%s', '%s',
+            '%d', // legacy_id
+            '%s', // tecnico
+            '%s', // cliente
+            '%s', // email_cliente
+            '%s', // faena_lugar
+            '%s', // maquina
+            '%s', // modelo
+            '%s', // serie
+            '%s', // numero_interno
+            '%s', // fecha
+            '%s', // horas
+            '%s', // tipo_servicio
+            '%s', // tipo_servicio_label
+            '%s', // tipo_mantencion
+            '%s', // tipo_mantencion_label
+            '%s', // cantidad_horas
+            '%s', // fecha_reparacion
+            '%s', // fecha_cierre
+            '%s', // lubricantes
+            '%s', // filtros_utilizados
+            '%s', // componentes_utilizados
+            '%s', // trabajos_realizados
+            '%s', // observaciones
+            '%d', // firma_cliente_id
+            '%d', // firma_tecnico_id
+            '%s', // fotos_ids
+            '%d', // pdf_attachment_id
+            '%s', // pdf_status
+            '%s', // pdf_error
+            '%s', // pdf_last_attempt_at
+            '%d', // pdf_generated_ms
+            '%d', // pdf_size_bytes
+            '%d', // pdf_page_count
+            '%s', // pdf_warnings
+            '%s', // correo_copia
+            '%s', // mail_status
+            '%s', // mail_error
+            '%s', // mail_last_attempt_at
+            '%s', // created_at
+            '%s', // updated_at
         );
     }
 
@@ -930,6 +970,7 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
             'tipo_servicio' => __( 'Tipo de servicio', 'agrocampo-post-venta' ),
             'mail_status' => __( 'Correo', 'agrocampo-post-venta' ),
             'pdf_status' => __( 'PDF', 'agrocampo-post-venta' ),
+            'pdf_metrics' => __( 'Métricas PDF', 'agrocampo-post-venta' ),
             'created_at' => __( 'Fecha', 'agrocampo-post-venta' ),
         );
     }
@@ -1254,6 +1295,29 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
             return '<span class="agp-pv-status agp-pv-status-' . esc_attr( $item['pdf_status'] ?? '' ) . '">' . esc_html( $this->format_status( (string) ( $item['pdf_status'] ?? '' ) ) ) . '</span>';
         }
 
+        if ( 'pdf_metrics' === $column_name ) {
+            $elapsed_ms = isset( $item['pdf_generated_ms'] ) ? max( 0, (int) $item['pdf_generated_ms'] ) : 0;
+            $size_bytes = isset( $item['pdf_size_bytes'] ) ? max( 0, (int) $item['pdf_size_bytes'] ) : 0;
+            $page_count = isset( $item['pdf_page_count'] ) ? max( 0, (int) $item['pdf_page_count'] ) : 0;
+
+            $parts = array();
+            if ( $elapsed_ms > 0 ) {
+                $parts[] = sprintf( __( '%d ms', 'agrocampo-post-venta' ), $elapsed_ms );
+            }
+            if ( $size_bytes > 0 ) {
+                $parts[] = size_format( $size_bytes, 1 );
+            }
+            if ( $page_count > 0 ) {
+                $parts[] = sprintf( _n( '%d página', '%d páginas', $page_count, 'agrocampo-post-venta' ), $page_count );
+            }
+
+            if ( empty( $parts ) ) {
+                return '&mdash;';
+            }
+
+            return esc_html( implode( ' · ', $parts ) );
+        }
+
         if ( 'created_at' === $column_name ) {
             return esc_html( $item['created_at'] ?? '' );
         }
@@ -1300,7 +1364,7 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
         echo '</tr>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 
         if ( isset( $_GET['submission_id'] ) && absint( $_GET['submission_id'] ) === (int) $item['id'] ) {
-            echo '<tr class="agp-pv-detail"><td colspan="10">'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            echo '<tr class="agp-pv-detail"><td colspan="11">'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
             echo wp_kses_post( $this->render_detail( (int) $item['id'] ) );
             echo '</td></tr>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         }
@@ -1324,6 +1388,35 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
             $view_url = $this->get_view_pdf_url( (int) $submission_id );
             $output .= '<strong>' . esc_html__( 'PDF:', 'agrocampo-post-venta' ) . '</strong> ';
             $output .= '<a href="' . esc_url( $view_url ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Ver PDF', 'agrocampo-post-venta' ) . '</a><br>';
+
+            $elapsed_ms = isset( $submission['pdf_generated_ms'] ) ? max( 0, (int) $submission['pdf_generated_ms'] ) : 0;
+            $size_bytes = isset( $submission['pdf_size_bytes'] ) ? max( 0, (int) $submission['pdf_size_bytes'] ) : 0;
+            $page_count = isset( $submission['pdf_page_count'] ) ? max( 0, (int) $submission['pdf_page_count'] ) : 0;
+            $warnings = json_decode( (string) ( $submission['pdf_warnings'] ?? '' ), true );
+            if ( ! is_array( $warnings ) ) {
+                $warnings = array();
+            }
+
+            $output .= '<strong>' . esc_html__( 'Métricas PDF:', 'agrocampo-post-venta' ) . '</strong> ';
+            $metrics = array();
+            if ( $elapsed_ms > 0 ) {
+                $metrics[] = sprintf( esc_html__( '%d ms', 'agrocampo-post-venta' ), $elapsed_ms );
+            }
+            if ( $size_bytes > 0 ) {
+                $metrics[] = size_format( $size_bytes, 1 );
+            }
+            if ( $page_count > 0 ) {
+                $metrics[] = sprintf( _n( '%d página', '%d páginas', $page_count, 'agrocampo-post-venta' ), $page_count );
+            }
+            $output .= ! empty( $metrics ) ? esc_html( implode( ' · ', $metrics ) ) : '&mdash;';
+            $output .= '<br>';
+
+            if ( ! empty( $warnings ) ) {
+                $output .= '<strong>' . esc_html__( 'Warnings PDF:', 'agrocampo-post-venta' ) . '</strong><br>';
+                foreach ( $warnings as $warning ) {
+                    $output .= '- ' . esc_html( (string) $warning ) . '<br>';
+                }
+            }
         }
 
         $fotos = json_decode( (string) $submission['fotos_ids'], true );

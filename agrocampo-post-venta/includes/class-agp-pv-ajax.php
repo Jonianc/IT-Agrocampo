@@ -475,6 +475,10 @@ class AGP_PV_Ajax {
                 'pdf_status' => 'pending',
                 'pdf_error' => '',
                 'pdf_last_attempt_at' => null,
+                'pdf_generated_ms' => 0,
+                'pdf_size_bytes' => 0,
+                'pdf_page_count' => 0,
+                'pdf_warnings' => wp_json_encode( array() ),
                 'correo_copia' => $data['correo_copia'],
                 'mail_status' => 'pending',
                 'mail_error' => '',
@@ -513,6 +517,10 @@ class AGP_PV_Ajax {
                 '%s', // pdf_status
                 '%s', // pdf_error
                 '%s', // pdf_last_attempt_at
+                '%d', // pdf_generated_ms
+                '%d', // pdf_size_bytes
+                '%d', // pdf_page_count
+                '%s', // pdf_warnings
                 '%s', // correo_copia
                 '%s', // mail_status
                 '%s', // mail_error
