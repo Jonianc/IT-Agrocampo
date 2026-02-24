@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.43] - 2026-02-24
+
+### Security
+- Se endurecen acciones admin sensibles con nonce atado al `submission_id` para `Reintentar correo` y `Regenerar PDF`, reduciendo riesgo de reutilización cruzada de enlaces.
+- Se mantiene compatibilidad retroactiva aceptando nonce legacy durante transición de enlaces existentes.
+- Se exige método HTTP `POST` en endpoints AJAX críticos (`agp_pv_submit` y regeneración batch de PDFs) devolviendo `405` en métodos inválidos.
+
+### Changed
+- Se agrega helper interno de validación de nonce por envío (`verify_submission_action_nonce`) y validación centralizada de método HTTP para rutas AJAX en admin.
+
 ## [1.4.42] - 2026-02-24
 
 ### Added

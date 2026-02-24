@@ -20,7 +20,16 @@ class AGP_PV_Ajax {
         add_action( 'wp_ajax_nopriv_agp_pv_submit', array( $this, 'handle_submit' ) );
     }
 
+    private function enforce_post_request(): void {
+        $method = isset( $_SERVER['REQUEST_METHOD'] ) ? strtoupper( sanitize_text_field( wp_unslash( (string) $_SERVER['REQUEST_METHOD'] ) ) ) : '';
+        if ( 'POST' !== $method ) {
+            wp_send_json_error( array( 'message' => __( 'Método HTTP no permitido.', 'agrocampo-post-venta' ) ), 405 );
+        }
+    }
+
     public function handle_submit(): void {
+        $this->enforce_post_request();
+
         if ( ! check_ajax_referer( 'agp_pv_submit', 'nonce', false ) ) {
             wp_send_json_error( array( 'message' => __( 'Nonce inválido.', 'agrocampo-post-venta' ) ) );
         }

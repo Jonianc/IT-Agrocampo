@@ -252,14 +252,42 @@ class AGP_PV_Admin {
         }
     }
 
+
+    private function verify_submission_action_nonce( string $action, int $submission_id ): bool {
+        if ( $submission_id <= 0 ) {
+            return false;
+        }
+
+        $nonce = isset( $_REQUEST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( (string) $_REQUEST['_wpnonce'] ) ) : '';
+        if ( '' === $nonce ) {
+            return false;
+        }
+
+        // Backward-compatible: accept legacy action nonce while links rotate to id-scoped nonce.
+        return (bool) wp_verify_nonce( $nonce, $action . '_' . $submission_id ) || (bool) wp_verify_nonce( $nonce, $action );
+    }
+
+    private function enforce_post_for_ajax_json(): void {
+        $method = isset( $_SERVER['REQUEST_METHOD'] ) ? strtoupper( sanitize_text_field( wp_unslash( (string) $_SERVER['REQUEST_METHOD'] ) ) ) : '';
+        if ( 'POST' !== $method ) {
+            wp_send_json_error( array( 'message' => __( 'Método HTTP no permitido.', 'agrocampo-post-venta' ) ), 405 );
+        }
+    }
+
     public function handle_resend_email(): void {
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ) );
         }
 
-        check_admin_referer( 'agp_pv_resend_email' );
-
         $submission_id = isset( $_GET['submission_id'] ) ? absint( $_GET['submission_id'] ) : 0;
+        if ( ! $submission_id ) {
+            wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-submissions' ) );
+            exit;
+        }
+
+        if ( ! $this->verify_submission_action_nonce( 'agp_pv_resend_email', $submission_id ) ) {
+            wp_die( esc_html__( 'Enlace inválido o expirado.', 'agrocampo-post-venta' ), esc_html__( 'Acceso denegado', 'agrocampo-post-venta' ), array( 'response' => 403 ) );
+        }
         if ( $submission_id ) {
             $result = AGP_PV_Email::send_submission_email( $submission_id );
             if ( empty( $result['mail_sent'] ) ) {
@@ -280,12 +308,14 @@ class AGP_PV_Admin {
             wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ) );
         }
 
-        check_admin_referer( 'agp_pv_regenerate_pdf' );
-
         $submission_id = isset( $_GET['submission_id'] ) ? absint( $_GET['submission_id'] ) : 0;
         if ( ! $submission_id ) {
             wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-submissions' ) );
             exit;
+        }
+
+        if ( ! $this->verify_submission_action_nonce( 'agp_pv_regenerate_pdf', $submission_id ) ) {
+            wp_die( esc_html__( 'Enlace inválido o expirado.', 'agrocampo-post-venta' ), esc_html__( 'Acceso denegado', 'agrocampo-post-venta' ), array( 'response' => 403 ) );
         }
 
         $result = AGP_PV_PDF::regenerate_pdf_attachment( $submission_id );
@@ -362,6 +392,8 @@ class AGP_PV_Admin {
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_send_json_error( array( 'message' => __( 'No autorizado.', 'agrocampo-post-venta' ) ), 403 );
         }
+
+        $this->enforce_post_for_ajax_json();
 
         check_ajax_referer( 'agp_pv_regenerate_all_pdf', 'nonce' );
 
@@ -1214,13 +1246,13 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
 
         $actions['resend'] = sprintf(
             '<a href="%s">%s</a>',
-            esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=agp_pv_resend_email&submission_id=' . $submission_id ), 'agp_pv_resend_email' ) ),
+            esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=agp_pv_resend_email&submission_id=' . $submission_id ), 'agp_pv_resend_email_' . $submission_id ) ),
             esc_html__( 'Reintentar correo', 'agrocampo-post-venta' )
         );
 
         $actions['regenerate_pdf'] = sprintf(
             '<a href="%s">%s</a>',
-            esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=agp_pv_regenerate_pdf&submission_id=' . $submission_id ), 'agp_pv_regenerate_pdf' ) ),
+            esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=agp_pv_regenerate_pdf&submission_id=' . $submission_id ), 'agp_pv_regenerate_pdf_' . $submission_id ) ),
             esc_html__( 'Regenerar PDF', 'agrocampo-post-venta' )
         );
 
