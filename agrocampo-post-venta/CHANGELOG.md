@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.39] - 2026-02-24
+
+### Changed
+- Se aplica render condicional en la tarjeta `Servicio`: campos vacíos o con valor `No informado` ya no reservan filas, y cuando todos están ausentes se resume en una sola línea compacta en gris.
+- Se incorpora layout adaptativo 2-up para cabecera de contenido: `Datos Generales` y `Equipo` se muestran en dos cards en la misma fila cuando el contenido es corto; si crece (p. ej. nombres/series largas), se usa fallback automático al layout apilado anterior.
+- Se agrega estimación de altura para el bloque 2-up con control de overflow para mantener estabilidad de paginación y evitar solapes en casos de contenido extenso.
+
 ## [1.4.38] - 2026-02-24
 
 ### Fixed

@@ -271,6 +271,131 @@ class AGP_PV_PDF_Document extends FPDF {
     }
 
     /**
+     * Render Datos Generales + Equipo side-by-side when content is short.
+     * Returns true when rendered in 2-up mode; false to allow stacked fallback.
+     */
+    public function render_intro_cards_two_up( array $general_rows, array $equipment_rows ): bool {
+        $usable_w = $this->w - $this->lMargin - $this->rMargin;
+        $gap = 4.8;
+        $card_w = ( $usable_w - $gap ) / 2;
+
+        $label_w = 21.5;
+        $value_gap = 2.2;
+        $value_w = $card_w - 6.0 - $label_w - $value_gap;
+
+        if ( $value_w <= 24.0 ) {
+            return false;
+        }
+
+        $title_top = 2.6;
+        $title_h = 4.8;
+        $line_gap = 0.5;
+        $body_gap = 1.3;
+        $line_h = 4.1;
+        $row_gap = 0.8;
+        $bottom_pad = 1.6;
+        $after_gap = 1.3;
+
+        $general_h = $this->estimate_two_up_card_height( $general_rows, $value_w, $line_h, $row_gap, $title_top, $title_h, $line_gap, $body_gap, $bottom_pad );
+        $equipment_h = $this->estimate_two_up_card_height( $equipment_rows, $value_w, $line_h, $row_gap, $title_top, $title_h, $line_gap, $body_gap, $bottom_pad );
+        $max_h = max( $general_h, $equipment_h );
+
+        if ( $max_h > 56.0 ) {
+            return false;
+        }
+
+        $this->ensure_space( $max_h + $after_gap );
+
+        $y0 = $this->GetY();
+        $x_left = $this->lMargin;
+        $x_right = $x_left + $card_w + $gap;
+
+        $this->draw_two_up_card( $x_left, $y0, $card_w, __( 'Datos Generales', 'agrocampo-post-venta' ), $general_rows, $label_w, $value_gap, $value_w, $title_top, $title_h, $line_gap, $body_gap, $line_h, $row_gap, $max_h );
+        $this->draw_two_up_card( $x_right, $y0, $card_w, __( 'Equipo', 'agrocampo-post-venta' ), $equipment_rows, $label_w, $value_gap, $value_w, $title_top, $title_h, $line_gap, $body_gap, $line_h, $row_gap, $max_h );
+
+        $this->SetXY( $this->lMargin, $y0 + $max_h + $after_gap );
+        return true;
+    }
+
+    private function estimate_two_up_card_height(
+        array $rows,
+        float $value_w,
+        float $line_h,
+        float $row_gap,
+        float $title_top,
+        float $title_h,
+        float $line_gap,
+        float $body_gap,
+        float $bottom_pad
+    ): float {
+        $height = $title_top + $title_h + $line_gap + $body_gap;
+
+        foreach ( $rows as $row ) {
+            $value = self::enc( (string) ( $row['value'] ?? '' ) );
+            $nb = max( 1, $this->NbLines( $value_w, $value ) );
+            if ( $nb > 2 ) {
+                return 999.0;
+            }
+
+            $height += ( $line_h * $nb ) + $row_gap;
+        }
+
+        return $height + $bottom_pad;
+    }
+
+    private function draw_two_up_card(
+        float $x,
+        float $y,
+        float $w,
+        string $title,
+        array $rows,
+        float $label_w,
+        float $value_gap,
+        float $value_w,
+        float $title_top,
+        float $title_h,
+        float $line_gap,
+        float $body_gap,
+        float $line_h,
+        float $row_gap,
+        float $card_h
+    ): void {
+        $this->SetFont( 'Helvetica', 'B', 11.1 );
+        $this->SetXY( $x + 2.6, $y + $title_top );
+        $this->Cell( $w - 5.2, $title_h, self::enc( $title ), 0, 0, 'L' );
+
+        $line_y = $y + $title_top + $title_h + $line_gap;
+        $this->Line( $x + 2.4, $line_y, $x + $w - 2.4, $line_y );
+
+        $cursor_y = $line_y + $body_gap;
+        foreach ( $rows as $row ) {
+            $label = self::enc( (string) ( $row['label'] ?? '' ) );
+            $value = self::enc( (string) ( $row['value'] ?? '' ) );
+            $nb = max( 1, $this->NbLines( $value_w, $value ) );
+            $row_h = $line_h * $nb;
+
+            $this->SetFont( 'Helvetica', 'B', 9.6 );
+            $this->SetXY( $x + 2.6, $cursor_y );
+            $this->Cell( $label_w, $row_h, $label, 0, 0, 'L' );
+
+            $value_is_placeholder = strtolower( trim( $value ) ) === strtolower( self::enc( __( 'No informado', 'agrocampo-post-venta' ) ) );
+            if ( $value_is_placeholder ) {
+                $this->SetTextColor( 115, 115, 115 );
+            }
+            $this->SetFont( 'Helvetica', '', 9.5 );
+            $this->SetXY( $x + 2.6 + $label_w + $value_gap, $cursor_y );
+            $this->MultiCell( $value_w, $line_h, $value, 0, 'L' );
+            if ( $value_is_placeholder ) {
+                $this->SetTextColor( 20, 20, 20 );
+            }
+
+            $cursor_y += $row_h + $row_gap;
+        }
+
+        $this->RoundedRect( $x, $y, $w, $card_h, 3.0, 'D' );
+    }
+
+    /**
      * Full-width bordered box with text.
      */
     public function box_text( string $title, string $text ): void {
@@ -873,17 +998,67 @@ class AGP_PV_PDF {
             $tipo_servicio_label = self::normalize_pdf_value( $submission['tipo_servicio_label'] ?? self::map_tipo_servicio( (string) ( $submission['tipo_servicio'] ?? '' ) ) );
             $tipo_mantencion_label = self::normalize_pdf_value( $submission['tipo_mantencion_label'] ?? self::map_tipo_mantencion( (string) ( $submission['tipo_mantencion'] ?? '' ) ) );
 
-            $document->card_start( __( 'Datos Generales', 'agrocampo-post-venta' ), 16.0 );
-            $document->row4( __( 'Técnico', 'agrocampo-post-venta' ), $tecnico_label, __( 'Correo', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['email_cliente'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
-            $document->row2( __( 'Cliente', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['cliente'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
-            $document->row2( __( 'Faena / Lugar', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['faena_lugar'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
-            $document->card_end();
+            $general_rows = array(
+                array(
+                    'label' => __( 'Técnico', 'agrocampo-post-venta' ),
+                    'value' => $tecnico_label,
+                ),
+                array(
+                    'label' => __( 'Correo', 'agrocampo-post-venta' ),
+                    'value' => self::normalize_pdf_value( $submission['email_cliente'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ),
+                ),
+                array(
+                    'label' => __( 'Cliente', 'agrocampo-post-venta' ),
+                    'value' => self::normalize_pdf_value( $submission['cliente'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ),
+                ),
+                array(
+                    'label' => __( 'Faena / Lugar', 'agrocampo-post-venta' ),
+                    'value' => self::normalize_pdf_value( $submission['faena_lugar'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ),
+                ),
+            );
 
-            $document->card_start( __( 'Equipo', 'agrocampo-post-venta' ), 16.0 );
-            $document->row4( __( 'Máquina', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['maquina'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ), __( 'Modelo', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['modelo'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
-            $document->row4( __( 'Serie', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['serie'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ), __( 'N° Interno', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['numero_interno'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
-            $document->row4( __( 'Fecha', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['fecha'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ), __( 'Horas', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['horas'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
-            $document->card_end();
+            $equipment_rows = array(
+                array(
+                    'label' => __( 'Máquina', 'agrocampo-post-venta' ),
+                    'value' => self::normalize_pdf_value( $submission['maquina'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ),
+                ),
+                array(
+                    'label' => __( 'Modelo', 'agrocampo-post-venta' ),
+                    'value' => self::normalize_pdf_value( $submission['modelo'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ),
+                ),
+                array(
+                    'label' => __( 'Serie', 'agrocampo-post-venta' ),
+                    'value' => self::normalize_pdf_value( $submission['serie'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ),
+                ),
+                array(
+                    'label' => __( 'N° Interno', 'agrocampo-post-venta' ),
+                    'value' => self::normalize_pdf_value( $submission['numero_interno'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ),
+                ),
+                array(
+                    'label' => __( 'Fecha', 'agrocampo-post-venta' ),
+                    'value' => self::normalize_pdf_value( $submission['fecha'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ),
+                ),
+                array(
+                    'label' => __( 'Horas', 'agrocampo-post-venta' ),
+                    'value' => self::normalize_pdf_value( $submission['horas'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ),
+                ),
+            );
+
+            $rendered_intro_two_up = $document->render_intro_cards_two_up( $general_rows, $equipment_rows );
+
+            if ( ! $rendered_intro_two_up ) {
+                $document->card_start( __( 'Datos Generales', 'agrocampo-post-venta' ), 16.0 );
+                $document->row4( __( 'Técnico', 'agrocampo-post-venta' ), $tecnico_label, __( 'Correo', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['email_cliente'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
+                $document->row2( __( 'Cliente', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['cliente'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
+                $document->row2( __( 'Faena / Lugar', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['faena_lugar'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
+                $document->card_end();
+
+                $document->card_start( __( 'Equipo', 'agrocampo-post-venta' ), 16.0 );
+                $document->row4( __( 'Máquina', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['maquina'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ), __( 'Modelo', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['modelo'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
+                $document->row4( __( 'Serie', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['serie'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ), __( 'N° Interno', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['numero_interno'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
+                $document->row4( __( 'Fecha', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['fecha'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ), __( 'Horas', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['horas'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
+                $document->card_end();
+            }
 
             $document->card_start( __( 'Servicio', 'agrocampo-post-venta' ), 16.0 );
             $cantidad_horas = self::normalize_pdf_value( $submission['cantidad_horas'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) );
@@ -891,9 +1066,38 @@ class AGP_PV_PDF {
             $fecha_cierre = self::normalize_pdf_value( $submission['fecha_cierre'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) );
             $mantencion_val = ! empty( $tipo_mantencion_label ) ? $tipo_mantencion_label : __( 'No informado', 'agrocampo-post-venta' );
 
-            $document->row4( __( 'Tipo de Servicio', 'agrocampo-post-venta' ), (string) $tipo_servicio_label, __( 'Cantidad de Horas', 'agrocampo-post-venta' ), $cantidad_horas );
-            $document->row4( __( 'Tipo de Mantención', 'agrocampo-post-venta' ), (string) $mantencion_val, __( 'F. Reparación', 'agrocampo-post-venta' ), $fecha_reparacion );
-            $document->row2( __( 'F. Cierre', 'agrocampo-post-venta' ), $fecha_cierre );
+            $service_pairs = array(
+                array( __( 'Tipo de Servicio', 'agrocampo-post-venta' ), (string) $tipo_servicio_label ),
+                array( __( 'Cantidad de Horas', 'agrocampo-post-venta' ), $cantidad_horas ),
+                array( __( 'Tipo de Mantención', 'agrocampo-post-venta' ), (string) $mantencion_val ),
+                array( __( 'F. Reparación', 'agrocampo-post-venta' ), $fecha_reparacion ),
+                array( __( 'F. Cierre', 'agrocampo-post-venta' ), $fecha_cierre ),
+            );
+
+            $visible_service_pairs = array();
+            foreach ( $service_pairs as $pair ) {
+                if ( self::is_empty_pdf_display_value( (string) $pair[1] ) ) {
+                    continue;
+                }
+
+                $visible_service_pairs[] = $pair;
+            }
+
+            if ( empty( $visible_service_pairs ) ) {
+                $document->row2( __( 'Servicio', 'agrocampo-post-venta' ), __( 'No informado', 'agrocampo-post-venta' ) );
+            } else {
+                $visible_count = count( $visible_service_pairs );
+                for ( $i = 0; $i < $visible_count; $i += 2 ) {
+                    $left = $visible_service_pairs[ $i ];
+                    $right = $visible_service_pairs[ $i + 1 ] ?? null;
+
+                    if ( null !== $right ) {
+                        $document->row4( (string) $left[0], (string) $left[1], (string) $right[0], (string) $right[1] );
+                    } else {
+                        $document->row2( (string) $left[0], (string) $left[1] );
+                    }
+                }
+            }
             $document->card_end();
 
             $document->card_start( __( 'Detalle', 'agrocampo-post-venta' ), 20.0 );
@@ -1386,6 +1590,15 @@ class AGP_PV_PDF {
         }
 
         return $normalized;
+    }
+
+    private static function is_empty_pdf_display_value( string $value ): bool {
+        $normalized = trim( self::normalize_pdf_value( $value, '' ) );
+        if ( '' === $normalized ) {
+            return true;
+        }
+
+        return 0 === strcasecmp( $normalized, __( 'No informado', 'agrocampo-post-venta' ) );
     }
     /**
      * Normaliza bloques de texto para PDF sin truncar contenido.
