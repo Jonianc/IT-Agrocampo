@@ -188,7 +188,39 @@ class AGP_PV_Ajax {
             $errors['fecha_reparacion'] = __( 'Fecha Reparación es obligatorio.', 'agrocampo-post-venta' );
         }
 
+        $max_lengths = array(
+            'cliente' => 80,
+            'faena_lugar' => 80,
+            'maquina' => 50,
+            'modelo' => 50,
+            'serie' => 60,
+            'numero_interno' => 30,
+        );
+
+        foreach ( $max_lengths as $field => $max_length ) {
+            $current = isset( $data[ $field ] ) ? (string) $data[ $field ] : '';
+            if ( '' === $current ) {
+                continue;
+            }
+
+            if ( $this->text_length( $current ) > (int) $max_length ) {
+                $errors[ $field ] = sprintf(
+                    /* translators: %d max allowed characters */
+                    __( 'Máximo %d caracteres.', 'agrocampo-post-venta' ),
+                    (int) $max_length
+                );
+            }
+        }
+
         return $errors;
+    }
+
+    private function text_length( string $text ): int {
+        if ( function_exists( 'mb_strlen' ) ) {
+            return (int) mb_strlen( $text );
+        }
+
+        return strlen( $text );
     }
 
     private function get_tipo_servicio_label( string $value ): string {

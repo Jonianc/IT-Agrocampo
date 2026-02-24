@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.44] - 2026-02-24
+
+### Changed
+- Se agregan límites de longitud y guías visuales en frontend para campos críticos de cabecera (`Cliente`, `Faena`, `Máquina`, `Modelo`, `Serie`, `N° Interno`) con contador de caracteres restantes para prevenir desbordes en PDF.
+- Se incorpora feedback visual cuando un campo se acerca al límite de caracteres, mejorando la captura en móvil y escritorio.
+
+### Security
+- Se añade validación defensiva de longitudes en backend para los mismos campos, evitando que payloads fuera de rango salten las restricciones del frontend.
+
 ## [1.4.43] - 2026-02-24
 
 ### Security

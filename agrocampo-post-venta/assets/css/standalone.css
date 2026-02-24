@@ -233,6 +233,17 @@
     margin-top: 4px;
 }
 
+
+.agp-pv-charcount {
+    margin-top: 2px;
+    color: #5f6368;
+}
+
+.agp-pv-charcount.is-limit-near {
+    color: #8a5a00;
+    font-weight: 600;
+}
+
 .agp-pv-invalid {
     border-color: #b00020 !important;
     outline: none;

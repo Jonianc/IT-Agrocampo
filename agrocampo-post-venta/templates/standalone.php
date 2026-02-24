@@ -56,7 +56,8 @@ if ( ! defined( 'ABSPATH' ) ) {
             <div class="agp-pv-grid">
                 <div class="agp-pv-field">
                     <label for="agp-pv-cliente"><?php esc_html_e( 'Cliente', 'agrocampo-post-venta' ); ?> *</label>
-                    <input id="agp-pv-cliente" name="cliente" type="text" required>
+                    <input id="agp-pv-cliente" name="cliente" type="text" required maxlength="80" data-maxlength-target="cliente">
+                    <small class="agp-pv-help agp-pv-charcount" data-maxlength-counter="cliente"></small>
                     <span class="agp-pv-error" data-error-for="cliente"></span>
                 </div>
                 <div class="agp-pv-field">
@@ -68,11 +69,13 @@ if ( ! defined( 'ABSPATH' ) ) {
             <div class="agp-pv-grid">
                 <div class="agp-pv-field">
                     <label for="agp-pv-faena"><?php esc_html_e( 'Faena Lugar', 'agrocampo-post-venta' ); ?></label>
-                    <input id="agp-pv-faena" name="faena_lugar" type="text">
+                    <input id="agp-pv-faena" name="faena_lugar" type="text" maxlength="80" data-maxlength-target="faena_lugar">
+                    <small class="agp-pv-help agp-pv-charcount" data-maxlength-counter="faena_lugar"></small>
                 </div>
                 <div class="agp-pv-field">
                     <label for="agp-pv-maquina"><?php esc_html_e( 'Máquina', 'agrocampo-post-venta' ); ?> *</label>
-                    <input id="agp-pv-maquina" name="maquina" type="text" required>
+                    <input id="agp-pv-maquina" name="maquina" type="text" required maxlength="50" data-maxlength-target="maquina">
+                    <small class="agp-pv-help agp-pv-charcount" data-maxlength-counter="maquina"></small>
                     <span class="agp-pv-error" data-error-for="maquina"></span>
                 </div>
             </div>
@@ -80,12 +83,14 @@ if ( ! defined( 'ABSPATH' ) ) {
             <div class="agp-pv-grid">
                 <div class="agp-pv-field">
                     <label for="agp-pv-modelo"><?php esc_html_e( 'Modelo', 'agrocampo-post-venta' ); ?> *</label>
-                    <input id="agp-pv-modelo" name="modelo" type="text" required>
+                    <input id="agp-pv-modelo" name="modelo" type="text" required maxlength="50" data-maxlength-target="modelo">
+                    <small class="agp-pv-help agp-pv-charcount" data-maxlength-counter="modelo"></small>
                     <span class="agp-pv-error" data-error-for="modelo"></span>
                 </div>
                 <div class="agp-pv-field">
                     <label for="agp-pv-serie"><?php esc_html_e( 'Serie', 'agrocampo-post-venta' ); ?> *</label>
-                    <input id="agp-pv-serie" name="serie" type="text" required>
+                    <input id="agp-pv-serie" name="serie" type="text" required maxlength="60" data-maxlength-target="serie">
+                    <small class="agp-pv-help agp-pv-charcount" data-maxlength-counter="serie"></small>
                     <span class="agp-pv-error" data-error-for="serie"></span>
                 </div>
             </div>
@@ -93,7 +98,8 @@ if ( ! defined( 'ABSPATH' ) ) {
             <div class="agp-pv-grid">
                 <div class="agp-pv-field">
                     <label for="agp-pv-numero-interno"><?php esc_html_e( 'N° Interno', 'agrocampo-post-venta' ); ?> *</label>
-                    <input id="agp-pv-numero-interno" name="numero_interno" type="text" required>
+                    <input id="agp-pv-numero-interno" name="numero_interno" type="text" required maxlength="30" data-maxlength-target="numero_interno">
+                    <small class="agp-pv-help agp-pv-charcount" data-maxlength-counter="numero_interno"></small>
                     <span class="agp-pv-error" data-error-for="numero_interno"></span>
                 </div>
                 <div class="agp-pv-field agp-pv-field--date" data-condition="fecha">
@@ -106,7 +112,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             <div class="agp-pv-grid">
                 <div class="agp-pv-field">
                     <label for="agp-pv-horas"><?php esc_html_e( 'Horas', 'agrocampo-post-venta' ); ?> *</label>
-                    <input id="agp-pv-horas" name="horas" type="number" inputmode="numeric" min="0" step="1" required>
+                    <input id="agp-pv-horas" name="horas" type="number" inputmode="numeric" min="0" step="1" required max="999999">
                     <span class="agp-pv-error" data-error-for="horas"></span>
                 </div>
                 <div class="agp-pv-field">
