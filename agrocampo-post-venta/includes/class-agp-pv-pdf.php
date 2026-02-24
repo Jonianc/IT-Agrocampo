@@ -28,6 +28,14 @@ class AGP_PV_PDF_Document extends FPDF {
     private string $footer_text = '';
     private string $it_label_template = '';
 
+    /** @var array{placeholder_gray:int,min_body_font:float,min_title_font:float,min_line_height:float} */
+    private array $readability = array(
+        'placeholder_gray' => 95,
+        'min_body_font' => 10.0,
+        'min_title_font' => 10.8,
+        'min_line_height' => 4.4,
+    );
+
     private bool $compact_density = false;
     private bool $force_signature_compact = false;
 
@@ -156,7 +164,7 @@ class AGP_PV_PDF_Document extends FPDF {
         $body_gap  = $this->compact_density ? 1.3 : 2.1;
 
         $this->SetXY( $this->card_x + 3, $this->card_y + $title_top );
-        $this->SetFont( 'Helvetica', 'B', $this->compact_density ? 11.2 : 12 );
+        $this->SetFont( 'Helvetica', 'B', max( $this->compact_density ? 11.2 : 12, $this->readability['min_title_font'] ) );
         $this->Cell( $this->card_w - 6, $title_h, self::enc( $title ), 0, 1, 'L' );
 
         $line_y = $this->GetY() + $line_gap;
@@ -186,7 +194,7 @@ class AGP_PV_PDF_Document extends FPDF {
         $gap     = $this->gap_mm;
         $value_w = $this->w - $this->lMargin - $this->rMargin - $label_w - $gap;
 
-        $line_h = $this->compact_density ? 4.4 : 5.3;
+        $line_h = max( $this->compact_density ? 4.4 : 5.3, $this->readability['min_line_height'] );
 
         $label = self::enc( $label );
         $value = self::enc( $value );
@@ -200,15 +208,15 @@ class AGP_PV_PDF_Document extends FPDF {
         $y = $this->GetY();
 
         // Label.
-        $this->SetFont( 'Helvetica', 'B', $this->compact_density ? 9.8 : 10.2 );
+        $this->SetFont( 'Helvetica', 'B', max( $this->compact_density ? 9.8 : 10.2, $this->readability['min_body_font'] ) );
         $this->Cell( $label_w, $row_h, $label, 0, 0, 'L' );
 
         // Value.
         $value_is_placeholder = AGP_PV_PDF::is_missing_display_value( $value );
         if ( $value_is_placeholder ) {
-            $this->SetTextColor( 115, 115, 115 );
+            $this->SetTextColor( $this->readability['placeholder_gray'], $this->readability['placeholder_gray'], $this->readability['placeholder_gray'] );
         }
-        $this->SetFont( 'Helvetica', '', $this->compact_density ? 9.7 : 10.1 );
+        $this->SetFont( 'Helvetica', '', max( $this->compact_density ? 9.9 : 10.2, $this->readability['min_body_font'] ) );
         $this->SetXY( $x + $label_w + $gap, $y );
         $this->MultiCell( $value_w, $line_h, $value, 0, 'L' );
         if ( $value_is_placeholder ) {
@@ -233,7 +241,7 @@ class AGP_PV_PDF_Document extends FPDF {
         $gap       = 3.2;
         $value_w   = $pair_w - $label_w - $gap;
 
-        $line_h = $this->compact_density ? 4.2 : 5.0;
+        $line_h = max( $this->compact_density ? 4.2 : 5.0, $this->readability['min_line_height'] );
 
         $label1 = self::enc( $label1 );
         $value1 = self::enc( $value1 );
@@ -250,15 +258,15 @@ class AGP_PV_PDF_Document extends FPDF {
         $y0 = $this->GetY();
 
         // Left pair.
-        $this->SetFont( 'Helvetica', 'B', $this->compact_density ? 9.8 : 10.2 );
+        $this->SetFont( 'Helvetica', 'B', max( $this->compact_density ? 9.8 : 10.2, $this->readability['min_body_font'] ) );
         $this->SetXY( $x0, $y0 );
         $this->Cell( $label_w, $row_h, $label1, 0, 0, 'L' );
 
         $value1_is_placeholder = AGP_PV_PDF::is_missing_display_value( $value1 );
         if ( $value1_is_placeholder ) {
-            $this->SetTextColor( 115, 115, 115 );
+            $this->SetTextColor( $this->readability['placeholder_gray'], $this->readability['placeholder_gray'], $this->readability['placeholder_gray'] );
         }
-        $this->SetFont( 'Helvetica', '', $this->compact_density ? 9.7 : 10.1 );
+        $this->SetFont( 'Helvetica', '', max( $this->compact_density ? 9.9 : 10.2, $this->readability['min_body_font'] ) );
         $this->SetXY( $x0 + $label_w + $gap, $y0 );
         $this->MultiCell( $value_w, $line_h, $value1, 0, 'L' );
         if ( $value1_is_placeholder ) {
@@ -267,15 +275,15 @@ class AGP_PV_PDF_Document extends FPDF {
 
         // Right pair.
         $x1 = $x0 + $pair_w + $pair_gap;
-        $this->SetFont( 'Helvetica', 'B', $this->compact_density ? 9.8 : 10.2 );
+        $this->SetFont( 'Helvetica', 'B', max( $this->compact_density ? 9.8 : 10.2, $this->readability['min_body_font'] ) );
         $this->SetXY( $x1, $y0 );
         $this->Cell( $label_w, $row_h, $label2, 0, 0, 'L' );
 
         $value2_is_placeholder = AGP_PV_PDF::is_missing_display_value( $value2 );
         if ( $value2_is_placeholder ) {
-            $this->SetTextColor( 115, 115, 115 );
+            $this->SetTextColor( $this->readability['placeholder_gray'], $this->readability['placeholder_gray'], $this->readability['placeholder_gray'] );
         }
-        $this->SetFont( 'Helvetica', '', $this->compact_density ? 9.7 : 10.1 );
+        $this->SetFont( 'Helvetica', '', max( $this->compact_density ? 9.9 : 10.2, $this->readability['min_body_font'] ) );
         $this->SetXY( $x1 + $label_w + $gap, $y0 );
         $this->MultiCell( $value_w, $line_h, $value2, 0, 'L' );
         if ( $value2_is_placeholder ) {

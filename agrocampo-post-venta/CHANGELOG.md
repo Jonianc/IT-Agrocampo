@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.54] - 2026-02-24
+
+### Changed
+- Se mejora legibilidad base del PDF con umbrales mínimos de tipografía/interlineado en modo compacto para evitar texto excesivamente pequeño.
+- Se incrementa contraste de placeholders en filas (`row2`/`row4`) usando un gris más oscuro para facilitar lectura e impresión.
+
+### Accessibility
+- Se añaden tokens internos de legibilidad (fuente mínima, altura de línea mínima, gris de placeholders) para mantener consistencia visual en cabeceras y bloques de contenido.
+
+### Testing
+- Se amplía la regresión CLI con una aserción específica de altura mínima de fila en `compact_density`.
+
 ## [1.4.53] - 2026-02-24
 
 ### i18n

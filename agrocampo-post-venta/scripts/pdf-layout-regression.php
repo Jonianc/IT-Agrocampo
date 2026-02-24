@@ -231,6 +231,11 @@ $compact_density_doc->set_compact_density(true);
 $compact_card_end = $compact_density_doc->estimate_card_end_height();
 assert_true($compact_card_end < $normal_card_end, 'estimate_card_end_height baja con compact_density.');
 
+$accessibility_doc = make_doc();
+$accessibility_doc->set_compact_density(true);
+$readability_row_h = $accessibility_doc->estimate_row2_value_height('Texto corto');
+assert_true($readability_row_h >= 5.3, 'Legibilidad mínima mantiene altura de fila suficiente en compact_density.');
+
 assert_true(AGP_PV_PDF::is_missing_display_value('No informado'), 'Detecta placeholder clásico No informado.');
 assert_true(AGP_PV_PDF::is_missing_display_value('SIN INFORMACIÓN'), 'Detecta placeholder con acentos/case distintos.');
 assert_true(AGP_PV_PDF::is_missing_display_value('n/a'), 'Detecta placeholder N/A.');
