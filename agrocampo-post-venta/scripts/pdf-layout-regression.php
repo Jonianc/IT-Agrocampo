@@ -49,6 +49,26 @@ if (!function_exists('apply_filters')) {
     }
 }
 
+
+
+if (!function_exists('wp_tempnam')) {
+    function wp_tempnam(string $filename = ''): string {
+        $tmp = tempnam(sys_get_temp_dir(), 'agp-wp-');
+        return false === $tmp ? '' : $tmp;
+    }
+}
+
+if (!function_exists('wp_check_filetype_and_ext')) {
+    function wp_check_filetype_and_ext(string $file, string $filename, ?array $mimes = null): array {
+        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        if ('pdf' === $ext) {
+            return ['ext' => 'pdf', 'type' => 'application/pdf', 'proper_filename' => null];
+        }
+
+        return ['ext' => false, 'type' => false, 'proper_filename' => null];
+    }
+}
+
 if (!function_exists('remove_accents')) {
     function remove_accents(string $text): string {
         if (function_exists('iconv')) {
@@ -81,6 +101,31 @@ function make_doc(): AGP_PV_PDF_Document {
 
 $doc = make_doc();
 
+
+
+$invalid_attachment = AGP_PV_PDF::validate_pdf_attachment_path('/tmp/agp-pv-missing-file.pdf');
+assert_true(empty($invalid_attachment['valid']), 'validate_pdf_attachment_path falla cuando el archivo no existe.');
+
+$tmp_pdf = tempnam(sys_get_temp_dir(), 'agp-pdf-');
+$tmp_pdf_real = $tmp_pdf . '.pdf';
+@rename($tmp_pdf, $tmp_pdf_real);
+$fake_pdf = "%PDF-1.4\n" . str_repeat("A", 1300) . "\n%%EOF";
+file_put_contents($tmp_pdf_real, $fake_pdf);
+
+$previous_error_handler = set_error_handler(
+    static function (int $errno, string $errstr): bool {
+        return str_contains($errstr, 'proc_open(): posix_spawn() failed');
+    }
+);
+$valid_attachment = AGP_PV_PDF::validate_pdf_attachment_path($tmp_pdf_real);
+if (is_callable($previous_error_handler)) {
+    set_error_handler($previous_error_handler);
+} else {
+    restore_error_handler();
+}
+
+assert_true(!empty($valid_attachment['valid']), 'validate_pdf_attachment_path acepta PDF válido y legible.');
+@unlink($tmp_pdf_real);
 
 $default_thresholds = AGP_PV_PDF::get_layout_thresholds();
 assert_true((int) $default_thresholds['observaciones_short_max_chars'] >= 220, 'Threshold por defecto de observaciones cortas está disponible.');

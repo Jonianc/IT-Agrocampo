@@ -62,8 +62,11 @@ class AGP_PV_Email {
         $pdf_warning = '';
         if ( isset( $pdf_result['status'] ) && 'ready' === $pdf_result['status'] && ! empty( $pdf_result['attachment_id'] ) ) {
             $pdf_path = get_attached_file( (int) $pdf_result['attachment_id'] );
-            if ( $pdf_path && file_exists( $pdf_path ) ) {
+            $pdf_path_validation = AGP_PV_PDF::validate_pdf_attachment_path( (string) $pdf_path );
+            if ( ! empty( $pdf_path_validation['valid'] ) ) {
                 $attachments[] = $pdf_path;
+            } else {
+                $pdf_warning = $pdf_path_validation['message'] ?? __( 'PDF inválido, se envió el correo sin adjunto.', 'agrocampo-post-venta' );
             }
         } elseif ( isset( $pdf_result['status'] ) && 'failed' === $pdf_result['status'] ) {
             $pdf_warning = $pdf_result['message'] ?? __( 'PDF inválido, se envió el correo sin adjunto.', 'agrocampo-post-venta' );

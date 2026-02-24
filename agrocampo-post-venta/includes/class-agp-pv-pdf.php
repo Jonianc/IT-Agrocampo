@@ -974,8 +974,7 @@ class AGP_PV_PDF {
             );
         }
 
-        $report_id = AGP_PV_DB::get_visible_report_id( $submission );
-        $filename = wp_unique_filename( $upload_dir['path'], 'agp-pv-' . ( $report_id > 0 ? $report_id : $submission_id ) . '.pdf' );
+        $filename = wp_unique_filename( $upload_dir['path'], self::build_pdf_filename( $submission_id, $submission ) );
         $path     = trailingslashit( $upload_dir['path'] ) . $filename;
 
         $generated = self::generate_pdf_file( $submission_id, $submission, $path );
@@ -1024,7 +1023,7 @@ class AGP_PV_PDF {
 
         $attachment = array(
             'post_mime_type' => 'application/pdf',
-            'post_title'      => sanitize_file_name( $filename ),
+            'post_title'      => sanitize_text_field( pathinfo( $filename, PATHINFO_FILENAME ) ),
             'post_content'    => '',
             'post_status'     => 'inherit',
         );
@@ -1071,6 +1070,84 @@ class AGP_PV_PDF {
             'message'       => '',
             'attachment_id' => (int) $attach_id,
             'path'          => $path,
+        );
+    }
+
+    /**
+     * Build deterministic/safe PDF filename.
+     */
+    private static function build_pdf_filename( int $submission_id, array $submission ): string {
+        $report_id = AGP_PV_DB::get_visible_report_id( $submission );
+        $report_ref = $report_id > 0 ? $report_id : $submission_id;
+        $issue_date = date_i18n( 'Ymd' );
+
+        $base = sprintf( 'it-%s-%s', (string) $report_ref, $issue_date );
+        $base = sanitize_file_name( $base );
+        if ( '' === $base ) {
+            $base = 'it-' . (string) $report_ref;
+        }
+
+        return $base . '.pdf';
+    }
+
+    /**
+     * Validate that a path points to a readable PDF suitable for email attachment.
+     *
+     * @return array{valid:bool,message:string}
+     */
+    public static function validate_pdf_attachment_path( string $path ): array {
+        $path = trim( $path );
+        if ( '' === $path ) {
+            return array(
+                'valid' => false,
+                'message' => __( 'Ruta de PDF vacía.', 'agrocampo-post-venta' ),
+            );
+        }
+
+        if ( ! file_exists( $path ) || ! is_readable( $path ) ) {
+            return array(
+                'valid' => false,
+                'message' => __( 'El PDF no existe o no se puede leer.', 'agrocampo-post-venta' ),
+            );
+        }
+
+        $validation = self::validate_pdf_file( $path );
+        if ( empty( $validation['valid'] ) ) {
+            return array(
+                'valid' => false,
+                'message' => (string) ( $validation['message'] ?? __( 'PDF inválido para adjuntar.', 'agrocampo-post-venta' ) ),
+            );
+        }
+
+        $mime = '';
+        if ( function_exists( 'wp_check_filetype_and_ext' ) ) {
+            $ft = wp_check_filetype_and_ext( $path, basename( $path ), array( 'pdf' => 'application/pdf' ) );
+            if ( is_array( $ft ) && ! empty( $ft['type'] ) ) {
+                $mime = (string) $ft['type'];
+            }
+        }
+
+        if ( '' === $mime && function_exists( 'finfo_open' ) ) {
+            $fi = finfo_open( FILEINFO_MIME_TYPE );
+            if ( false !== $fi ) {
+                $detected = finfo_file( $fi, $path );
+                if ( is_string( $detected ) ) {
+                    $mime = $detected;
+                }
+                finfo_close( $fi );
+            }
+        }
+
+        if ( '' !== $mime && ! in_array( $mime, array( 'application/pdf', 'application/x-pdf' ), true ) ) {
+            return array(
+                'valid' => false,
+                'message' => __( 'El archivo adjunto no tiene MIME de PDF válido.', 'agrocampo-post-venta' ),
+            );
+        }
+
+        return array(
+            'valid' => true,
+            'message' => '',
         );
     }
 

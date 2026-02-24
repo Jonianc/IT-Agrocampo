@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.50] - 2026-02-24
+
+### Security
+- Se endurece el manejo de adjuntos PDF: validación defensiva de ruta/lectura, estructura PDF y MIME antes de adjuntar en correo.
+
+### Changed
+- Se estandariza el naming de PDF generado con helper dedicado (`it-{report_id}-{yyyymmdd}.pdf`) para mejorar consistencia operativa y compatibilidad de adjuntos.
+- Cuando el PDF existe pero falla validación de adjunto, el correo se envía sin archivo y retorna warning explícito.
+
+### Testing
+- Se amplía la regresión CLI para cubrir validación de adjunto PDF en casos de archivo inexistente y PDF válido local.
+
 ## [1.4.49] - 2026-02-24
 
 ### Changed
