@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.41] - 2026-02-24
+
+### Added
+- Se agrega script CLI de regresión `scripts/pdf-layout-regression.php` con fixtures para validar el comportamiento del layout 2-up (`Datos Generales` + `Equipo`) y su fallback a apilado cuando el contenido es extenso.
+- El script incorpora aserciones de semántica para placeholders de dato ausente (`No informado`, `SIN INFORMACIÓN`, `n/a`) para detectar regresiones tempranas en la lógica de render condicional del PDF.
+
+### Changed
+- Se formaliza una comprobación mínima repetible de layout PDF para reducir riesgo de regresiones entre iteraciones de compactación/paginación.
+
 ## [1.4.40] - 2026-02-24
 
 ### Changed
