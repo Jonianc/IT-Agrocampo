@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.46] - 2026-02-24
+
+### Changed
+- Se optimiza la regeneración masiva de PDF por lotes con presupuesto temporal por request (time-slicing), evitando que una sola llamada AJAX procese demasiados informes y reduzca la estabilidad en hostings lentos.
+- El endpoint batch ahora retorna telemetría de ejecución (`elapsed_ms`, `next_limit`) para ajustar dinámicamente el tamaño del siguiente lote.
+- El cliente admin de regeneración masiva adapta automáticamente el tamaño de lote dentro de límites configurables (`batchMin`/`batchMax`) para mejorar throughput y reducir timeouts.
+
 ## [1.4.45] - 2026-02-24
 
 ### Changed

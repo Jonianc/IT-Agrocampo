@@ -401,7 +401,10 @@ class AGP_PV_Admin {
         $table = AGP_PV_DB::table_name();
 
         $offset = isset( $_POST['offset'] ) ? max( 0, absint( wp_unslash( $_POST['offset'] ) ) ) : 0;
-        $limit = isset( $_POST['limit'] ) ? max( 1, min( 100, absint( wp_unslash( $_POST['limit'] ) ) ) ) : 25;
+        $limit = isset( $_POST['limit'] ) ? max( 10, min( 100, absint( wp_unslash( $_POST['limit'] ) ) ) ) : 25;
+        $batch_min = 10;
+        $batch_max = 100;
+        $time_budget_ms = 4200;
 
         $total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
         if ( 0 === $total ) {
@@ -413,6 +416,8 @@ class AGP_PV_Admin {
                     'failed' => 0,
                     'done' => true,
                     'next_offset' => 0,
+                    'next_limit' => $limit,
+                    'elapsed_ms' => 0,
                 )
             );
         }
@@ -421,6 +426,8 @@ class AGP_PV_Admin {
 
         $success = 0;
         $failed = 0;
+        $processed_in_batch = 0;
+        $batch_start = (int) round( microtime( true ) * 1000 );
 
         foreach ( $ids as $id ) {
             $result = AGP_PV_PDF::regenerate_pdf_attachment( (int) $id );
@@ -429,17 +436,35 @@ class AGP_PV_Admin {
             } else {
                 $failed++;
             }
+
+            $processed_in_batch++;
+            $elapsed_now = (int) round( microtime( true ) * 1000 ) - $batch_start;
+            if ( $elapsed_now >= $time_budget_ms ) {
+                break;
+            }
         }
 
-        $next_offset = $offset + count( $ids );
+        $processed = min( $total, $offset + $processed_in_batch );
+        $next_offset = $offset + $processed_in_batch;
+        $elapsed_ms = max( 1, (int) round( microtime( true ) * 1000 ) - $batch_start );
+
+        $next_limit = $limit;
+        if ( $elapsed_ms > 4500 ) {
+            $next_limit = max( $batch_min, $limit - 10 );
+        } elseif ( $elapsed_ms < 1800 && $processed_in_batch >= $limit ) {
+            $next_limit = min( $batch_max, $limit + 10 );
+        }
+
         wp_send_json_success(
             array(
-                'processed' => $next_offset,
+                'processed' => $processed,
                 'total' => $total,
                 'success' => $success,
                 'failed' => $failed,
-                'done' => $next_offset >= $total || count( $ids ) < $limit,
+                'done' => $next_offset >= $total || $processed_in_batch <= 0,
                 'next_offset' => $next_offset,
+                'next_limit' => $next_limit,
+                'elapsed_ms' => $elapsed_ms,
             )
         );
     }
@@ -849,6 +874,8 @@ class AGP_PV_Admin {
                     'ajaxUrl' => admin_url( 'admin-ajax.php' ),
                     'nonce' => wp_create_nonce( 'agp_pv_regenerate_all_pdf' ),
                     'batchSize' => 25,
+                    'batchMin' => 10,
+                    'batchMax' => 100,
                     'messages' => array(
                         'running' => __( 'Regenerando PDF... %1$d/%2$d (ok: %3$d, fallidos: %4$d)', 'agrocampo-post-venta' ),
                         'done' => __( 'Regeneración completada. Procesados: %1$d, OK: %2$d, Fallidos: %3$d.', 'agrocampo-post-venta' ),

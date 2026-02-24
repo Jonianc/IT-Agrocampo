@@ -28,12 +28,12 @@
         }
     };
 
-    const runBatch = function (offset, accumSuccess, accumFailed) {
+    const runBatch = function (offset, accumSuccess, accumFailed, limit) {
         $.post(cfg.ajaxUrl, {
             action: 'agp_pv_regenerate_all_pdf_batch',
             nonce: cfg.nonce,
             offset: offset,
-            limit: cfg.batchSize || 25
+            limit: limit || cfg.batchSize || 25
         }).done(function (response) {
             if (!response || !response.success || !response.data) {
                 throw new Error('Invalid response');
@@ -55,7 +55,12 @@
                 return;
             }
 
-            runBatch(Number(data.next_offset || 0), success, failed);
+            const minLimit = Number(cfg.batchMin || 10);
+            const maxLimit = Number(cfg.batchMax || 100);
+            let nextLimit = Number(data.next_limit || limit || cfg.batchSize || 25);
+            nextLimit = Math.max(minLimit, Math.min(maxLimit, nextLimit));
+
+            runBatch(Number(data.next_offset || 0), success, failed, nextLimit);
         }).fail(function () {
             setRunningState(false);
             $progressText.text(cfg.messages.error || 'Error');
@@ -71,6 +76,6 @@
         $progressBar.val(0);
         $progressText.text((cfg.messages && cfg.messages.starting) ? cfg.messages.starting : 'Iniciando...');
         setRunningState(true);
-        runBatch(0, 0, 0);
+        runBatch(0, 0, 0, Number(cfg.batchSize || 25));
     });
 })(jQuery);
