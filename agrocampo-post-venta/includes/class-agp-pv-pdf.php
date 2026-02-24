@@ -1045,6 +1045,16 @@ class AGP_PV_PDF {
             );
 
             $rendered_intro_two_up = $document->render_intro_cards_two_up( $general_rows, $equipment_rows );
+            self::log_layout_event(
+                'intro_layout',
+                array(
+                    'submission_id' => $submission_id,
+                    'report_id' => $report_id > 0 ? $report_id : $submission_id,
+                    'mode' => $rendered_intro_two_up ? 'two_up' : 'stacked',
+                    'general_rows' => count( $general_rows ),
+                    'equipment_rows' => count( $equipment_rows ),
+                )
+            );
 
             if ( ! $rendered_intro_two_up ) {
                 $document->card_start( __( 'Datos Generales', 'agrocampo-post-venta' ), 16.0 );
@@ -1082,6 +1092,16 @@ class AGP_PV_PDF {
 
                 $visible_service_pairs[] = $pair;
             }
+
+            self::log_layout_event(
+                'service_visibility',
+                array(
+                    'submission_id' => $submission_id,
+                    'visible_pairs' => count( $visible_service_pairs ),
+                    'total_pairs' => count( $service_pairs ),
+                    'render_mode' => empty( $visible_service_pairs ) ? 'single_placeholder' : 'filtered_pairs',
+                )
+            );
 
             if ( empty( $visible_service_pairs ) ) {
                 $document->row2( __( 'Servicio', 'agrocampo-post-venta' ), __( 'No informado', 'agrocampo-post-venta' ) );
@@ -1149,7 +1169,9 @@ class AGP_PV_PDF {
             $needed_normal = $obs_h_normal + $document->estimate_card_end_height() + $document->estimate_signature_section_height( false, $signatures_no_images );
             $space_left = $document->get_space_left();
 
+            $preflight_mode = 'normal';
             if ( $space_left < $needed_normal ) {
+                $preflight_mode = 'compact_density';
                 $document->set_compact_density( true );
                 if ( $obs_short ) {
                     $document->set_signature_compact( true );
@@ -1162,9 +1184,22 @@ class AGP_PV_PDF {
 
                 if ( $space_left < $needed_compact ) {
                     // Still does not fit: keep compact mode but allow natural page break.
+                    $preflight_mode = 'compact_density_plus_signature_compact';
                     $document->set_signature_compact( true );
                 }
             }
+
+            self::log_layout_event(
+                'observaciones_preflight',
+                array(
+                    'submission_id' => $submission_id,
+                    'mode' => $preflight_mode,
+                    'space_left' => round( $space_left, 2 ),
+                    'needed_normal' => round( $needed_normal, 2 ),
+                    'obs_short' => $obs_short,
+                    'signatures_no_images' => $signatures_no_images,
+                )
+            );
 
             $document->adaptive_text( __( 'Observaciones', 'agrocampo-post-venta' ), $observaciones );
             $document->card_end();
@@ -1724,8 +1759,37 @@ class AGP_PV_PDF {
         return array_values( array_unique( $flat ) );
     }
 
+    private static function is_layout_logging_enabled(): bool {
+        return ( defined( 'WP_DEBUG' ) && WP_DEBUG ) || (bool) get_option( 'agp_pv_debug' ) || (bool) get_option( 'agp_pv_pdf_layout_debug' );
+    }
+
+    /**
+     * Structured debug logs for PDF layout decisions.
+     */
+    private static function log_layout_event( string $event, array $context ): void {
+        if ( ! self::is_layout_logging_enabled() ) {
+            return;
+        }
+
+        $payload = array_merge(
+            array(
+                'event' => $event,
+                'ts' => gmdate( 'c' ),
+            ),
+            $context
+        );
+
+        $encoded = wp_json_encode( $payload );
+        if ( false === $encoded || '' === $encoded ) {
+            self::log( 'layout_event=' . $event );
+            return;
+        }
+
+        self::log( 'layout_event=' . $encoded );
+    }
+
     private static function log( string $message ): void {
-        if ( ! ( defined( 'WP_DEBUG' ) && WP_DEBUG ) && ! get_option( 'agp_pv_debug' ) ) {
+        if ( ! self::is_layout_logging_enabled() ) {
             return;
         }
 

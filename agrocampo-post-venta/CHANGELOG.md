@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.42] - 2026-02-24
+
+### Added
+- Se agrega logging estructurado de decisiones de layout PDF (`intro_layout`, `service_visibility`, `observaciones_preflight`) con contexto técnico (`submission_id`, modo aplicado, espacio disponible y umbrales de preflight).
+- Nuevo switch de observabilidad vía opción `agp_pv_pdf_layout_debug` (además de `WP_DEBUG` / `agp_pv_debug`) para habilitar trazas sin tocar lógica de render.
+
+### Changed
+- Se centraliza la puerta de logging en `is_layout_logging_enabled()` para mantener consistencia entre logs de layout y logs generales del generador PDF.
+
 ## [1.4.41] - 2026-02-24
 
 ### Added
