@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.48] - 2026-02-24
+
+### Changed
+- Se amplía la regresión CLI de PDF con escenarios de estrés para estimadores de altura (`adaptive`, `row2`, `box`) y validaciones de compactación/firma, mejorando cobertura de overflow y layout final.
+- El script ahora verifica más placeholders canónicos y agrega una prueba de render de observaciones extensas + bloque de firmas para detectar fallos no fatales en composición de página.
+
+### Testing
+- Se fortalece el script `scripts/pdf-layout-regression.php` con aserciones adicionales y mensajes de fallo más específicos para diagnóstico rápido.
+
 ## [1.4.47] - 2026-02-24
 
 ### Added
