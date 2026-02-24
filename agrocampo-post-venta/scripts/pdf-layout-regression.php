@@ -17,6 +17,18 @@ if (!function_exists('__')) {
     }
 }
 
+if (!function_exists('get_option')) {
+    function get_option(string $option, $default = false) {
+        return $default;
+    }
+}
+
+if (!function_exists('sanitize_text_field')) {
+    function sanitize_text_field(string $text): string {
+        return trim(strip_tags($text));
+    }
+}
+
 if (!function_exists('_n')) {
     function _n(string $single, string $plural, int $number, string $domain = ''): string {
         return 1 === $number ? $single : $plural;
@@ -126,6 +138,11 @@ if (is_callable($previous_error_handler)) {
 
 assert_true(!empty($valid_attachment['valid']), 'validate_pdf_attachment_path acepta PDF válido y legible.');
 @unlink($tmp_pdf_real);
+
+
+$branding = AGP_PV_PDF::get_branding_config();
+assert_true('INFORME TÉCNICO' === (string) $branding['header_title'], 'Branding por defecto incluye título PDF esperado.');
+assert_true(str_contains((string) $branding['it_label_template'], '%d'), 'Branding por defecto incluye placeholder %d en etiqueta IT.');
 
 $default_thresholds = AGP_PV_PDF::get_layout_thresholds();
 assert_true((int) $default_thresholds['observaciones_short_max_chars'] >= 220, 'Threshold por defecto de observaciones cortas está disponible.');

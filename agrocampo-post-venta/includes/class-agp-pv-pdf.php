@@ -24,6 +24,10 @@ class AGP_PV_PDF_Document extends FPDF {
     private float $card_y = 0.0;
     private float $card_w = 0.0;
     private bool $card_open = false;
+    private string $header_title = '';
+    private string $footer_text = '';
+    private string $it_label_template = '';
+
     private bool $compact_density = false;
     private bool $force_signature_compact = false;
 
@@ -35,6 +39,11 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->issue_date     = $issue_date;
         $this->logo_path      = $logo_path;
         $this->logo_width_mm  = $logo_width_mm > 0 ? $logo_width_mm : 38.0;
+
+        $branding = AGP_PV_PDF::get_branding_config();
+        $this->header_title = (string) $branding['header_title'];
+        $this->footer_text = (string) $branding['footer_text'];
+        $this->it_label_template = (string) $branding['it_label_template'];
 
         // Units are mm in FPDF.
         $this->SetMargins( 12, 12, 12 );
@@ -81,7 +90,8 @@ class AGP_PV_PDF_Document extends FPDF {
 
         // Title (center).
         $this->SetFont( 'Helvetica', 'B', 15 );
-        $title      = self::enc( __( 'INFORME TÉCNICO', 'agrocampo-post-venta' ) );
+        $title_text = '' !== $this->header_title ? $this->header_title : __( 'INFORME TÉCNICO', 'agrocampo-post-venta' );
+        $title      = self::enc( $title_text );
         $title_w    = $this->GetStringWidth( $title );
         $center_x   = ( $this->w - $title_w ) / 2;
         $title_y    = $start_y + 3;
@@ -95,7 +105,11 @@ class AGP_PV_PDF_Document extends FPDF {
         $right_x = $this->w - $this->rMargin - $right_w;
         $this->RoundedRect( $right_x, $start_y, $right_w, $right_h, 2.5, 'D' );
         $this->SetXY( $right_x + 2.2, $start_y + 1.8 );
-        $this->Cell( $right_w - 4.4, 3.8, self::enc( sprintf( __( 'IT: %d', 'agrocampo-post-venta' ), $this->report_id ) ), 0, 2, 'L' );
+        $it_template = '' !== $this->it_label_template ? $this->it_label_template : __( 'IT: %d', 'agrocampo-post-venta' );
+        if ( false === strpos( $it_template, '%' ) ) {
+            $it_template .= ' %d';
+        }
+        $this->Cell( $right_w - 4.4, 3.8, self::enc( sprintf( $it_template, $this->report_id ) ), 0, 2, 'L' );
         $this->SetFont( 'Helvetica', '', 8 );
         $this->SetX( $right_x + 2.2 );
         $this->Cell( $right_w - 4.4, 3.6, self::enc( $this->issue_date ), 0, 0, 'L' );
@@ -110,7 +124,8 @@ class AGP_PV_PDF_Document extends FPDF {
     public function Footer(): void { // phpcs:ignore WordPress.NamingConventions.ValidFunctionName.MethodNameInvalid
         $this->SetY( -12 );
         $this->SetFont( 'Helvetica', '', 9.5 );
-        $footer_text = self::enc( __( 'Talca • Linares • Parral   |   +56 9 9748 5650', 'agrocampo-post-venta' ) );
+        $footer_source = '' !== $this->footer_text ? $this->footer_text : __( 'Talca • Linares • Parral   |   +56 9 9748 5650', 'agrocampo-post-venta' );
+        $footer_text = self::enc( $footer_source );
         $page_text   = self::enc( sprintf( __( 'Página %d', 'agrocampo-post-venta' ), $this->PageNo() ) );
         $full        = $footer_text . self::enc( '   |   ' ) . $page_text;
         $this->Cell( 0, 5.2, $full, 0, 0, 'C' );
@@ -1680,6 +1695,48 @@ class AGP_PV_PDF {
 
     private static function update_pdf_status( int $submission_id, string $status, string $error ): void {
         AGP_PV_DB::update_pdf_status( $submission_id, $status, $error );
+    }
+
+
+    /**
+     * Configurable branding used by PDF header/footer.
+     *
+     * @return array{header_title:string,footer_text:string,it_label_template:string}
+     */
+    public static function get_branding_config(): array {
+        $header_title = (string) get_option( 'agp_pv_pdf_header_title', __( 'INFORME TÉCNICO', 'agrocampo-post-venta' ) );
+        $footer_text = (string) get_option( 'agp_pv_pdf_footer_text', __( 'Talca • Linares • Parral   |   +56 9 9748 5650', 'agrocampo-post-venta' ) );
+        $it_label_template = (string) get_option( 'agp_pv_pdf_it_label_template', __( 'IT: %d', 'agrocampo-post-venta' ) );
+
+        $header_title = sanitize_text_field( $header_title );
+        $footer_text = sanitize_text_field( $footer_text );
+        $it_label_template = sanitize_text_field( $it_label_template );
+
+        if ( '' === $header_title ) {
+            $header_title = __( 'INFORME TÉCNICO', 'agrocampo-post-venta' );
+        }
+        if ( '' === $footer_text ) {
+            $footer_text = __( 'Talca • Linares • Parral   |   +56 9 9748 5650', 'agrocampo-post-venta' );
+        }
+        if ( '' === $it_label_template ) {
+            $it_label_template = __( 'IT: %d', 'agrocampo-post-venta' );
+        }
+
+        if ( function_exists( 'mb_substr' ) ) {
+            $header_title = mb_substr( $header_title, 0, 70 );
+            $footer_text = mb_substr( $footer_text, 0, 110 );
+            $it_label_template = mb_substr( $it_label_template, 0, 40 );
+        } else {
+            $header_title = substr( $header_title, 0, 70 );
+            $footer_text = substr( $footer_text, 0, 110 );
+            $it_label_template = substr( $it_label_template, 0, 40 );
+        }
+
+        return array(
+            'header_title' => $header_title,
+            'footer_text' => $footer_text,
+            'it_label_template' => $it_label_template,
+        );
     }
 
     private static function get_logo_config(): array {

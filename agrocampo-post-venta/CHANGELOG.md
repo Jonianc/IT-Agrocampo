@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.52] - 2026-02-24
+
+### Added
+- Se agrega configuración de branding PDF en ajustes admin para título de cabecera, plantilla de etiqueta IT y texto de pie de página.
+
+### Changed
+- El render de cabecera/pie del PDF ahora usa branding configurable con fallback seguro a valores por defecto.
+- Se aplican límites de longitud y saneamiento de campos de branding para evitar desbordes de layout y mantener compatibilidad.
+
+### Testing
+- Se extiende la regresión CLI con aserciones del branding por defecto para validar compatibilidad de configuración.
+
 ## [1.4.51] - 2026-02-24
 
 ### Security
