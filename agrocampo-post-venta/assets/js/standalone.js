@@ -509,7 +509,7 @@ function initPhotos() {
                 $error.text('');
                 var files = Array.from($input.get(0).files || []);
                 if (files.length > MAX_FILES) {
-                    $error.text('Máximo 10 fotos.');
+                    $error.text(getMessage('photosMaxCount', 'Máximo 10 fotos.'));
                     $input.val('');
                     updateMetaFallback();
                     return;
@@ -522,7 +522,7 @@ function initPhotos() {
                         break;
                     }
                     if ((files[i].size || 0) > MAX_FILE_BYTES) {
-                        $error.text('Cada foto debe pesar máximo 5 MB.');
+                        $error.text(getMessage('photoMaxSize', 'Cada foto debe pesar máximo 5 MB.'));
                         $input.val('');
                         break;
                     }
@@ -596,13 +596,13 @@ function initPhotos() {
 
             var available = MAX_FILES - dt.files.length;
             if (available <= 0) {
-                $error.text('Máximo 10 fotos.');
+                $error.text(getMessage('photosMaxCount', 'Máximo 10 fotos.'));
                 $input.get(0).files = dt.files;
                 return;
             }
 
             if (incoming.length > available) {
-                $error.text('Máximo 10 fotos. El resto fue descartado.');
+                $error.text(getMessage('photosMaxCountTrimmed', 'Máximo 10 fotos. El resto fue descartado.'));
                 incoming = incoming.slice(0, available);
             }
 
@@ -612,7 +612,7 @@ function initPhotos() {
                 var originalFile = incoming[i];
 
                 if (!isSupportedImage(originalFile)) {
-                    $error.text('Se omitió "' + originalFile.name + '": formato no permitido.');
+                    $error.text(formatMessage(getMessage('photoOmittedInvalidFormat', 'Se omitió "%s": formato no permitido.'), [originalFile.name]));
                     continue;
                 }
 
@@ -620,12 +620,12 @@ function initPhotos() {
                 var processedFile = result.file;
 
                 if ((processedFile.size || 0) > MAX_FILE_BYTES) {
-                    $error.text('Se omitió "' + originalFile.name + '": supera 5 MB.');
+                    $error.text(formatMessage(getMessage('photoOmittedTooLarge', 'Se omitió "%s": supera 5 MB.'), [originalFile.name]));
                     continue;
                 }
 
                 if (currentTotal + processedFile.size > MAX_TOTAL_BYTES) {
-                    $error.text('Límite total alcanzado: 20 MB.');
+                    $error.text(getMessage('photosTotalLimit', 'Límite total alcanzado: 20 MB.'));
                     break;
                 }
 
@@ -746,7 +746,7 @@ function initPhotos() {
                     firstInvalid.get(0).reportValidity();
                 }
                 firstInvalid.trigger('focus');
-                $('.agp-pv-status').text('Revisa los campos marcados antes de continuar.');
+                $('.agp-pv-status').text(getMessage('statusReviewFieldsBeforeContinue', 'Revisa los campos marcados antes de continuar.'));
             }
 
             return valid;
@@ -910,7 +910,7 @@ function initPhotos() {
                 goToStep(restoredStep);
             }
 
-            $('.agp-pv-status').text('Se recuperó un borrador local.');
+            $('.agp-pv-status').text(getMessage('draftRecovered', 'Se recuperó un borrador local.'));
         }
 
         $form.on('input change', 'input, select, textarea', function () {
@@ -935,6 +935,28 @@ function initPhotos() {
         restoreDraft();
     }
 
+
+
+    function getMessage(key, fallback) {
+        if (agpPvData && agpPvData.messages && Object.prototype.hasOwnProperty.call(agpPvData.messages, key)) {
+            return agpPvData.messages[key];
+        }
+
+        return fallback;
+    }
+
+    function formatMessage(template, values) {
+        var text = String(template || '');
+        (values || []).forEach(function (val, idx) {
+            var token = '%' + (idx + 1) + '$d';
+            text = text.replace(token, val);
+            if (idx === 0) {
+                text = text.replace('%d', val);
+            }
+            text = text.replace('%s', val);
+        });
+        return text;
+    }
 
     function setStatusMessage(text, type) {
         var $status = $('.agp-pv-status');
@@ -1005,12 +1027,12 @@ function initPhotos() {
             var remaining = max - val.length;
             var $counter = $('[data-maxlength-counter="' + key + '"]');
             if ($counter.length) {
-                $counter.text('Máximo ' + max + ' caracteres (' + remaining + ' restantes)');
+                $counter.text(formatMessage(getMessage('fieldMaxRemainingTemplate', 'Máximo %1$d caracteres (%2$d restantes)'), [max, remaining]));
                 $counter.toggleClass('is-limit-near', remaining <= 10);
             }
 
             if (remaining <= 0) {
-                $field.get(0).setCustomValidity('Has alcanzado el máximo de ' + max + ' caracteres.');
+                $field.get(0).setCustomValidity(formatMessage(getMessage('fieldMaxReachedTemplate', 'Has alcanzado el máximo de %d caracteres.'), [max]));
             } else {
                 $field.get(0).setCustomValidity('');
             }
@@ -1060,7 +1082,7 @@ function initPhotos() {
                     formEl.reportValidity();
                 }
                 highlightInvalidFromNative(formEl);
-                setStatusMessage('Revisa los campos marcados.', 'error');
+                setStatusMessage(getMessage('statusReviewFields', 'Revisa los campos marcados.'), 'error');
                 return;
             }
 
@@ -1069,13 +1091,13 @@ function initPhotos() {
             var $submit = $('.agp-pv-submit');
             var originalText = $submit.data('original-text') || $submit.text();
             $submit.data('original-text', originalText);
-            $submit.prop('disabled', true).text('Enviando...');
+            $submit.prop('disabled', true).text(getMessage('statusSending', 'Enviando...'));
 
             var formData = new FormData(formEl);
             formData.append('action', 'agp_pv_submit');
             formData.append('nonce', agpPvData.nonce);
 
-            setStatusMessage('Enviando...');
+            setStatusMessage(getMessage('statusSending', 'Enviando...'));
 
             $.ajax({
                 url: agpPvData.ajaxUrl,
@@ -1122,7 +1144,7 @@ function initPhotos() {
                         // Field errors
                         if (response && response.data && response.data.errors) {
                             showFieldErrors(response.data.errors);
-                            setStatusMessage('Revisa los campos marcados.', 'error');
+                            setStatusMessage(getMessage('statusReviewFields', 'Revisa los campos marcados.'), 'error');
                         } else if (response && response.data && response.data.message) {
                             setStatusMessage(response.data.message, 'error');
                         } else {

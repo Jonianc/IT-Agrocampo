@@ -99,6 +99,18 @@ class AGP_PV_Plugin {
                     'successMailWarning' => __( 'Informe guardado correctamente, pero NO se pudo enviar el correo.', 'agrocampo-post-venta' ),
                     'successPdfWarning' => __( 'Informe enviado, pero el PDF no pudo adjuntarse.', 'agrocampo-post-venta' ),
                     'reportIdPrefix' => __( 'ID informe', 'agrocampo-post-venta' ),
+                    'statusReviewFieldsBeforeContinue' => __( 'Revisa los campos marcados antes de continuar.', 'agrocampo-post-venta' ),
+                    'statusReviewFields' => __( 'Revisa los campos marcados.', 'agrocampo-post-venta' ),
+                    'statusSending' => __( 'Enviando...', 'agrocampo-post-venta' ),
+                    'draftRecovered' => __( 'Se recuperó un borrador local.', 'agrocampo-post-venta' ),
+                    'photosMaxCount' => __( 'Máximo 10 fotos.', 'agrocampo-post-venta' ),
+                    'photosMaxCountTrimmed' => __( 'Máximo 10 fotos. El resto fue descartado.', 'agrocampo-post-venta' ),
+                    'photoMaxSize' => __( 'Cada foto debe pesar máximo 5 MB.', 'agrocampo-post-venta' ),
+                    'photosTotalLimit' => __( 'Límite total alcanzado: 20 MB.', 'agrocampo-post-venta' ),
+                    'photoOmittedInvalidFormat' => __( 'Se omitió "%s": formato no permitido.', 'agrocampo-post-venta' ),
+                    'photoOmittedTooLarge' => __( 'Se omitió "%s": supera 5 MB.', 'agrocampo-post-venta' ),
+                    'fieldMaxRemainingTemplate' => __( 'Máximo %1$d caracteres (%2$d restantes)', 'agrocampo-post-venta' ),
+                    'fieldMaxReachedTemplate' => __( 'Has alcanzado el máximo de %d caracteres.', 'agrocampo-post-venta' ),
                 ),
             )
         );

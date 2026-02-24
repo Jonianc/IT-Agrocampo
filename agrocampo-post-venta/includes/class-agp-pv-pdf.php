@@ -95,7 +95,7 @@ class AGP_PV_PDF_Document extends FPDF {
         $right_x = $this->w - $this->rMargin - $right_w;
         $this->RoundedRect( $right_x, $start_y, $right_w, $right_h, 2.5, 'D' );
         $this->SetXY( $right_x + 2.2, $start_y + 1.8 );
-        $this->Cell( $right_w - 4.4, 3.8, self::enc( sprintf( 'IT: %d', $this->report_id ) ), 0, 2, 'L' );
+        $this->Cell( $right_w - 4.4, 3.8, self::enc( sprintf( __( 'IT: %d', 'agrocampo-post-venta' ), $this->report_id ) ), 0, 2, 'L' );
         $this->SetFont( 'Helvetica', '', 8 );
         $this->SetX( $right_x + 2.2 );
         $this->Cell( $right_w - 4.4, 3.6, self::enc( $this->issue_date ), 0, 0, 'L' );

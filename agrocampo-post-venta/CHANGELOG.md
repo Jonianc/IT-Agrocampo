@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.45] - 2026-02-24
+
+### Changed
+- Se mejora i18n/compatibilidad del frontend standalone moviendo mensajes hardcodeados JS (estado, borrador, límites de fotos y contadores de longitud) a `wp_localize_script` para permitir traducción consistente por dominio del plugin.
+- Se agrega helper de formateo en JS para plantillas localizables con placeholders (`%s`, `%d`, `%1$d`, `%2$d`) sin perder fallback.
+
+### i18n
+- Se internacionaliza la etiqueta de cabecera PDF `IT: %d` usando funciones de traducción del plugin para mantener consistencia con el resto del documento.
+
 ## [1.4.44] - 2026-02-24
 
 ### Changed
