@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.51] - 2026-02-24
+
+### Security
+- Se endurece la previsualización admin de PDF validando permisos, nonce, método HTTP permitido (`GET/HEAD`) y PDF realmente válido antes de servirlo.
+- Se agregan cabeceras defensivas de respuesta para preview (`nosniff`, `no-store`, `no-cache`, `Accept-Ranges: none`).
+
+### Changed
+- La entrega de preview PDF ahora usa streaming directo (`readfile`) y soporta solicitudes `HEAD` para mejorar robustez y reducir uso de memoria.
+- Se incorpora logging técnico de eventos de denegación/fallo en preview bajo modo debug del plugin.
+
 ## [1.4.50] - 2026-02-24
 
 ### Security

@@ -331,14 +331,57 @@ class AGP_PV_Admin {
     }
 
 
+
+    private function deny_pdf_preview( string $message, string $title, int $status = 403 ): void {
+        $this->log_pdf_preview_event(
+            'deny',
+            array(
+                'status' => $status,
+                'message' => $message,
+            )
+        );
+
+        wp_die( esc_html( $message ), esc_html( $title ), array( 'response' => $status ) );
+    }
+
+    private function log_pdf_preview_event( string $event, array $context = array() ): void {
+        if ( ! ( ( defined( 'WP_DEBUG' ) && WP_DEBUG ) || (bool) get_option( 'agp_pv_debug' ) ) ) {
+            return;
+        }
+
+        $payload = wp_json_encode(
+            array_merge(
+                array(
+                    'event' => $event,
+                    'scope' => 'pdf_preview',
+                    'ts' => gmdate( 'c' ),
+                ),
+                $context
+            )
+        );
+
+        if ( $payload ) {
+            error_log( '[agp_pv_admin] ' . $payload ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+        }
+    }
+
     public function handle_view_pdf_request(): void {
-        if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+        if ( ! is_admin() ) {
             return;
         }
 
         $page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
         if ( 'agp-pv-submissions' !== $page ) {
             return;
+        }
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            $this->deny_pdf_preview( __( 'No autorizado.', 'agrocampo-post-venta' ), __( 'Acceso denegado', 'agrocampo-post-venta' ), 403 );
+        }
+
+        $method = isset( $_SERVER['REQUEST_METHOD'] ) ? strtoupper( sanitize_text_field( wp_unslash( (string) $_SERVER['REQUEST_METHOD'] ) ) ) : '';
+        if ( ! in_array( $method, array( 'GET', 'HEAD' ), true ) ) {
+            $this->deny_pdf_preview( __( 'Método HTTP no permitido.', 'agrocampo-post-venta' ), __( 'Solicitud inválida', 'agrocampo-post-venta' ), 405 );
         }
 
         $view_id = isset( $_GET['view'] ) ? absint( $_GET['view'] ) : 0;
@@ -348,27 +391,28 @@ class AGP_PV_Admin {
 
         $nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
         if ( ! wp_verify_nonce( $nonce, 'agp_pv_view_pdf_' . $view_id ) ) {
-            wp_die( esc_html__( 'Enlace de PDF inválido o expirado.', 'agrocampo-post-venta' ), esc_html__( 'Acceso denegado', 'agrocampo-post-venta' ), array( 'response' => 403 ) );
+            $this->deny_pdf_preview( __( 'Enlace de PDF inválido o expirado.', 'agrocampo-post-venta' ), __( 'Acceso denegado', 'agrocampo-post-venta' ), 403 );
         }
 
         $submission = AGP_PV_Email::get_submission( $view_id );
         if ( ! $submission ) {
-            wp_die( esc_html__( 'No se encontró el informe solicitado.', 'agrocampo-post-venta' ), esc_html__( 'Informe no encontrado', 'agrocampo-post-venta' ), array( 'response' => 404 ) );
+            $this->deny_pdf_preview( __( 'No se encontró el informe solicitado.', 'agrocampo-post-venta' ), __( 'Informe no encontrado', 'agrocampo-post-venta' ), 404 );
         }
 
         $pdf_result = AGP_PV_PDF::ensure_pdf_attachment( $view_id, $submission );
         if ( empty( $pdf_result['status'] ) || 'ready' !== $pdf_result['status'] ) {
-            wp_die( esc_html( $pdf_result['message'] ?? __( 'No fue posible generar el PDF.', 'agrocampo-post-venta' ) ), esc_html__( 'Error al generar PDF', 'agrocampo-post-venta' ), array( 'response' => 500 ) );
+            $this->deny_pdf_preview( (string) ( $pdf_result['message'] ?? __( 'No fue posible generar el PDF.', 'agrocampo-post-venta' ) ), __( 'Error al generar PDF', 'agrocampo-post-venta' ), 500 );
         }
 
         $pdf_path = isset( $pdf_result['path'] ) ? (string) $pdf_result['path'] : '';
-        if ( ! $pdf_path || ! file_exists( $pdf_path ) ) {
-            wp_die( esc_html__( 'No se encontró el archivo PDF en el servidor.', 'agrocampo-post-venta' ), esc_html__( 'PDF no disponible', 'agrocampo-post-venta' ), array( 'response' => 404 ) );
+        $path_validation = AGP_PV_PDF::validate_pdf_attachment_path( $pdf_path );
+        if ( empty( $path_validation['valid'] ) ) {
+            $this->deny_pdf_preview( (string) ( $path_validation['message'] ?? __( 'No se encontró un PDF válido para previsualizar.', 'agrocampo-post-venta' ) ), __( 'PDF no disponible', 'agrocampo-post-venta' ), 404 );
         }
 
-        $pdf_bytes = file_get_contents( $pdf_path );
-        if ( false === $pdf_bytes ) {
-            wp_die( esc_html__( 'No fue posible leer el PDF generado.', 'agrocampo-post-venta' ), esc_html__( 'Error de lectura', 'agrocampo-post-venta' ), array( 'response' => 500 ) );
+        $size = (int) @filesize( $pdf_path );
+        if ( $size <= 0 ) {
+            $this->deny_pdf_preview( __( 'No fue posible calcular el tamaño del PDF.', 'agrocampo-post-venta' ), __( 'Error de lectura', 'agrocampo-post-venta' ), 500 );
         }
 
         $report_id = AGP_PV_DB::get_visible_report_id( $submission );
@@ -381,9 +425,28 @@ class AGP_PV_Admin {
         nocache_headers();
         header( 'Content-Type: application/pdf' );
         header( 'Content-Disposition: inline; filename="' . sanitize_file_name( $filename ) . '"' );
-        header( 'Content-Length: ' . (string) strlen( $pdf_bytes ) );
+        header( 'X-Content-Type-Options: nosniff' );
+        header( 'Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0' );
+        header( 'Pragma: no-cache' );
+        header( 'Expires: 0' );
+        header( 'Accept-Ranges: none' );
+        header( 'Content-Length: ' . (string) $size );
 
-        echo $pdf_bytes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        if ( 'HEAD' === $method ) {
+            exit;
+        }
+
+        $read = readfile( $pdf_path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile
+        if ( false === $read ) {
+            $this->log_pdf_preview_event(
+                'stream_failed',
+                array(
+                    'submission_id' => $view_id,
+                    'path' => $pdf_path,
+                )
+            );
+        }
+
         exit;
     }
 
