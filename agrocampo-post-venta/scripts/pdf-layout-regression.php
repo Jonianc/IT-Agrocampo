@@ -23,6 +23,32 @@ if (!function_exists('_n')) {
     }
 }
 
+
+if (!function_exists('add_filter')) {
+    $GLOBALS['agp_pv_filters'] = [];
+
+    function add_filter(string $hook, callable $callback): void {
+        if (!isset($GLOBALS['agp_pv_filters'][$hook])) {
+            $GLOBALS['agp_pv_filters'][$hook] = [];
+        }
+        $GLOBALS['agp_pv_filters'][$hook][] = $callback;
+    }
+}
+
+if (!function_exists('apply_filters')) {
+    function apply_filters(string $hook, $value) {
+        if (empty($GLOBALS['agp_pv_filters'][$hook]) || !is_array($GLOBALS['agp_pv_filters'][$hook])) {
+            return $value;
+        }
+
+        foreach ($GLOBALS['agp_pv_filters'][$hook] as $callback) {
+            $value = $callback($value);
+        }
+
+        return $value;
+    }
+}
+
 if (!function_exists('remove_accents')) {
     function remove_accents(string $text): string {
         if (function_exists('iconv')) {
@@ -54,6 +80,23 @@ function make_doc(): AGP_PV_PDF_Document {
 }
 
 $doc = make_doc();
+
+
+$default_thresholds = AGP_PV_PDF::get_layout_thresholds();
+assert_true((int) $default_thresholds['observaciones_short_max_chars'] >= 220, 'Threshold por defecto de observaciones cortas está disponible.');
+assert_true((float) $default_thresholds['signatures_card_min_height'] >= 28.0, 'Threshold por defecto de altura mínima de firmas está disponible.');
+
+add_filter('agp_pv_pdf_layout_thresholds', static function (array $thresholds): array {
+    $thresholds['observaciones_short_max_chars'] = 300;
+    $thresholds['signatures_card_min_height'] = 32.0;
+    $thresholds['preflight_extra_padding_mm'] = 2.5;
+    return $thresholds;
+});
+
+$filtered_thresholds = AGP_PV_PDF::get_layout_thresholds();
+assert_true(300 === (int) $filtered_thresholds['observaciones_short_max_chars'], 'Filtro de thresholds permite ajustar observaciones_short_max_chars.');
+assert_true(32.0 === (float) $filtered_thresholds['signatures_card_min_height'], 'Filtro de thresholds permite ajustar signatures_card_min_height.');
+assert_true(2.5 === (float) $filtered_thresholds['preflight_extra_padding_mm'], 'Filtro de thresholds permite ajustar preflight_extra_padding_mm.');
 
 $general_short = [
     ['label' => 'Técnico', 'value' => 'Juan Castro Meza'],

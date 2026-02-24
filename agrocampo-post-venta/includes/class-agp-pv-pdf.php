@@ -1249,8 +1249,12 @@ class AGP_PV_PDF {
 
             $document->adaptive_text( __( 'Trabajos Realizados', 'agrocampo-post-venta' ), $trabajos );
 
+            $thresholds = self::get_layout_thresholds();
             $obs_trimmed = trim( $observaciones );
-            $obs_short = strlen( $obs_trimmed ) <= 220 && false === strpos( $obs_trimmed, "\n" );
+            $obs_short = strlen( $obs_trimmed ) <= (int) $thresholds['observaciones_short_max_chars'];
+            if ( ! (bool) $thresholds['observaciones_short_allow_newline'] ) {
+                $obs_short = $obs_short && false === strpos( $obs_trimmed, "\n" );
+            }
             $firma_cliente_path = self::resolve_attachment_path( (int) ( $submission['firma_cliente_id'] ?? 0 ) );
             $firma_tecnico_path = self::resolve_attachment_path( (int) ( $submission['firma_tecnico_id'] ?? 0 ) );
             $signatures_no_images = ! $firma_cliente_path && ! $firma_tecnico_path;
@@ -1259,21 +1263,21 @@ class AGP_PV_PDF {
             $obs_h_row_normal = $document->estimate_row2_value_height( $observaciones );
             $obs_h_box_normal = $document->estimate_box_text_height( $observaciones );
             $obs_h_normal = min( $obs_h_row_normal, $obs_h_box_normal );
-            $needed_normal = $obs_h_normal + $document->estimate_card_end_height() + $document->estimate_signature_section_height( false, $signatures_no_images );
+            $needed_normal = $obs_h_normal + $document->estimate_card_end_height() + $document->estimate_signature_section_height( false, $signatures_no_images ) + (float) $thresholds['preflight_extra_padding_mm'];
             $space_left = $document->get_space_left();
 
             $preflight_mode = 'normal';
             if ( $space_left < $needed_normal ) {
                 $preflight_mode = 'compact_density';
                 $document->set_compact_density( true );
-                if ( $obs_short ) {
+                if ( $obs_short && (bool) $thresholds['force_signature_compact_when_compact_density'] ) {
                     $document->set_signature_compact( true );
                 }
 
                 $obs_h_row_compact = $document->estimate_row2_value_height( $observaciones );
                 $obs_h_box_compact = $document->estimate_box_text_height( $observaciones );
                 $obs_h_compact = min( $obs_h_row_compact, $obs_h_box_compact );
-                $needed_compact = $obs_h_compact + $document->estimate_card_end_height() + $document->estimate_signature_section_height( true, $signatures_no_images );
+                $needed_compact = $obs_h_compact + $document->estimate_card_end_height() + $document->estimate_signature_section_height( true, $signatures_no_images ) + (float) $thresholds['preflight_extra_padding_mm'];
 
                 if ( $space_left < $needed_compact ) {
                     // Still does not fit: keep compact mode but allow natural page break.
@@ -1291,13 +1295,14 @@ class AGP_PV_PDF {
                     'needed_normal' => round( $needed_normal, 2 ),
                     'obs_short' => $obs_short,
                     'signatures_no_images' => $signatures_no_images,
+                    'thresholds' => $thresholds,
                 )
             );
 
             $document->adaptive_text( __( 'Observaciones', 'agrocampo-post-venta' ), $observaciones );
             $document->card_end();
 
-            $document->card_start( __( 'Firmas', 'agrocampo-post-venta' ), 28.0 );
+            $document->card_start( __( 'Firmas', 'agrocampo-post-venta' ), (float) $thresholds['signatures_card_min_height'] );
             $document->signature_row(
                 array(
                     'label' => __( 'Firma Cliente', 'agrocampo-post-venta' ),
@@ -1847,6 +1852,37 @@ class AGP_PV_PDF {
      * @param mixed[] $values
      * @return string[]
      */
+
+    /**
+     * Layout thresholds used by PDF preflight decisions.
+     *
+     * @return array<string,mixed>
+     */
+    public static function get_layout_thresholds(): array {
+        $thresholds = array(
+            'observaciones_short_max_chars' => 220,
+            'observaciones_short_allow_newline' => false,
+            'force_signature_compact_when_compact_density' => true,
+            'signatures_card_min_height' => 28.0,
+            'preflight_extra_padding_mm' => 0.0,
+        );
+
+        if ( function_exists( 'apply_filters' ) ) {
+            $filtered = apply_filters( 'agp_pv_pdf_layout_thresholds', $thresholds );
+            if ( is_array( $filtered ) ) {
+                $thresholds = array_merge( $thresholds, $filtered );
+            }
+        }
+
+        $thresholds['observaciones_short_max_chars'] = max( 40, (int) $thresholds['observaciones_short_max_chars'] );
+        $thresholds['observaciones_short_allow_newline'] = (bool) $thresholds['observaciones_short_allow_newline'];
+        $thresholds['force_signature_compact_when_compact_density'] = (bool) $thresholds['force_signature_compact_when_compact_density'];
+        $thresholds['signatures_card_min_height'] = max( 18.0, (float) $thresholds['signatures_card_min_height'] );
+        $thresholds['preflight_extra_padding_mm'] = max( 0.0, (float) $thresholds['preflight_extra_padding_mm'] );
+
+        return $thresholds;
+    }
+
     private static function flatten_pdf_values( array $values ): array {
         $flat = array();
 

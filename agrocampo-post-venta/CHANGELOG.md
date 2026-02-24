@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.49] - 2026-02-24
+
+### Changed
+- Se centralizan los umbrales del preflight de layout PDF en `get_layout_thresholds()` y se habilita ajuste externo con el filtro `agp_pv_pdf_layout_thresholds`.
+- El preflight de `Observaciones + Firmas` ahora consume umbrales configurables (`observaciones_short_max_chars`, `signatures_card_min_height`, `preflight_extra_padding_mm`) y registra los thresholds efectivos en logging estructurado.
+
+### Testing
+- Se amplía la regresión CLI para validar que los thresholds por defecto existen y que el filtro permite sobrescribirlos de forma determinística.
+
 ## [1.4.48] - 2026-02-24
 
 ### Changed
