@@ -392,6 +392,13 @@ class AGP_PV_Ajax {
         global $wpdb;
         $table = AGP_PV_DB::table_name();
         $now = current_time( 'mysql' );
+        $lock_name = $this->get_report_id_lock_name();
+        $should_release_lock = false;
+
+        if ( '' !== $lock_name && $this->acquire_report_id_lock( $lock_name ) ) {
+            $should_release_lock = true;
+        }
+
         $report_id = $this->get_next_imported_report_id();
 
         $inserted = $wpdb->insert(
@@ -474,6 +481,10 @@ class AGP_PV_Ajax {
             )
         );
 
+        if ( $should_release_lock ) {
+            $this->release_report_id_lock( $lock_name );
+        }
+
         if ( false === $inserted ) {
             return array(
                 'submission_id' => 0,
@@ -498,6 +509,36 @@ class AGP_PV_Ajax {
         }
 
         return $max_legacy_id + 1;
+    }
+
+    private function get_report_id_lock_name(): string {
+        global $wpdb;
+
+        $table = AGP_PV_DB::table_name();
+
+        return substr( 'agp_pv_report_id_' . md5( $wpdb->dbname . ':' . $table ), 0, 64 );
+    }
+
+    private function acquire_report_id_lock( string $lock_name ): bool {
+        global $wpdb;
+
+        $query = $wpdb->prepare( 'SELECT GET_LOCK(%s, %d)', $lock_name, 5 );
+        if ( null === $query ) {
+            return false;
+        }
+
+        return '1' === (string) $wpdb->get_var( $query );
+    }
+
+    private function release_report_id_lock( string $lock_name ): void {
+        global $wpdb;
+
+        $query = $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $lock_name );
+        if ( null === $query ) {
+            return;
+        }
+
+        $wpdb->query( $query );
     }
 
     private function is_rate_limited(): bool {
