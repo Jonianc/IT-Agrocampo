@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.32] - 2026-02-24
+
+### Changed
+- Se rediseña la UI del PDF al estilo tarjeta (dashboard) con contenedores redondeados por sección, separadores internos y mayor jerarquía visual en cabecera.
+- El bloque de encabezado ahora muestra `IT` y fecha dentro de una caja redondeada, alineada con el título para un look más limpio y consistente.
+- Se reorganiza el flujo de contenido en tarjetas para `Datos Generales`, `Equipo`, `Servicio`, `Detalle` y `Firmas`, mejorando lectura y escaneo del informe impreso.
+
 ## [1.4.31] - 2026-02-24
 
 ### Changed

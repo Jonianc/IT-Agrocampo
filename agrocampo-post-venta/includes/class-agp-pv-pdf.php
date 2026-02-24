@@ -20,6 +20,10 @@ class AGP_PV_PDF_Document extends FPDF {
     private float $logo_width_mm = 38.0;
     private float $label_width_mm = 42.0;
     private float $gap_mm = 3.0;
+    private float $card_x = 0.0;
+    private float $card_y = 0.0;
+    private float $card_w = 0.0;
+    private bool $card_open = false;
 
     /** @var string[] */
     private array $warnings = array();
@@ -83,20 +87,19 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->Cell( $title_w, 7.5, $title, 0, 0, 'C' );
 
         // Right block (IT + date).
-        $this->SetFont( 'Helvetica', '', 10 );
-        $right_w = 40;
+        $this->SetFont( 'Helvetica', 'B', 10 );
+        $right_w = 38;
+        $right_h = 10.8;
         $right_x = $this->w - $this->rMargin - $right_w;
-        $this->SetXY( $right_x, $start_y );
-        $this->MultiCell(
-            $right_w,
-            5.2,
-            self::enc( sprintf( "IT: %d\n%s", $this->report_id, $this->issue_date ) ),
-            0,
-            'R'
-        );
+        $this->RoundedRect( $right_x, $start_y, $right_w, $right_h, 2.5, 'D' );
+        $this->SetXY( $right_x + 2.2, $start_y + 1.8 );
+        $this->Cell( $right_w - 4.4, 3.8, self::enc( sprintf( 'IT: %d', $this->report_id ) ), 0, 2, 'L' );
+        $this->SetFont( 'Helvetica', '', 8 );
+        $this->SetX( $right_x + 2.2 );
+        $this->Cell( $right_w - 4.4, 3.6, self::enc( $this->issue_date ), 0, 0, 'L' );
 
         // Separator line.
-        $header_h = max( $logo_h, 18.0 );
+        $header_h = max( $logo_h, 17.0 );
         $line_y   = $start_y + $header_h + 4;
         $this->Line( $this->lMargin, $line_y, $this->w - $this->rMargin, $line_y );
         $this->SetY( $line_y + 4.2 );
@@ -119,6 +122,34 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->Line( $this->lMargin, $y, $this->w - $this->rMargin, $y );
         $this->Ln( 3.2 );
         $this->SetFont( 'Helvetica', '', 10 );
+    }
+
+    public function card_start( string $title, float $min_height = 28.0 ): void {
+        $this->ensure_space( $min_height );
+
+        $this->card_x = $this->lMargin;
+        $this->card_y = $this->GetY();
+        $this->card_w = $this->w - $this->lMargin - $this->rMargin;
+        $this->card_open = true;
+
+        $this->SetXY( $this->card_x + 3, $this->card_y + 3.2 );
+        $this->SetFont( 'Helvetica', 'B', 12 );
+        $this->Cell( $this->card_w - 6, 5.2, self::enc( $title ), 0, 1, 'L' );
+
+        $line_y = $this->GetY() + 0.6;
+        $this->Line( $this->card_x + 2.8, $line_y, $this->card_x + $this->card_w - 2.8, $line_y );
+        $this->SetXY( $this->card_x + 3, $line_y + 2.1 );
+    }
+
+    public function card_end( float $bottom_padding = 3.0 ): void {
+        if ( ! $this->card_open ) {
+            return;
+        }
+
+        $end_y = $this->GetY() + $bottom_padding;
+        $this->RoundedRect( $this->card_x, $this->card_y, $this->card_w, $end_y - $this->card_y, 3.2, 'D' );
+        $this->SetXY( $this->lMargin, $end_y + 2.6 );
+        $this->card_open = false;
     }
 
     /**
@@ -332,6 +363,58 @@ class AGP_PV_PDF_Document extends FPDF {
         if ( ( $this->GetY() + $h ) > ( $this->h - $this->bMargin ) ) {
             $this->AddPage( 'P', 'A4' );
         }
+    }
+
+    /**
+     * Rounded rectangle helper (FPDF script style).
+     */
+    private function RoundedRect( float $x, float $y, float $w, float $h, float $r, string $style = '' ): void { // phpcs:ignore WordPress.NamingConventions.ValidFunctionName.MethodNameInvalid
+        $k  = $this->k;
+        $hp = $this->h;
+
+        $op = 'S';
+        if ( 'F' === $style ) {
+            $op = 'f';
+        } elseif ( 'FD' === $style || 'DF' === $style ) {
+            $op = 'B';
+        }
+
+        $my_arc = 4 / 3 * ( sqrt( 2 ) - 1 );
+
+        $this->_out( sprintf( '%.2F %.2F m', ( $x + $r ) * $k, ( $hp - $y ) * $k ) );
+        $xc = $x + $w - $r;
+        $yc = $y + $r;
+        $this->_out( sprintf( '%.2F %.2F l', $xc * $k, ( $hp - $y ) * $k ) );
+        $this->arc( $xc + $r * $my_arc, $yc - $r, $xc + $r, $yc - $r * $my_arc, $xc + $r, $yc );
+        $xc = $x + $w - $r;
+        $yc = $y + $h - $r;
+        $this->_out( sprintf( '%.2F %.2F l', ( $x + $w ) * $k, ( $hp - $yc ) * $k ) );
+        $this->arc( $xc + $r, $yc + $r * $my_arc, $xc + $r * $my_arc, $yc + $r, $xc, $yc + $r );
+        $xc = $x + $r;
+        $yc = $y + $h - $r;
+        $this->_out( sprintf( '%.2F %.2F l', $xc * $k, ( $hp - ( $y + $h ) ) * $k ) );
+        $this->arc( $xc - $r * $my_arc, $yc + $r, $xc - $r, $yc + $r * $my_arc, $xc - $r, $yc );
+        $xc = $x + $r;
+        $yc = $y + $r;
+        $this->_out( sprintf( '%.2F %.2F l', $x * $k, ( $hp - $yc ) * $k ) );
+        $this->arc( $xc - $r, $yc - $r * $my_arc, $xc - $r * $my_arc, $yc - $r, $xc, $yc - $r );
+        $this->_out( $op );
+    }
+
+    private function arc( float $x1, float $y1, float $x2, float $y2, float $x3, float $y3 ): void {
+        $h = $this->h;
+        $k = $this->k;
+        $this->_out(
+            sprintf(
+                '%.2F %.2F %.2F %.2F %.2F %.2F c',
+                $x1 * $k,
+                ( $h - $y1 ) * $k,
+                $x2 * $k,
+                ( $h - $y2 ) * $k,
+                $x3 * $k,
+                ( $h - $y3 ) * $k
+            )
+        );
     }
 
     /**
@@ -574,17 +657,19 @@ class AGP_PV_PDF {
             $tipo_servicio_label = self::normalize_pdf_value( $submission['tipo_servicio_label'] ?? self::map_tipo_servicio( (string) ( $submission['tipo_servicio'] ?? '' ) ) );
             $tipo_mantencion_label = self::normalize_pdf_value( $submission['tipo_mantencion_label'] ?? self::map_tipo_mantencion( (string) ( $submission['tipo_mantencion'] ?? '' ) ) );
 
-            $document->section_title( __( 'Datos Generales', 'agrocampo-post-venta' ) );
+            $document->card_start( __( 'Datos Generales', 'agrocampo-post-venta' ), 35.0 );
             $document->row4( __( 'Técnico', 'agrocampo-post-venta' ), $tecnico_label, __( 'Correo', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['email_cliente'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
             $document->row2( __( 'Cliente', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['cliente'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
             $document->row2( __( 'Faena / Lugar', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['faena_lugar'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
+            $document->card_end();
 
-            $document->section_title( __( 'Equipo', 'agrocampo-post-venta' ) );
+            $document->card_start( __( 'Equipo', 'agrocampo-post-venta' ), 35.0 );
             $document->row4( __( 'Máquina', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['maquina'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ), __( 'Modelo', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['modelo'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
             $document->row4( __( 'Serie', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['serie'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ), __( 'N° Interno', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['numero_interno'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
             $document->row4( __( 'Fecha', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['fecha'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ), __( 'Horas', 'agrocampo-post-venta' ), self::normalize_pdf_value( $submission['horas'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
+            $document->card_end();
 
-            $document->section_title( __( 'Servicio', 'agrocampo-post-venta' ) );
+            $document->card_start( __( 'Servicio', 'agrocampo-post-venta' ), 32.0 );
             $document->row2( __( 'Tipo de Servicio', 'agrocampo-post-venta' ), (string) $tipo_servicio_label );
 
             // Mantención.
@@ -605,8 +690,9 @@ class AGP_PV_PDF {
                     self::normalize_pdf_value( $submission['fecha_cierre'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) )
                 );
             }
+            $document->card_end();
 
-            $document->section_title( __( 'Detalle', 'agrocampo-post-venta' ) );
+            $document->card_start( __( 'Detalle', 'agrocampo-post-venta' ), 34.0 );
 
             $lub = self::limit_pdf_block_text( self::normalize_pdf_value( $submission['lubricantes'] ?? '', '', true ) );
             $fil = self::limit_pdf_block_text( self::normalize_pdf_value( $submission['filtros_utilizados'] ?? '', '', true ) );
@@ -629,8 +715,9 @@ class AGP_PV_PDF {
 
             $document->adaptive_text( __( 'Trabajos Realizados', 'agrocampo-post-venta' ), $trabajos );
             $document->adaptive_text( __( 'Observaciones', 'agrocampo-post-venta' ), $observaciones );
+            $document->card_end();
 
-            $document->section_title( __( 'Firmas', 'agrocampo-post-venta' ) );
+            $document->card_start( __( 'Firmas', 'agrocampo-post-venta' ), 48.0 );
             $document->signature_row(
                 array(
                     'label' => __( 'Firma Cliente', 'agrocampo-post-venta' ),
@@ -641,6 +728,7 @@ class AGP_PV_PDF {
                     'path'  => self::resolve_attachment_path( (int) ( $submission['firma_tecnico_id'] ?? 0 ) ),
                 )
             );
+            $document->card_end();
 
             $document->Output( 'F', $path );
 
