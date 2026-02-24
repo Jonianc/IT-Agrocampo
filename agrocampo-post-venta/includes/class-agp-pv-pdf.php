@@ -24,6 +24,7 @@ class AGP_PV_PDF_Document extends FPDF {
     private float $card_y = 0.0;
     private float $card_w = 0.0;
     private bool $card_open = false;
+    private bool $force_signature_compact = false;
 
     /** @var string[] */
     private array $warnings = array();
@@ -291,6 +292,74 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->box_text( $title, $trimmed );
     }
 
+    /**
+     * Render two medium/short lists in a two-column 50/50 layout.
+     * Returns true when rendered in two columns; false to fallback single-column.
+     */
+    public function detail_lists_two_columns( string $title_left, string $text_left, string $title_right, string $text_right ): bool {
+        $left  = trim( $text_left );
+        $right = trim( $text_right );
+
+        if ( '' === $left || '' === $right ) {
+            return false;
+        }
+
+        $usable_w = $this->w - $this->lMargin - $this->rMargin;
+        $gap      = 6.0;
+        $col_w    = ( $usable_w - $gap ) / 2;
+
+        $title_h    = 5.8;
+        $padding    = 1.7;
+        $line_h     = 4.6;
+        $inner_w    = $col_w - ( 2 * $padding );
+
+        $left_enc   = self::enc( $left );
+        $right_enc  = self::enc( $right );
+        $nb_left    = max( 1, $this->NbLines( $inner_w, $left_enc ) );
+        $nb_right   = max( 1, $this->NbLines( $inner_w, $right_enc ) );
+        $max_lines  = max( $nb_left, $nb_right );
+
+        // Auto fallback to single column when one list is too long.
+        if ( $max_lines > 8 ) {
+            return false;
+        }
+
+        $box_h = ( $max_lines * $line_h ) + ( 2 * $padding );
+        $row_h = $title_h + $box_h + 2.0;
+        $this->ensure_space( $row_h + 1.5 );
+
+        $x = $this->lMargin;
+        $y = $this->GetY();
+
+        // Left column.
+        $this->SetFont( 'Helvetica', 'B', 10.4 );
+        $this->SetXY( $x, $y );
+        $this->Cell( $col_w, $title_h, self::enc( $title_left ), 0, 0, 'L' );
+        $left_box_y = $y + $title_h;
+        $this->Rect( $x, $left_box_y, $col_w, $box_h );
+        $this->SetFont( 'Helvetica', '', 10.1 );
+        $this->SetXY( $x + $padding, $left_box_y + $padding );
+        $this->MultiCell( $inner_w, $line_h, $left_enc, 0, 'L' );
+
+        // Right column.
+        $x2 = $x + $col_w + $gap;
+        $this->SetFont( 'Helvetica', 'B', 10.4 );
+        $this->SetXY( $x2, $y );
+        $this->Cell( $col_w, $title_h, self::enc( $title_right ), 0, 0, 'L' );
+        $right_box_y = $y + $title_h;
+        $this->Rect( $x2, $right_box_y, $col_w, $box_h );
+        $this->SetFont( 'Helvetica', '', 10.1 );
+        $this->SetXY( $x2 + $padding, $right_box_y + $padding );
+        $this->MultiCell( $inner_w, $line_h, $right_enc, 0, 'L' );
+
+        $this->SetXY( $this->lMargin, $y + $row_h );
+        return true;
+    }
+
+    public function set_signature_compact( bool $compact ): void {
+        $this->force_signature_compact = $compact;
+    }
+
     public function signature_row( array $left, array $right ): void {
         $gap       = 6.5;
         $box_h     = 27.0;
@@ -298,7 +367,7 @@ class AGP_PV_PDF_Document extends FPDF {
         $box_w     = ( $this->w - $this->lMargin - $this->rMargin - $gap ) / 2;
 
         $space_left = $this->space_left();
-        if ( $space_left < 36.0 && $space_left >= 30.0 ) {
+        if ( $this->force_signature_compact || ( $space_left < 36.0 && $space_left >= 30.0 ) ) {
             // Compact mode to avoid pushing "Firmas" alone to a new page.
             $box_h    = 22.0;
             $tail_gap = 3.8;
@@ -313,6 +382,7 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->signature_box( (string) $right['label'], (string) $right['path'], $x + $box_w + $gap, $y, $box_w, $box_h );
 
         $this->SetXY( $this->lMargin, $y + $box_h + $tail_gap );
+        $this->force_signature_compact = false;
     }
 
     private function signature_box( string $label, string $path, float $x, float $y, float $w, float $h ): void {
@@ -376,6 +446,10 @@ class AGP_PV_PDF_Document extends FPDF {
 
     private function space_left(): float {
         return ( $this->h - $this->bMargin ) - $this->GetY();
+    }
+
+    public function get_space_left(): float {
+        return $this->space_left();
     }
 
     /**
@@ -712,10 +786,23 @@ class AGP_PV_PDF {
             $com = self::limit_pdf_block_text( self::normalize_pdf_value( $submission['componentes_utilizados'] ?? '', '', true ) );
 
             if ( '' !== trim( $lub ) ) {
-                $document->adaptive_text( __( 'Lubricantes', 'agrocampo-post-venta' ), $lub );
-            }
+                $rendered_two_cols = false;
+                if ( '' !== trim( $fil ) ) {
+                    $rendered_two_cols = $document->detail_lists_two_columns(
+                        __( 'Lubricantes', 'agrocampo-post-venta' ),
+                        $lub,
+                        __( 'Filtros Utilizados', 'agrocampo-post-venta' ),
+                        $fil
+                    );
+                }
 
-            if ( '' !== trim( $fil ) ) {
+                if ( ! $rendered_two_cols ) {
+                    $document->adaptive_text( __( 'Lubricantes', 'agrocampo-post-venta' ), $lub );
+                    if ( '' !== trim( $fil ) ) {
+                        $document->adaptive_text( __( 'Filtros Utilizados', 'agrocampo-post-venta' ), $fil );
+                    }
+                }
+            } elseif ( '' !== trim( $fil ) ) {
                 $document->adaptive_text( __( 'Filtros Utilizados', 'agrocampo-post-venta' ), $fil );
             }
 
@@ -727,6 +814,16 @@ class AGP_PV_PDF {
             $observaciones = self::limit_pdf_block_text( self::normalize_pdf_value( $submission['observaciones'] ?? '', __( 'No informado', 'agrocampo-post-venta' ), true ) );
 
             $document->adaptive_text( __( 'Trabajos Realizados', 'agrocampo-post-venta' ), $trabajos );
+
+            // If Observaciones is short, force compact signatures mode so both
+            // sections are more likely to fit on the same page before breaking.
+            $obs_trimmed = trim( $observaciones );
+            $obs_short = strlen( $obs_trimmed ) <= 180 && false === strpos( $obs_trimmed, "\n" );
+            $space_left = $document->get_space_left();
+            if ( $obs_short && $space_left < 58.0 ) {
+                $document->set_signature_compact( true );
+            }
+
             $document->adaptive_text( __( 'Observaciones', 'agrocampo-post-venta' ), $observaciones );
             $document->card_end();
 

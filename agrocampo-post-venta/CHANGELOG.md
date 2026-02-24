@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.35] - 2026-02-24
+
+### Changed
+- Se optimiza el bloque `Detalle` para renderizar `Lubricantes` y `Filtros Utilizados` en layout de 2 columnas (50/50) cuando ambas listas son cortas/medias; si alguna crece demasiado, el PDF vuelve automáticamente a columna única.
+- Se agrega lógica de compactación coordinada entre `Observaciones` (cuando es corta) y `Firmas` para mejorar la probabilidad de mantener ambas secciones en la misma página antes de forzar salto.
+
+### Fixed
+- Se mejora el aprovechamiento vertical del informe en escenarios de contenido variable, reduciendo saltos innecesarios y blancos residuales hacia el cierre del PDF.
+
 ## [1.4.34] - 2026-02-24
 
 ### Fixed
