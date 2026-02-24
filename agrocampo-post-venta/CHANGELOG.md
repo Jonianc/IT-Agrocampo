@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.29] - 2026-02-24
+
+### Fixed
+- Se corrige la captura de firmas en el formulario cuando el paso de Firmas aún no estaba visible al inicializar el canvas, evitando lienzos colapsados y pérdida de trazo.
+- Se mejora el parseo server-side del `data:image/png;base64` de firmas para preservar correctamente el payload y evitar fallas al guardar adjuntos.
+
 ## [1.4.28] - 2026-02-23
 
 ### Fixed

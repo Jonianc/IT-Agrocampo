@@ -218,8 +218,8 @@ class AGP_PV_Ajax {
             'firma_tecnico_id' => 0,
         );
 
-        $firma_cliente = isset( $_POST['firma_cliente'] ) ? sanitize_text_field( wp_unslash( $_POST['firma_cliente'] ) ) : '';
-        $firma_tecnico = isset( $_POST['firma_tecnico'] ) ? sanitize_text_field( wp_unslash( $_POST['firma_tecnico'] ) ) : '';
+        $firma_cliente = $this->normalize_signature_data_url( $_POST['firma_cliente'] ?? '' );
+        $firma_tecnico = $this->normalize_signature_data_url( $_POST['firma_tecnico'] ?? '' );
 
         if ( $firma_cliente ) {
             $result['firma_cliente_id'] = $this->store_signature( $firma_cliente, 'firma-cliente' );
@@ -242,6 +242,20 @@ class AGP_PV_Ajax {
         }
 
         return $result;
+    }
+
+    private function normalize_signature_data_url( $raw ): string {
+        if ( ! is_string( $raw ) ) {
+            return '';
+        }
+
+        $value = trim( wp_unslash( $raw ) );
+        if ( '' === $value ) {
+            return '';
+        }
+
+        // In case payload was urlencoded, restore base64 plus signs.
+        return str_replace( ' ', '+', $value );
     }
 
     private function store_signature( string $data_url, string $prefix ): int {

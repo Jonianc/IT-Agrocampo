@@ -164,6 +164,8 @@
     }
 
     function initSignatures() {
+        var signatureSetups = [];
+
         $('.agp-pv-signature').each(function () {
             var $wrapper = $(this);
             var canvas = $wrapper.find('canvas').get(0);
@@ -176,14 +178,31 @@
             function setupCanvas() {
                 // Use the rendered size for crisp signatures on high DPI
                 var rect = canvas.getBoundingClientRect();
+                var cssW = Math.round(rect.width);
+                var cssH = Math.round(rect.height);
+
+                // Skip while hidden (step not visible) to avoid collapsing to 1x1.
+                if (cssW < 10 || cssH < 10) {
+                    return;
+                }
+
                 var dpr = window.devicePixelRatio || 1;
+                var targetW = Math.round(cssW * dpr);
+                var targetH = Math.round(cssH * dpr);
 
-                // Avoid zero size issues
-                var cssW = Math.max(1, Math.round(rect.width));
-                var cssH = Math.max(1, Math.round(rect.height));
+                if (canvas.width === targetW && canvas.height === targetH) {
+                    return;
+                }
 
-                canvas.width = Math.round(cssW * dpr);
-                canvas.height = Math.round(cssH * dpr);
+                var hadSignature = $wrapper.hasClass('has-signature');
+                var previousCanvas = document.createElement('canvas');
+                previousCanvas.width = canvas.width;
+                previousCanvas.height = canvas.height;
+                var previousCtx = previousCanvas.getContext('2d');
+                previousCtx.drawImage(canvas, 0, 0);
+
+                canvas.width = targetW;
+                canvas.height = targetH;
 
                 // Reset transform then scale so coordinates are in CSS pixels
                 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -192,9 +211,14 @@
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
                 ctx.strokeStyle = '#111';
+
+                if (hadSignature && previousCanvas.width > 0 && previousCanvas.height > 0) {
+                    ctx.drawImage(previousCanvas, 0, 0, targetW, targetH);
+                }
             }
 
             setupCanvas();
+            signatureSetups.push(setupCanvas);
 
             var drawing = false;
 
@@ -245,6 +269,22 @@
 
             $wrapper.find('.agp-pv-signature-clear').on('click', function () {
                 clearSignature($wrapper);
+            });
+        });
+
+        $(window).on('resize', function () {
+            signatureSetups.forEach(function (setup) {
+                setup();
+            });
+        });
+
+        $('#agp-pv-form').on('agpPvStepChanged', function (e, step) {
+            if (step !== 3) {
+                return;
+            }
+
+            signatureSetups.forEach(function (setup) {
+                setup();
             });
         });
     }
