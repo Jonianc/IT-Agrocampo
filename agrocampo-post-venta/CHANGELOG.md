@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.33] - 2026-02-24
+
+### Fixed
+- Se corrige la estabilidad de paginación del layout PDF tipo tarjeta reduciendo alturas mínimas conservadoras que provocaban saltos innecesarios y grandes áreas en blanco.
+- Se ajusta la lógica de apertura/cierre de tarjetas para ocupar mejor el espacio vertical disponible y evitar que bloques cortos queden aislados en una página nueva.
+- Se compacta el bloque de firmas (altura de cajas y espaciados) para disminuir casos donde `Firmas` quedaba sola en la página 2 con contenido normal.
+
 ## [1.4.32] - 2026-02-24
 
 ### Changed
