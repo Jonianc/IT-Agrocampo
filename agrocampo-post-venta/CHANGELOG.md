@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.38] - 2026-02-24
+
+### Fixed
+- Se corrige un fatal error en generación/regeneración de PDF cuando el preflight recibía valores `null` en `Observaciones` (o campos análogos), robusteciendo los estimadores para normalizar entradas a string antes de codificar/renderizar.
+- Se añade hardening en funciones de estimación de altura del layout (`estimate_adaptive_text_height`, `estimate_row2_value_height`, `estimate_box_text_height`) para manejar datos vacíos o nulos sin romper la generación.
+
 ## [1.4.37] - 2026-02-24
 
 ### Fixed

@@ -504,8 +504,8 @@ class AGP_PV_PDF_Document extends FPDF {
         return $this->space_left();
     }
 
-    public function estimate_adaptive_text_height( string $text ): float {
-        $trimmed = trim( $text );
+    public function estimate_adaptive_text_height( $text ): float {
+        $trimmed = trim( (string) $text );
         if ( '' === $trimmed ) {
             return 0.0;
         }
@@ -522,7 +522,8 @@ class AGP_PV_PDF_Document extends FPDF {
         return max( $row_h, $box_h );
     }
 
-    public function estimate_row2_value_height( string $value ): float {
+    public function estimate_row2_value_height( $value ): float {
+        $value = (string) $value;
         $label_w = $this->label_width_mm;
         $gap     = $this->gap_mm;
         $value_w = $this->w - $this->lMargin - $this->rMargin - $label_w - $gap;
@@ -533,7 +534,12 @@ class AGP_PV_PDF_Document extends FPDF {
         return $row_h + $after;
     }
 
-    public function estimate_box_text_height( string $text ): float {
+    public function estimate_box_text_height( $text ): float {
+        $trimmed = trim( (string) $text );
+        if ( '' === $trimmed ) {
+            return 0.0;
+        }
+
         $box_w = $this->w - $this->lMargin - $this->rMargin;
         $padding = $this->compact_density ? 1.3 : 2.1;
         $inner_w = $box_w - ( 2 * $padding );
