@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.61] - 2026-02-26
+
+### Security
+- Se endurece el frontend de observabilidad y conectividad con payload mínimo versionado (`eventVersion`) en eventos `agpPv:*`, manteniendo datos no sensibles.
+
+### Changed
+- Se agrega fallback compatible para `CustomEvent` en navegadores legacy y guardas defensivas para acceso a `agpPvData`.
+- Se evita doble envío concurrente (`in-flight guard`) deshabilitando submit/retry durante requests activos y bloqueando reintentos simultáneos.
+- Se robustecen pendientes offline con validación de JSON + expiración automática (TTL 24h) para evitar estados pendientes corruptos o fantasma.
+
 ## [1.4.60] - 2026-02-26
 
 ### i18n
