@@ -249,6 +249,8 @@
             if (tipoMantencion !== 'OTRO') {
                 $('#agp-pv-cantidad-horas').val('');
             }
+
+            $('#agp-pv-form').trigger('agpPvConditionsChanged');
         }
 
         $tipoServicio.on('change', function () {
@@ -792,17 +794,63 @@ function initPhotos() {
             return $steps.filter('[data-step="' + step + '"]');
         }
 
+        function getRequiredInvalidFields($scope) {
+            return $scope.find('input, select, textarea').filter(function () {
+                var el = this;
+                var $el = $(el);
+
+                if (!el.required) {
+                    return false;
+                }
+
+                if (el.disabled || $el.is(':hidden')) {
+                    return false;
+                }
+
+                if (typeof el.checkValidity === 'function') {
+                    return !el.checkValidity();
+                }
+
+                return false;
+            });
+        }
+
+        function updateStepErrorStates() {
+            $steps.each(function () {
+                var $step = $(this);
+                var stepNumber = parseInt($step.attr('data-step'), 10);
+                if (!stepNumber) {
+                    return;
+                }
+
+                var hasErrors = getRequiredInvalidFields($step).length > 0;
+                var $indicator = $indicators.filter('[data-step-indicator="' + stepNumber + '"]');
+
+                $indicator.toggleClass('is-error', hasErrors);
+
+                if (hasErrors) {
+                    $indicator.attr('data-has-errors', '1').attr('aria-invalid', 'true');
+                } else {
+                    $indicator.removeAttr('data-has-errors').removeAttr('aria-invalid');
+                }
+            });
+        }
+
         function updateIndicators(step) {
             $indicators.each(function () {
                 var $i = $(this);
                 var n = parseInt($i.attr('data-step-indicator'), 10);
                 $i.removeClass('is-active is-completed');
+                $i.removeAttr('aria-current');
                 if (n < step) {
                     $i.addClass('is-completed');
                 } else if (n === step) {
                     $i.addClass('is-active');
+                    $i.attr('aria-current', 'step');
                 }
             });
+
+            updateStepErrorStates();
         }
 
         function goTo(step) {
@@ -872,6 +920,8 @@ function initPhotos() {
                 $('.agp-pv-status').text(getMessage('statusReviewFieldsBeforeContinue', 'Revisa los campos marcados antes de continuar.'));
             }
 
+            updateStepErrorStates();
+
             return valid;
         }
 
@@ -892,6 +942,14 @@ function initPhotos() {
             if (step) {
                 goTo(step);
             }
+        });
+
+        $('#agp-pv-form').on('input change blur', 'input, select, textarea', function () {
+            updateStepErrorStates();
+        });
+
+        $('#agp-pv-form').on('agpPvStepChanged agpPvConditionsChanged', function () {
+            updateStepErrorStates();
         });
 
         $('#agp-pv-form').data('agpPvGoToStep', goTo);

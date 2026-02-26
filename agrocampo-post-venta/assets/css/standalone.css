@@ -57,6 +57,17 @@
     background: #2e6f40;
 }
 
+.agp-pv-stepper li.is-error {
+    border-color: #b00020;
+    background: #fff4f6;
+    color: #7a0016;
+    font-weight: 700;
+}
+
+.agp-pv-stepper li.is-active.is-error {
+    background: #fdecef;
+}
+
 .agp-pv-step {
     display: none;
 }

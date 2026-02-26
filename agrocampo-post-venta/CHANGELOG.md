@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.62] - 2026-02-26
+
+### Accessibility
+- El stepper del formulario ahora marca errores por paso con clase `is-error` y metadatos accesibles (`aria-invalid`/`data-has-errors`) cuando existen campos requeridos visibles inválidos.
+- Se mantiene `aria-current="step"` en el indicador activo para mejorar contexto de navegación por tecnologías asistivas.
+
+### Changed
+- Se recalcula el estado de error del stepper en cambios de paso, eventos de interacción (`input`/`change`/`blur`) y al alternar condicionales visibles/ocultos, excluyendo controles ocultos o deshabilitados.
+
 ## [1.4.61] - 2026-02-26
 
 ### Security
