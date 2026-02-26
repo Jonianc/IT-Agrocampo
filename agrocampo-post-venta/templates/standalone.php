@@ -201,12 +201,14 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <textarea id="agp-pv-trabajos" name="trabajos_realizados" rows="3" maxlength="455" data-maxlength-target="trabajos_realizados" data-maxlength-format="used-max"></textarea>
                 <small class="agp-pv-help"><?php esc_html_e( 'Resuma diagnóstico, acciones ejecutadas y resultado final.', 'agrocampo-post-venta' ); ?></small>
                 <small class="agp-pv-help agp-pv-charcount" data-maxlength-counter="trabajos_realizados"></small>
+                <span class="agp-pv-error" data-error-for="trabajos_realizados"></span>
             </div>
 
             <div class="agp-pv-field">
                 <label for="agp-pv-observaciones"><?php esc_html_e( 'Observaciones', 'agrocampo-post-venta' ); ?></label>
                 <textarea id="agp-pv-observaciones" name="observaciones" rows="3"></textarea>
                 <small class="agp-pv-help"><?php esc_html_e( 'Agregue riesgos, recomendaciones o pendientes para seguimiento.', 'agrocampo-post-venta' ); ?></small>
+                <span class="agp-pv-error" data-error-for="observaciones"></span>
             </div>
 
             <div class="agp-pv-step-actions">

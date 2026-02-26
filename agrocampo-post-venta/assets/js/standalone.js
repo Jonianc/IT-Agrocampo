@@ -157,6 +157,15 @@
         renderErrorSummary(summaryItems, getMessage('errorSummaryTitle', 'Revisa los siguientes campos antes de continuar:'), true);
 
         if (firstInvalid && firstInvalid.length) {
+            var $firstStep = firstInvalid.closest('.agp-pv-step');
+            if ($firstStep.length) {
+                var stepNumber = parseInt($firstStep.attr('data-step'), 10);
+                var goToStep = $('#agp-pv-form').data('agpPvGoToStep');
+                if (stepNumber && typeof goToStep === 'function') {
+                    goToStep(stepNumber);
+                }
+            }
+
             firstInvalid.trigger('focus');
         }
     }
@@ -784,6 +793,65 @@ function initPhotos() {
         }
     }
 
+    function getDetalleMinimumConfig() {
+        var minChars = 10;
+        if (typeof window.agpPvData !== 'undefined' && agpPvData && typeof agpPvData.detalleMinimumChars !== 'undefined') {
+            var parsed = parseInt(agpPvData.detalleMinimumChars, 10);
+            if (!isNaN(parsed) && parsed > 0) {
+                minChars = parsed;
+            }
+        }
+
+        return {
+            minChars: minChars,
+            message: formatMessage(getMessage('detalleAtLeastOneMinChars', 'Completa “Trabajos realizados” u “Observaciones” con al menos %d caracteres.'), [minChars])
+        };
+    }
+
+    function syncDetalleMinimumConstraint(showInlineError) {
+        var config = getDetalleMinimumConfig();
+        var $trabajos = $('#agp-pv-trabajos');
+        var $observaciones = $('#agp-pv-observaciones');
+
+        if (!$trabajos.length || !$observaciones.length) {
+            return true;
+        }
+
+        var trabajosLen = $.trim(String($trabajos.val() || '')).length;
+        var observacionesLen = $.trim(String($observaciones.val() || '')).length;
+        var isValid = (trabajosLen >= config.minChars) || (observacionesLen >= config.minChars);
+
+        $trabajos.get(0).setCustomValidity(isValid ? '' : config.message);
+        $observaciones.get(0).setCustomValidity(isValid ? '' : config.message);
+
+        var $errorTrabajos = $('.agp-pv-error[data-error-for="trabajos_realizados"]');
+        var $errorObservaciones = $('.agp-pv-error[data-error-for="observaciones"]');
+
+        if (isValid) {
+            $errorTrabajos.text('');
+            $errorObservaciones.text('');
+            $trabajos.removeClass('agp-pv-invalid').removeAttr('aria-invalid');
+            $observaciones.removeClass('agp-pv-invalid').removeAttr('aria-invalid');
+            return true;
+        }
+
+        if (showInlineError) {
+            $errorTrabajos.text(config.message);
+            $errorObservaciones.text(config.message);
+            $trabajos.addClass('agp-pv-invalid').attr('aria-invalid', 'true');
+            $observaciones.addClass('agp-pv-invalid').attr('aria-invalid', 'true');
+
+            if ($errorTrabajos.length && $errorTrabajos.attr('id')) {
+                $trabajos.attr('aria-describedby', $errorTrabajos.attr('id'));
+            }
+            if ($errorObservaciones.length && $errorObservaciones.attr('id')) {
+                $observaciones.attr('aria-describedby', $errorObservaciones.attr('id'));
+            }
+        }
+
+        return false;
+    }
+
 
     function initStepper() {
         var $steps = $('.agp-pv-step');
@@ -901,6 +969,13 @@ function initPhotos() {
                 }
             });
 
+            if (currentStep === 2 && !syncDetalleMinimumConstraint(true)) {
+                valid = false;
+                if (!firstInvalid) {
+                    firstInvalid = $('#agp-pv-trabajos');
+                }
+            }
+
             if (!valid && firstInvalid) {
                 var summaryItems = [];
 
@@ -922,6 +997,13 @@ function initPhotos() {
                         message: getFieldErrorMessage($el) || getMessage('statusReviewFieldsBeforeContinue', 'Revisa los campos marcados antes de continuar.')
                     });
                 });
+
+                if (currentStep === 2 && !syncDetalleMinimumConstraint(false)) {
+                    summaryItems.push({
+                        id: 'agp-pv-trabajos',
+                        message: getDetalleMinimumConfig().message
+                    });
+                }
 
                 renderErrorSummary(summaryItems, getMessage('errorSummaryTitle', 'Revisa los siguientes campos antes de continuar:'), true);
 
@@ -1468,6 +1550,10 @@ function initPhotos() {
             if (name) {
                 $('.agp-pv-error[data-error-for="' + name + '"]').text('');
             }
+
+            if (name === 'trabajos_realizados' || name === 'observaciones') {
+                syncDetalleMinimumConstraint(false);
+            }
         });
 
         $('#agp-pv-form').on('submit', function (e) {
@@ -1502,6 +1588,7 @@ function initPhotos() {
 
             // Native validation first (works with conditional disable)
             var formEl = this;
+            syncDetalleMinimumConstraint(false);
             if (typeof formEl.checkValidity === 'function' && !formEl.checkValidity()) {
                 if (typeof formEl.reportValidity === 'function') {
                     formEl.reportValidity();

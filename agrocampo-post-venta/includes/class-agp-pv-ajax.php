@@ -188,6 +188,18 @@ class AGP_PV_Ajax {
             $errors['fecha_reparacion'] = __( 'Fecha Reparación es obligatorio.', 'agrocampo-post-venta' );
         }
 
+
+        $detalle_min_chars = 10;
+        $trabajos_len = $this->text_length( trim( (string) ( $data['trabajos_realizados'] ?? '' ) ) );
+        $observaciones_len = $this->text_length( trim( (string) ( $data['observaciones'] ?? '' ) ) );
+        if ( $trabajos_len < $detalle_min_chars && $observaciones_len < $detalle_min_chars ) {
+            $errors['trabajos_realizados'] = sprintf(
+                /* translators: %d minimum characters required in at least one detail field */
+                __( 'Completa “Trabajos realizados” u “Observaciones” con al menos %d caracteres.', 'agrocampo-post-venta' ),
+                $detalle_min_chars
+            );
+        }
+
         $max_lengths = array(
             'cliente' => 80,
             'faena_lugar' => 80,
@@ -195,6 +207,7 @@ class AGP_PV_Ajax {
             'modelo' => 50,
             'serie' => 60,
             'numero_interno' => 30,
+            'trabajos_realizados' => 455,
         );
 
         foreach ( $max_lengths as $field => $max_length ) {

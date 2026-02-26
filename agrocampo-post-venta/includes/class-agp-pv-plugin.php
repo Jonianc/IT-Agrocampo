@@ -94,6 +94,7 @@ class AGP_PV_Plugin {
                 'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
                 'nonce'    => wp_create_nonce( 'agp_pv_submit' ),
                 'debugFrontend' => ( defined( 'WP_DEBUG' ) && WP_DEBUG ),
+                'detalleMinimumChars' => 10,
                 'messages' => array(
                     'invalid' => __( 'Error: tu formulario no es válido, ¡por favor, corrige los errores!', 'agrocampo-post-venta' ),
                     'success' => __( 'Informe enviado.', 'agrocampo-post-venta' ),
@@ -115,6 +116,7 @@ class AGP_PV_Plugin {
                     'fieldMaxRemainingTemplate' => __( 'Máximo %1$d caracteres (%2$d restantes)', 'agrocampo-post-venta' ),
                     'fieldMaxUsedTemplate' => __( '%1$d/%2$d caracteres', 'agrocampo-post-venta' ),
                     'fieldMaxReachedTemplate' => __( 'Has alcanzado el máximo de %d caracteres.', 'agrocampo-post-venta' ),
+                    'detalleAtLeastOneMinChars' => __( 'Completa “Trabajos realizados” u “Observaciones” con al menos %d caracteres.', 'agrocampo-post-venta' ),
                     'networkOnline' => __( 'Conexión disponible.', 'agrocampo-post-venta' ),
                     'networkOffline' => __( 'Sin conexión. Puedes completar el formulario y reintentar el envío cuando vuelva Internet.', 'agrocampo-post-venta' ),
                     'networkOfflineSubmitBlocked' => __( 'Sin conexión. Guardamos el envío como pendiente para que puedas reintentarlo.', 'agrocampo-post-venta' ),

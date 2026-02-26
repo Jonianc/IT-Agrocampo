@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.65] - 2026-02-26
+
+### Changed
+- Se incorpora validación contextual en `Detalle`: al menos uno entre `Trabajos realizados` u `Observaciones` debe incluir contenido mínimo útil (10 caracteres).
+- La regla se aplica tanto en frontend como backend para evitar bypass y mantener consistencia del flujo.
+
+### UX
+- En errores server-side, el formulario vuelve automáticamente al paso del primer campo inválido antes de enfocar, mejorando corrección guiada en stepper.
+
 ## [1.4.64] - 2026-02-26
 
 ### Fixed
