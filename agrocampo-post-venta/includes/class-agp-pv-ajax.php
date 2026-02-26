@@ -67,6 +67,7 @@ class AGP_PV_Ajax {
             array(
                 'logged_in' => is_user_logged_in() ? 1 : 0,
                 'has_files' => ! empty( $_FILES ) ? 1 : 0,
+                'rate_limit_exempt' => $this->is_rate_limit_exempt() ? 1 : 0,
             )
         );
 
@@ -678,7 +679,17 @@ class AGP_PV_Ajax {
         $wpdb->query( $query );
     }
 
+    private function is_rate_limit_exempt(): bool {
+        $is_logged_in = is_user_logged_in();
+
+        return (bool) apply_filters( 'agp_pv_rate_limit_exempt', $is_logged_in, $is_logged_in ? 'logged_in' : 'anonymous' );
+    }
+
     private function is_rate_limited(): bool {
+        if ( $this->is_rate_limit_exempt() ) {
+            return false;
+        }
+
         $max_attempts = (int) apply_filters( 'agp_pv_rate_limit_max_attempts', 5 );
         $window_seconds = (int) apply_filters( 'agp_pv_rate_limit_window_seconds', 15 * MINUTE_IN_SECONDS );
 
@@ -693,6 +704,10 @@ class AGP_PV_Ajax {
     }
 
     private function register_rate_limit_attempt(): void {
+        if ( $this->is_rate_limit_exempt() ) {
+            return;
+        }
+
         $window_seconds = (int) apply_filters( 'agp_pv_rate_limit_window_seconds', 15 * MINUTE_IN_SECONDS );
         if ( $window_seconds < 1 ) {
             return;

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.70] - 2026-02-26
+
+### Fixed
+- Se excluye del rate limit a usuarios autenticados en `agp_pv_submit` para evitar bloqueos falsos positivos en operación interna (opción A), manteniendo la protección para tráfico anónimo.
+
+### Changed
+- El evento `request_started` en debug agrega `rate_limit_exempt` para diagnosticar rápidamente si la solicitud quedó fuera del throttling.
+
 ## [1.4.69] - 2026-02-26
 
 ### Added
