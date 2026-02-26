@@ -803,7 +803,19 @@ function initPhotos() {
                     return false;
                 }
 
-                if (el.disabled || $el.is(':hidden')) {
+                if (el.disabled) {
+                    return false;
+                }
+
+                // Keep required fields from inactive steps in the calculation.
+                // Exclude only truly hidden controls (type=hidden or hidden attributes)
+                // and fields inside conditional wrappers that are currently hidden.
+                if (el.type === 'hidden' || el.hidden || $el.is('[hidden]')) {
+                    return false;
+                }
+
+                var $conditionalWrap = $el.closest('[data-condition]');
+                if ($conditionalWrap.length && $conditionalWrap.is(':hidden')) {
                     return false;
                 }
 

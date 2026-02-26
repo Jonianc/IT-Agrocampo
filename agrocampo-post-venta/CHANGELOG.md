@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.64] - 2026-02-26
+
+### Fixed
+- Se corrige el cálculo de errores por paso en el stepper para que no dependa de `:hidden` del paso inactivo. Los campos requeridos de pasos no activos vuelven a contabilizarse y marcan `is-error`/`data-has-errors` cuando corresponde.
+
+### Changed
+- En la detección de errores por paso se excluyen solo controles realmente no aplicables (`disabled`, `type=hidden`, `[hidden]` o dentro de contenedores condicionales ocultos), manteniendo metadatos por paso consistentes en flujos como restauración de borrador.
+
 ## [1.4.63] - 2026-02-26
 
 ### UX
