@@ -1370,19 +1370,53 @@ function initPhotos() {
         return text;
     }
 
-    function setStatusMessage(text, type) {
+    function setStatusMessage(text, type, options) {
         var $status = $('.agp-pv-status');
+        var opts = options && typeof options === 'object' ? options : {};
+        var nextText = text || '';
+        var nextType = (type === 'success' || type === 'warning' || type === 'error') ? type : '';
+        var previousText = String($status.data('lastText') || '');
+        var previousType = String($status.data('lastType') || '');
+
+        if (opts.skipIfUnchanged && previousText === nextText && previousType === nextType) {
+            return;
+        }
+
         $status.removeClass('is-success is-warning is-error');
 
-        if (type === 'success') {
+        if (nextType === 'success') {
             $status.addClass('is-success');
-        } else if (type === 'warning') {
+        } else if (nextType === 'warning') {
             $status.addClass('is-warning');
-        } else if (type === 'error') {
+        } else if (nextType === 'error') {
             $status.addClass('is-error');
         }
 
-        $status.text(text || '');
+        $status.text(nextText);
+        $status.data('lastText', nextText);
+        $status.data('lastType', nextType);
+    }
+
+    function focusAndScrollStatusMessage() {
+        var $status = $('#agp-pv-submit-status');
+        if (!$status.length) {
+            $status = $('.agp-pv-status').first();
+        }
+
+        if (!$status.length) {
+            return;
+        }
+
+        var statusEl = $status.get(0);
+        if (statusEl && typeof statusEl.scrollIntoView === 'function') {
+            statusEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        if (!$status.is('[tabindex]')) {
+            $status.attr('tabindex', '-1');
+        }
+
+        $status.trigger('focus');
     }
 
     function buildSuccessMessage(data) {
@@ -1760,7 +1794,8 @@ function initPhotos() {
                             successState.text += ' ' + response.data.mail_error;
                         }
 
-                        setStatusMessage(successState.text, successState.type);
+                        setStatusMessage(successState.text, successState.type, { skipIfUnchanged: true });
+                        focusAndScrollStatusMessage();
                         emitFrontendEvent('submit_success', { statusType: (response.data && response.data.status_type) || 'success', reportId: (response.data && (response.data.report_id || response.data.submission_id)) || null });
 
                         // Reset UI (keep status)

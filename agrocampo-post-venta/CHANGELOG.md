@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.67] - 2026-02-26
+
+### Accessibility
+- Al completar el envío con estado exitoso o parcial, el bloque global de confirmación ahora recibe foco automáticamente y se desplaza con scroll suave para mantener visible el resultado.
+- El contenedor de confirmación incorpora `tabindex="-1"` para permitir foco programático accesible sin alterar navegación normal por tabulación.
+
+### Changed
+- Se agrega deduplicación opcional en actualización de estado frontend para evitar reescribir/anunciar mensajes idénticos cuando no cambia texto/tipo.
+
 ## [1.4.66] - 2026-02-26
 
 ### UX

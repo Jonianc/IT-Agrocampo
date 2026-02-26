@@ -278,7 +278,7 @@ if ( ! defined( 'ABSPATH' ) ) {
         </div>
     </form>
     <span class="agp-pv-network-status" role="status" aria-live="polite"></span>
-    <span class="agp-pv-status agp-pv-status--global" role="status" aria-live="polite"></span>
+    <span id="agp-pv-submit-status" class="agp-pv-status agp-pv-status--global" role="status" aria-live="polite" tabindex="-1"></span>
 </div>
 
 <?php wp_footer(); ?>
