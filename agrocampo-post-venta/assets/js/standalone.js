@@ -1,11 +1,90 @@
 (function ($) {
     function clearFieldErrors() {
         $('.agp-pv-error').text('');
+        clearErrorSummary();
         $('#agp-pv-form')
             .find('input, select, textarea')
             .removeClass('agp-pv-invalid')
             .removeAttr('aria-invalid')
             .removeAttr('aria-describedby');
+    }
+
+    function findFieldForErrorKey(key) {
+        var $field = $('[name="' + key + '"]');
+        if (!$field.length) {
+            $field = $('#agp-pv-' + key.replace(/_/g, '-'));
+        }
+
+        if (!$field.length) {
+            return $();
+        }
+
+        return $field.first();
+    }
+
+    function getFieldErrorMessage($field) {
+        if (!$field || !$field.length) {
+            return '';
+        }
+
+        var el = $field.get(0);
+        if (el && typeof el.validationMessage === 'string' && el.validationMessage) {
+            return el.validationMessage;
+        }
+
+        return '';
+    }
+
+    function clearErrorSummary() {
+        var $summary = $('#agp-pv-error-summary');
+        if (!$summary.length) {
+            return;
+        }
+
+        $summary.attr('hidden', true);
+        $summary.find('.agp-pv-error-summary__title').text('');
+        $summary.find('.agp-pv-error-summary__list').empty();
+    }
+
+    function renderErrorSummary(items, title, shouldFocus) {
+        var $summary = $('#agp-pv-error-summary');
+        if (!$summary.length) {
+            return;
+        }
+
+        var $title = $summary.find('.agp-pv-error-summary__title');
+        var $list = $summary.find('.agp-pv-error-summary__list');
+
+        $list.empty();
+
+        if (!items || !items.length) {
+            clearErrorSummary();
+            return;
+        }
+
+        $title.text(title || getMessage('errorSummaryTitle', 'Revisa los siguientes campos antes de continuar:'));
+
+        items.forEach(function (item) {
+            var $li = $('<li />');
+            var $link = $('<a />', { href: '#' + item.id, text: item.message });
+
+            $link.on('click', function (event) {
+                event.preventDefault();
+                var $target = $('#' + item.id);
+                if ($target.length) {
+                    $target.trigger('focus');
+                }
+            });
+
+            $li.append($link);
+            $list.append($li);
+        });
+
+        $summary.removeAttr('hidden');
+
+        if (shouldFocus) {
+            $summary.attr('tabindex', '-1').trigger('focus');
+        }
     }
 
     function ensureErrorIds() {
@@ -55,6 +134,27 @@
                 }
             }
         });
+
+        var summaryItems = [];
+
+        Object.keys(errors).forEach(function (key) {
+            var $field = findFieldForErrorKey(key);
+            if (!$field.length) {
+                return;
+            }
+
+            var fieldId = $field.attr('id');
+            if (!fieldId) {
+                return;
+            }
+
+            summaryItems.push({
+                id: fieldId,
+                message: errors[key]
+            });
+        });
+
+        renderErrorSummary(summaryItems, getMessage('errorSummaryTitle', 'Revisa los siguientes campos antes de continuar:'), true);
 
         if (firstInvalid && firstInvalid.length) {
             firstInvalid.trigger('focus');
@@ -742,6 +842,29 @@ function initPhotos() {
             });
 
             if (!valid && firstInvalid) {
+                var summaryItems = [];
+
+                $step.find('input, select, textarea').each(function () {
+                    var el = this;
+                    var $el = $(el);
+
+                    if (el.disabled || $el.is(':hidden') || !$el.hasClass('agp-pv-invalid')) {
+                        return;
+                    }
+
+                    var fieldId = $el.attr('id');
+                    if (!fieldId) {
+                        return;
+                    }
+
+                    summaryItems.push({
+                        id: fieldId,
+                        message: getFieldErrorMessage($el) || getMessage('statusReviewFieldsBeforeContinue', 'Revisa los campos marcados antes de continuar.')
+                    });
+                });
+
+                renderErrorSummary(summaryItems, getMessage('errorSummaryTitle', 'Revisa los siguientes campos antes de continuar:'), true);
+
                 if (typeof firstInvalid.get(0).reportValidity === 'function') {
                     firstInvalid.get(0).reportValidity();
                 }
@@ -1082,6 +1205,26 @@ function initPhotos() {
                     formEl.reportValidity();
                 }
                 highlightInvalidFromNative(formEl);
+
+                var summaryItems = [];
+                $(formEl).find(':invalid').each(function () {
+                    var $field = $(this);
+                    if ($field.is(':hidden') || $field.prop('disabled')) {
+                        return;
+                    }
+
+                    var fieldId = $field.attr('id');
+                    if (!fieldId) {
+                        return;
+                    }
+
+                    summaryItems.push({
+                        id: fieldId,
+                        message: getFieldErrorMessage($field) || getMessage('statusReviewFields', 'Revisa los campos marcados.')
+                    });
+                });
+
+                renderErrorSummary(summaryItems, getMessage('errorSummaryTitle', 'Revisa los siguientes campos antes de continuar:'), true);
                 setStatusMessage(getMessage('statusReviewFields', 'Revisa los campos marcados.'), 'error');
                 return;
             }

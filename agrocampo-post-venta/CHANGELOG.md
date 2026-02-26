@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.55] - 2026-02-26
+
+### Changed
+- Se agrega un resumen global de errores accesible en el formulario standalone, con enlaces por campo para navegación rápida al primer problema detectado.
+- La validación por paso y la validación final de envío ahora muestran errores consolidados en un bloque superior para reducir fricción en móvil.
+
+### Accessibility
+- El resumen de errores incorpora `role="alert"` y `aria-live` para anunciar incidencias a tecnologías asistivas, manteniendo foco navegable hacia cada input.
+
 ## [1.4.54] - 2026-02-24
 
 ### Changed

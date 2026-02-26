@@ -28,6 +28,11 @@ if ( ! defined( 'ABSPATH' ) ) {
             </ol>
         </nav>
 
+        <div class="agp-pv-error-summary" id="agp-pv-error-summary" role="alert" aria-live="assertive" hidden>
+            <p class="agp-pv-error-summary__title"></p>
+            <ul class="agp-pv-error-summary__list"></ul>
+        </div>
+
         <div class="agp-pv-step is-active" data-step="1">
             <h2 class="agp-pv-section-title"><?php esc_html_e( 'Datos del servicio', 'agrocampo-post-venta' ); ?></h2>
 

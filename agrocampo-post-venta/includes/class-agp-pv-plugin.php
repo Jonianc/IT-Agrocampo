@@ -101,6 +101,7 @@ class AGP_PV_Plugin {
                     'reportIdPrefix' => __( 'ID informe', 'agrocampo-post-venta' ),
                     'statusReviewFieldsBeforeContinue' => __( 'Revisa los campos marcados antes de continuar.', 'agrocampo-post-venta' ),
                     'statusReviewFields' => __( 'Revisa los campos marcados.', 'agrocampo-post-venta' ),
+                    'errorSummaryTitle' => __( 'Revisa los siguientes campos antes de continuar:', 'agrocampo-post-venta' ),
                     'statusSending' => __( 'Enviando...', 'agrocampo-post-venta' ),
                     'draftRecovered' => __( 'Se recuperó un borrador local.', 'agrocampo-post-venta' ),
                     'photosMaxCount' => __( 'Máximo 10 fotos.', 'agrocampo-post-venta' ),
