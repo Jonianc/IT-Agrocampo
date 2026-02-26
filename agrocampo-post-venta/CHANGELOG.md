@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.70] - 2026-02-26
+
+### Accessibility
+- El estado global ahora usa `aria-atomic="true"` y un canal de anuncio dedicado para evitar repeticiones al actualizar encabezado/cuerpo del mensaje.
+- Tras envío exitoso, el foco se mueve al heading del mensaje para una lectura más clara en navegación asistida y teclado.
+
+### Changed
+- Se separa visualmente el mensaje global en `heading` + `body`, manteniendo un único texto anunciado en vivo para evitar anuncios duplicados.
+
 ## [1.4.69] - 2026-02-26
 
 ### UX

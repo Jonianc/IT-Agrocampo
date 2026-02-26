@@ -1370,8 +1370,15 @@ function initPhotos() {
         return text;
     }
 
-    function setStatusMessage(text, type) {
+    function setStatusMessage(text, type, heading) {
         var $status = $('.agp-pv-status');
+        var $heading = $status.find('.agp-pv-status-heading');
+        var $text = $status.find('.agp-pv-status-text');
+        var $live = $status.find('.agp-pv-status-live');
+        var headingText = String(heading || '');
+        var bodyText = String(text || '');
+        var announceText = (headingText ? headingText + ' ' : '') + bodyText;
+
         $status.removeClass('is-success is-warning is-error');
 
         if (type === 'success') {
@@ -1382,7 +1389,28 @@ function initPhotos() {
             $status.addClass('is-error');
         }
 
-        $status.text(text || '');
+        if ($heading.length) {
+            $heading.text(headingText);
+            if (!headingText) {
+                $heading.attr('hidden', true);
+            } else {
+                $heading.removeAttr('hidden');
+            }
+        }
+
+        if ($text.length) {
+            $text.text(bodyText);
+        } else {
+            $status.text(bodyText);
+        }
+
+        if ($live.length) {
+            var previous = String($live.data('agpPvLastAnnouncement') || '');
+            if (announceText !== previous) {
+                $live.text(announceText);
+                $live.data('agpPvLastAnnouncement', announceText);
+            }
+        }
     }
 
 
@@ -1477,10 +1505,10 @@ function initPhotos() {
             successNextStep = getMessage('partialPdfNextStep', 'No te preocupes: el informe quedó registrado. Puedes regenerar el PDF desde Administración cuando corresponda.');
         }
 
+        var idPrefix = (agpPvData && agpPvData.messages && agpPvData.messages.reportIdPrefix) || 'ID informe';
         var fullMessage = successTitle + ' ' + baseMessage;
 
         if (reportId) {
-            var idPrefix = (agpPvData && agpPvData.messages && agpPvData.messages.reportIdPrefix) || 'ID informe';
             fullMessage += ' (' + idPrefix + ': ' + reportId + ')';
         }
 
@@ -1488,6 +1516,8 @@ function initPhotos() {
 
         return {
             text: fullMessage,
+            title: successTitle,
+            body: baseMessage + (reportId ? ' (' + ((agpPvData && agpPvData.messages && agpPvData.messages.reportIdPrefix) || 'ID informe') + ': ' + reportId + ')' : '') + ' ' + successNextStep,
             type: statusType === 'success' ? 'success' : 'warning',
             reportId: reportId
         };
@@ -1871,9 +1901,12 @@ function initPhotos() {
                     if (response && response.success) {
                         var successState = buildSuccessMessage(response.data || {});
 
-                        setStatusMessage(successState.text, successState.type);
+                        setStatusMessage(successState.body || successState.text, successState.type, successState.title || getMessage('successTitle', '¡Envío exitoso!'));
                         renderSuccessActions(successState);
-                        $('.agp-pv-status').trigger('focus');
+                        var $statusHeading = $('.agp-pv-status-heading');
+                        if ($statusHeading.length && !$statusHeading.is('[hidden]')) {
+                            $statusHeading.trigger('focus');
+                        }
                         emitFrontendEvent('submit_success', { statusType: (response.data && response.data.status_type) || 'success', reportId: (response.data && (response.data.report_id || response.data.submission_id)) || null });
 
                         // Reset UI (keep status)

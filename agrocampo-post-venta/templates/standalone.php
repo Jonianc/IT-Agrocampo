@@ -278,7 +278,11 @@ if ( ! defined( 'ABSPATH' ) ) {
         </div>
     </form>
     <span class="agp-pv-network-status" role="status" aria-live="polite"></span>
-    <span class="agp-pv-status agp-pv-status--global" role="status" aria-live="polite" tabindex="-1"></span>
+    <span class="agp-pv-status agp-pv-status--global" role="status" aria-live="polite" aria-atomic="true">
+        <span class="agp-pv-sr-only agp-pv-status-live"></span>
+        <span class="agp-pv-status-heading" tabindex="-1"></span>
+        <span class="agp-pv-status-text"></span>
+    </span>
     <div class="agp-pv-success-actions" hidden>
         <button type="button" class="agp-pv-copy-report-id" hidden></button>
         <button type="button" class="agp-pv-new-report" hidden></button>

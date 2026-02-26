@@ -200,6 +200,36 @@
     color: #333;
 }
 
+
+.agp-pv-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.agp-pv-status-heading,
+.agp-pv-status-text {
+    display: block;
+}
+
+.agp-pv-status-heading {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.agp-pv-status-heading:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
 .agp-pv-status--global {
     margin-top: 12px;
     padding: 10px 12px;
