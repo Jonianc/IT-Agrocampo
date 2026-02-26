@@ -181,26 +181,32 @@ if ( ! defined( 'ABSPATH' ) ) {
             <div class="agp-pv-field">
                 <label for="agp-pv-lubricantes"><?php esc_html_e( 'Lubricantes', 'agrocampo-post-venta' ); ?></label>
                 <textarea id="agp-pv-lubricantes" name="lubricantes" rows="3"></textarea>
+                <small class="agp-pv-help"><?php esc_html_e( 'Indique aceites/grasas aplicados y cantidades aproximadas.', 'agrocampo-post-venta' ); ?></small>
             </div>
 
             <div class="agp-pv-field">
                 <label for="agp-pv-filtros"><?php esc_html_e( 'Filtros Utilizados', 'agrocampo-post-venta' ); ?></label>
                 <textarea id="agp-pv-filtros" name="filtros_utilizados" rows="3"></textarea>
+                <small class="agp-pv-help"><?php esc_html_e( 'Liste filtros cambiados con código o descripción breve.', 'agrocampo-post-venta' ); ?></small>
             </div>
 
             <div class="agp-pv-field">
                 <label for="agp-pv-componentes"><?php esc_html_e( 'Componentes Utilizados', 'agrocampo-post-venta' ); ?></label>
                 <textarea id="agp-pv-componentes" name="componentes_utilizados" rows="3"></textarea>
+                <small class="agp-pv-help"><?php esc_html_e( 'Detalle repuestos/componentes instalados o ajustados.', 'agrocampo-post-venta' ); ?></small>
             </div>
 
             <div class="agp-pv-field">
                 <label for="agp-pv-trabajos"><?php esc_html_e( 'Trabajos realizados', 'agrocampo-post-venta' ); ?></label>
-                <textarea id="agp-pv-trabajos" name="trabajos_realizados" rows="3" maxlength="455"></textarea>
+                <textarea id="agp-pv-trabajos" name="trabajos_realizados" rows="3" maxlength="455" data-maxlength-target="trabajos_realizados" data-maxlength-format="used-max"></textarea>
+                <small class="agp-pv-help"><?php esc_html_e( 'Resuma diagnóstico, acciones ejecutadas y resultado final.', 'agrocampo-post-venta' ); ?></small>
+                <small class="agp-pv-help agp-pv-charcount" data-maxlength-counter="trabajos_realizados"></small>
             </div>
 
             <div class="agp-pv-field">
                 <label for="agp-pv-observaciones"><?php esc_html_e( 'Observaciones', 'agrocampo-post-venta' ); ?></label>
                 <textarea id="agp-pv-observaciones" name="observaciones" rows="3"></textarea>
+                <small class="agp-pv-help"><?php esc_html_e( 'Agregue riesgos, recomendaciones o pendientes para seguimiento.', 'agrocampo-post-venta' ); ?></small>
             </div>
 
             <div class="agp-pv-step-actions">

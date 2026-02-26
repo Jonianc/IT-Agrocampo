@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.63] - 2026-02-26
+
+### UX
+- Se agrega microcopy breve en cada textarea de la sección `Detalle` para guiar qué tipo de información ingresar en terreno.
+
+### Changed
+- Se reutiliza el sistema existente de contadores por `maxlength` en `Detalle`: `Trabajos realizados` ahora muestra contador en formato `usados/máximo` usando los mismos atributos `data-*` y clases del frontend actual.
+- No se agregan límites nuevos: solo se muestra contador donde ya existe `maxlength`.
+
 ## [1.4.62] - 2026-02-26
 
 ### Accessibility

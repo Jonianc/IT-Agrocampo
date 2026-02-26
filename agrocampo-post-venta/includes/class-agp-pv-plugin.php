@@ -113,6 +113,7 @@ class AGP_PV_Plugin {
                     'photoOmittedInvalidFormat' => __( 'Se omitió "%s": formato no permitido.', 'agrocampo-post-venta' ),
                     'photoOmittedTooLarge' => __( 'Se omitió "%s": supera 5 MB.', 'agrocampo-post-venta' ),
                     'fieldMaxRemainingTemplate' => __( 'Máximo %1$d caracteres (%2$d restantes)', 'agrocampo-post-venta' ),
+                    'fieldMaxUsedTemplate' => __( '%1$d/%2$d caracteres', 'agrocampo-post-venta' ),
                     'fieldMaxReachedTemplate' => __( 'Has alcanzado el máximo de %d caracteres.', 'agrocampo-post-venta' ),
                     'networkOnline' => __( 'Conexión disponible.', 'agrocampo-post-venta' ),
                     'networkOffline' => __( 'Sin conexión. Puedes completar el formulario y reintentar el envío cuando vuelva Internet.', 'agrocampo-post-venta' ),

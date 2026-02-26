@@ -1233,9 +1233,15 @@ function initPhotos() {
             }
 
             var remaining = max - val.length;
+            var used = val.length;
+            var counterFormat = String($field.data('maxlengthFormat') || 'remaining');
             var $counter = $('[data-maxlength-counter="' + key + '"]');
             if ($counter.length) {
-                $counter.text(formatMessage(getMessage('fieldMaxRemainingTemplate', 'Máximo %1$d caracteres (%2$d restantes)'), [max, remaining]));
+                if (counterFormat === 'used-max') {
+                    $counter.text(formatMessage(getMessage('fieldMaxUsedTemplate', '%1$d/%2$d caracteres'), [used, max]));
+                } else {
+                    $counter.text(formatMessage(getMessage('fieldMaxRemainingTemplate', 'Máximo %1$d caracteres (%2$d restantes)'), [max, remaining]));
+                }
                 $counter.toggleClass('is-limit-near', remaining <= 10);
             }
 
