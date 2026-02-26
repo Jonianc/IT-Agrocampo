@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.68] - 2026-02-26
+
+### Fixed
+- Tras envío exitoso en frontend, el flujo ya no regresa al paso 1 del formulario; se mantiene en el contexto final para evitar confusión en móvil.
+
+### UX
+- Cuando existe estado terminal `Enviado`, los pasos 1–4 del stepper quedan marcados como completados y solo el paso final conserva `aria-current="step"`.
+
 ## [1.4.67] - 2026-02-26
 
 ### UX

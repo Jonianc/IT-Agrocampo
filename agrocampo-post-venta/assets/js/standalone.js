@@ -1020,6 +1020,8 @@ function initPhotos() {
         }
 
         function updateIndicators(step) {
+            var hasSubmittedState = !!submittedState;
+
             $indicators.each(function () {
                 var $i = $(this);
                 var n = parseInt($i.attr('data-step-indicator'), 10);
@@ -1031,7 +1033,9 @@ function initPhotos() {
                 }
 
                 if (n <= 4) {
-                    if (n < step) {
+                    if (hasSubmittedState) {
+                        $i.addClass('is-completed');
+                    } else if (n < step) {
                         $i.addClass('is-completed');
                     } else if (n === step) {
                         $i.addClass('is-active');
@@ -1040,7 +1044,7 @@ function initPhotos() {
                 }
             });
 
-            if (submittedState) {
+            if (hasSubmittedState) {
                 var $submittedIndicator = $indicators.filter('[data-step-indicator="5"]');
                 if ($submittedIndicator.length) {
                     var submittedBaseLabel = $.trim(String($submittedIndicator.text() || ''));
@@ -1832,7 +1836,7 @@ function initPhotos() {
 
                         var goToStep = $('#agp-pv-form').data('agpPvGoToStep');
                         if (typeof goToStep === 'function') {
-                            goToStep(1);
+                            goToStep(4);
                         }
 
                         var clearDraft = $('#agp-pv-form').data('agpPvClearDraft');
