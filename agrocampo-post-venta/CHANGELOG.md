@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.57] - 2026-02-26
+
+### Changed
+- Se endurecen atributos HTML del formulario standalone para reducir errores de captura en terreno: `autocomplete`, `autocapitalize`, `spellcheck` e `inputmode` en campos críticos.
+- Se agrega un patrón suave en `N° Interno` para guiar formato válido (letras, números, guion, slash, guion bajo y espacios) sin sustituir la validación server-side.
+- Se unifica tope de `max=999999` en `Cantidad de Horas` para consistencia con el campo `Horas`.
+
+### UX
+- Se mejora el teclado contextual en móvil para campos email/número y se reduce autocorrección no deseada en identificadores de máquina/modelo/serie.
+
 ## [1.4.56] - 2026-02-26
 
 ### Performance
