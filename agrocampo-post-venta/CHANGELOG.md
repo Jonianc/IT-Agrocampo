@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.67] - 2026-02-26
+
+### UX
+- Se agrega el paso 5 `Confirmación` al stepper standalone, oculto por defecto, con panel `#agp-pv-step-confirmacion` integrado al flujo de pasos.
+- El bloque de éxito deja de mostrarse fuera del flujo y ahora se renderiza dentro del paso 5 con título, mensaje, ID y acciones contextuales.
+
+### Changed
+- En submit exitoso (`success`, `partial_mail`, `partial_pdf`) el frontend navega a `goToStep(5)` y actualiza estados del stepper: pasos 1–4 completos y paso 5 activo; en parciales el paso 5 usa estado `warning`.
+- Se mejora accesibilidad al entrar a confirmación: `scrollIntoView({behavior:'smooth'})` + `focus()` al contenedor con `tabindex="-1"`, `role="status"`, `aria-live="polite"`, `aria-atomic="true"`.
+- Se agregan acciones `Copiar ID` (solo con `report_id`, con fallback de copiado) y `Nuevo informe` (reset completo + retorno a paso 1).
+- En errores de submit se mantiene el paso actual y solo se muestra summary/mensajería de error.
+
 ## [1.4.66] - 2026-02-26
 
 ### UX

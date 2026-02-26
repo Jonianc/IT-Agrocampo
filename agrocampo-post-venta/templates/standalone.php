@@ -25,6 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <li data-step-indicator="2"><?php esc_html_e( 'Detalle', 'agrocampo-post-venta' ); ?></li>
                 <li data-step-indicator="3"><?php esc_html_e( 'Firmas', 'agrocampo-post-venta' ); ?></li>
                 <li data-step-indicator="4"><?php esc_html_e( 'Adjuntos', 'agrocampo-post-venta' ); ?></li>
+                <li data-step-indicator="5"><?php esc_html_e( 'Confirmación', 'agrocampo-post-venta' ); ?></li>
             </ol>
         </nav>
 
@@ -274,6 +275,23 @@ if ( ! defined( 'ABSPATH' ) ) {
                 </div>
                 <button type="button" class="agp-pv-retry-pending" hidden><?php esc_html_e( 'Reintentar envío pendiente', 'agrocampo-post-venta' ); ?></button>
                 <button type="button" class="agp-pv-clear-draft"><?php esc_html_e( 'Limpiar borrador local', 'agrocampo-post-venta' ); ?></button>
+            </div>
+        </div>
+
+        <div class="agp-pv-step" data-step="5" id="agp-pv-step-confirmacion" hidden>
+            <h2 class="agp-pv-section-title"><?php esc_html_e( 'Confirmación', 'agrocampo-post-venta' ); ?></h2>
+
+            <div class="agp-pv-confirmacion" id="agp-pv-confirmacion-status" tabindex="-1" role="status" aria-live="polite" aria-atomic="true">
+                <div class="agp-pv-confirmacion__header">
+                    <span class="agp-pv-confirmacion__icon" aria-hidden="true">✔</span>
+                    <p class="agp-pv-confirmacion__title"></p>
+                </div>
+                <p class="agp-pv-confirmacion__id" hidden></p>
+                <p class="agp-pv-confirmacion__message"></p>
+                <div class="agp-pv-confirmacion__actions">
+                    <button type="button" class="agp-pv-confirmacion-copy" hidden><?php esc_html_e( 'Copiar ID', 'agrocampo-post-venta' ); ?></button>
+                    <button type="button" class="agp-pv-confirmacion-new"><?php esc_html_e( 'Nuevo informe', 'agrocampo-post-venta' ); ?></button>
+                </div>
             </div>
         </div>
     </form>

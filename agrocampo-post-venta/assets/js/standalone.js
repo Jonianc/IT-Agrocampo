@@ -1018,17 +1018,25 @@ function initPhotos() {
             });
         }
 
-        function updateIndicators(step) {
+        function updateIndicators(step, options) {
+            var stepOptions = options || {};
+
             $indicators.each(function () {
                 var $i = $(this);
                 var n = parseInt($i.attr('data-step-indicator'), 10);
-                $i.removeClass('is-active is-completed');
+                $i.removeClass('is-active is-completed is-warning');
                 $i.removeAttr('aria-current');
+                $i.removeAttr('data-step-warning');
+
                 if (n < step) {
                     $i.addClass('is-completed');
                 } else if (n === step) {
                     $i.addClass('is-active');
                     $i.attr('aria-current', 'step');
+
+                    if (stepOptions.warningStep && stepOptions.warningStep === n) {
+                        $i.addClass('is-warning').attr('data-step-warning', '1');
+                    }
                 }
             });
 
@@ -1036,13 +1044,27 @@ function initPhotos() {
             updateStepDraftStates();
         }
 
-        function goTo(step) {
+        function goTo(step, options) {
+            var stepOptions = options || {};
+
             currentStep = step;
             $steps.removeClass('is-active').attr('hidden', true);
             var $target = getStep(step);
             $target.addClass('is-active').removeAttr('hidden');
-            updateIndicators(step);
-            $('#agp-pv-form').data('agpPvCurrentStep', step).trigger('agpPvStepChanged', [step]);
+            updateIndicators(step, stepOptions);
+            $('#agp-pv-form').data('agpPvCurrentStep', step).trigger('agpPvStepChanged', [step, stepOptions]);
+
+            if (step === 5) {
+                var $confirmMessage = $('#agp-pv-confirmacion-status');
+                if ($confirmMessage.length) {
+                    var confirmNode = $confirmMessage.get(0);
+                    if (confirmNode && typeof confirmNode.scrollIntoView === 'function') {
+                        confirmNode.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                    $confirmMessage.trigger('focus');
+                }
+                return;
+            }
 
             var $focus = $target.find('input, select, textarea, button').filter(':visible:not([disabled])').first();
             if ($focus.length) {
@@ -1290,7 +1312,7 @@ function initPhotos() {
 
             var goToStep = $form.data('agpPvGoToStep');
             var restoredStep = parseInt(parsed.step, 10);
-            if (typeof goToStep === 'function' && restoredStep >= 1 && restoredStep <= 4) {
+            if (typeof goToStep === 'function' && restoredStep >= 1 && restoredStep <= 5) {
                 goToStep(restoredStep);
             }
 
@@ -1401,15 +1423,102 @@ function initPhotos() {
 
         var reportId = data && data.report_id ? data.report_id : (data && data.submission_id ? data.submission_id : null);
 
-        if (reportId) {
-            var idPrefix = (agpPvData && agpPvData.messages && agpPvData.messages.reportIdPrefix) || 'ID informe';
-            baseMessage += ' (' + idPrefix + ': ' + reportId + ')';
-        }
-
         return {
             text: baseMessage,
-            type: statusType === 'success' ? 'success' : 'warning'
+            type: statusType === 'success' ? 'success' : 'warning',
+            statusType: statusType,
+            reportId: reportId
         };
+    }
+
+    function resetFormForNewReport(formEl) {
+        formEl.reset();
+
+        clearSignature($('.agp-pv-signature[data-signature="cliente"]'));
+        clearSignature($('.agp-pv-signature[data-signature="tecnico"]'));
+
+        var resetPhotos = $('#agp-pv-fotos').data('agpPvReset');
+        if (typeof resetPhotos === 'function') {
+            resetPhotos();
+        }
+
+        $('#agp-pv-tipo-servicio').trigger('change');
+
+        clearErrorSummary();
+        clearFieldErrors();
+
+        var $confirm = $('#agp-pv-confirmacion-status');
+        $confirm.removeClass('is-success is-warning').removeAttr('data-confirmation-type');
+        $confirm.find('.agp-pv-confirmacion__title').text('');
+        $confirm.find('.agp-pv-confirmacion__id').text('').attr('hidden', true);
+        $confirm.find('.agp-pv-confirmacion__message').text('');
+        $confirm.find('.agp-pv-confirmacion-copy').attr('hidden', true).removeData('reportId');
+    }
+
+    function copyReportId(reportId) {
+        var normalized = $.trim(String(reportId || ''));
+        if (!normalized) {
+            return false;
+        }
+
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+            navigator.clipboard.writeText(normalized).catch(function () {
+                // fallback below
+            });
+            return true;
+        }
+
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.value = normalized;
+        input.setAttribute('readonly', 'readonly');
+        input.style.position = 'absolute';
+        input.style.left = '-9999px';
+        document.body.appendChild(input);
+        input.select();
+
+        var copied = false;
+        try {
+            copied = document.execCommand('copy');
+        } catch (e) {
+            copied = false;
+        }
+
+        document.body.removeChild(input);
+        return copied;
+    }
+
+    function renderConfirmationStep(successState) {
+        var $confirm = $('#agp-pv-confirmacion-status');
+        if (!$confirm.length) {
+            return;
+        }
+
+        var statusType = successState && successState.statusType ? successState.statusType : 'success';
+        var reportId = successState && successState.reportId ? successState.reportId : null;
+        var idPrefix = getMessage('reportIdPrefix', 'ID informe');
+
+        $confirm.removeClass('is-success is-warning').attr('data-confirmation-type', statusType);
+        $confirm.addClass(statusType === 'success' ? 'is-success' : 'is-warning');
+
+        $confirm.find('.agp-pv-confirmacion__title').text(
+            statusType === 'success'
+                ? getMessage('confirmationTitleSuccess', '¡Informe enviado con éxito!')
+                : getMessage('confirmationTitleWarning', 'Informe enviado con advertencias')
+        );
+
+        $confirm.find('.agp-pv-confirmacion__message').text(successState && successState.text ? successState.text : getMessage('success', 'Informe enviado.'));
+
+        var $id = $confirm.find('.agp-pv-confirmacion__id');
+        var $copyButton = $confirm.find('.agp-pv-confirmacion-copy');
+
+        if (reportId) {
+            $id.text(idPrefix + ': #' + reportId).removeAttr('hidden');
+            $copyButton.removeAttr('hidden').data('reportId', reportId);
+        } else {
+            $id.text('').attr('hidden', true);
+            $copyButton.attr('hidden', true).removeData('reportId');
+        }
     }
 
 
@@ -1666,6 +1775,37 @@ function initPhotos() {
             }
         });
 
+        $('#agp-pv-form').on('click', '.agp-pv-confirmacion-copy', function () {
+            var reportId = $(this).data('reportId');
+            if (!reportId) {
+                setStatusMessage(getMessage('confirmationCopyFallback', 'No hay un ID disponible para copiar.'), 'warning');
+                return;
+            }
+
+            var copied = copyReportId(reportId);
+            if (copied) {
+                setStatusMessage(getMessage('confirmationCopySuccess', 'ID copiado al portapapeles.'), 'success');
+            } else {
+                setStatusMessage(getMessage('confirmationCopyFallback', 'No se pudo copiar automáticamente. Copia manualmente el ID.'), 'warning');
+            }
+        });
+
+        $('#agp-pv-form').on('click', '.agp-pv-confirmacion-new', function () {
+            resetFormForNewReport($('#agp-pv-form').get(0));
+
+            var goToStep = $('#agp-pv-form').data('agpPvGoToStep');
+            if (typeof goToStep === 'function') {
+                goToStep(1);
+            }
+
+            var clearDraft = $('#agp-pv-form').data('agpPvClearDraft');
+            if (typeof clearDraft === 'function') {
+                clearDraft();
+            }
+
+            setStatusMessage('', 'success');
+        });
+
         $('#agp-pv-form').on('submit', function (e) {
             e.preventDefault();
 
@@ -1763,24 +1903,19 @@ function initPhotos() {
                         setStatusMessage(successState.text, successState.type);
                         emitFrontendEvent('submit_success', { statusType: (response.data && response.data.status_type) || 'success', reportId: (response.data && (response.data.report_id || response.data.submission_id)) || null });
 
-                        // Reset UI (keep status)
-                        formEl.reset();
-
-                        // Clear signatures and previews
-                        clearSignature($('.agp-pv-signature[data-signature="cliente"]'));
-                        clearSignature($('.agp-pv-signature[data-signature="tecnico"]'));
-
-                        var resetPhotos = $('#agp-pv-fotos').data('agpPvReset');
-                        if (typeof resetPhotos === 'function') {
-                            resetPhotos();
+                        var allowedStatusTypes = ['success', 'partial_mail', 'partial_pdf'];
+                        if (allowedStatusTypes.indexOf(successState.statusType) === -1) {
+                            setStatusMessage(getMessage('statusReviewFields', 'Revisa los campos marcados.'), 'error');
+                            return;
                         }
 
-                        // Re-apply conditional logic after reset
-                        $('#agp-pv-tipo-servicio').trigger('change');
+                        renderConfirmationStep(successState);
 
                         var goToStep = $('#agp-pv-form').data('agpPvGoToStep');
                         if (typeof goToStep === 'function') {
-                            goToStep(1);
+                            goToStep(5, {
+                                warningStep: successState.statusType === 'success' ? null : 5
+                            });
                         }
 
                         var clearDraft = $('#agp-pv-form').data('agpPvClearDraft');

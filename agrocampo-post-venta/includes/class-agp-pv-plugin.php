@@ -126,6 +126,10 @@ class AGP_PV_Plugin {
                     'networkOfflineRetryBlocked' => __( 'Sin conexión. No se puede reintentar todavía.', 'agrocampo-post-venta' ),
                     'pendingReadyToRetry' => __( 'Hay un envío pendiente listo para reintentar.', 'agrocampo-post-venta' ),
                     'pendingRetrying' => __( 'Reintentando envío pendiente...', 'agrocampo-post-venta' ),
+                    'confirmationTitleSuccess' => __( '¡Informe enviado con éxito!', 'agrocampo-post-venta' ),
+                    'confirmationTitleWarning' => __( 'Informe enviado con advertencias', 'agrocampo-post-venta' ),
+                    'confirmationCopySuccess' => __( 'ID copiado al portapapeles.', 'agrocampo-post-venta' ),
+                    'confirmationCopyFallback' => __( 'No se pudo copiar automáticamente. Copia manualmente el ID.', 'agrocampo-post-venta' ),
                 ),
             )
         );
