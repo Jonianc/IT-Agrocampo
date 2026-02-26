@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.69] - 2026-02-26
+
+### UX
+- Se mejora el microcopy de estados parciales (`partial_mail` / `partial_pdf`) con guía concreta de “qué hacer” y tono no alarmista.
+- En casos parciales, el mensaje ahora indica que el informe sí quedó guardado/registrado y orienta a reintentar desde Administración.
+
+### Changed
+- Se agregan mensajes localizables `partialMailNextStep` y `partialPdfNextStep` para instrucciones contextuales tras envío parcial.
+- Se elimina el agregado de error técnico crudo de correo al mensaje frontend para evitar ruido al usuario final.
+
 ## [1.4.68] - 2026-02-26
 
 ### UX

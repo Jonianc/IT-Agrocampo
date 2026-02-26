@@ -100,6 +100,8 @@ class AGP_PV_Plugin {
                     'success' => __( 'Informe enviado.', 'agrocampo-post-venta' ),
                     'successTitle' => __( '¡Envío exitoso!', 'agrocampo-post-venta' ),
                     'successNextStep' => __( 'Puedes copiar el ID del informe o iniciar un nuevo envío de inmediato.', 'agrocampo-post-venta' ),
+                    'partialMailNextStep' => __( 'No te preocupes: el informe quedó guardado. Si lo necesitas, puedes reintentar el correo desde Administración.', 'agrocampo-post-venta' ),
+                    'partialPdfNextStep' => __( 'No te preocupes: el informe quedó registrado. Puedes regenerar el PDF desde Administración cuando corresponda.', 'agrocampo-post-venta' ),
                     'copyReportId' => __( 'Copiar ID', 'agrocampo-post-venta' ),
                     'copyReportIdSuccess' => __( 'ID copiado al portapapeles.', 'agrocampo-post-venta' ),
                     'copyReportIdError' => __( 'No se pudo copiar el ID automáticamente. Cópialo manualmente.', 'agrocampo-post-venta' ),

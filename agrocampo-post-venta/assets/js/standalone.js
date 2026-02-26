@@ -1470,6 +1470,13 @@ function initPhotos() {
         var reportId = data && data.report_id ? data.report_id : (data && data.submission_id ? data.submission_id : null);
         var successTitle = getMessage('successTitle', '¡Envío exitoso!');
         var successNextStep = getMessage('successNextStep', 'Puedes copiar el ID del informe o iniciar un nuevo envío de inmediato.');
+
+        if (statusType === 'partial_mail') {
+            successNextStep = getMessage('partialMailNextStep', 'No te preocupes: el informe quedó guardado. Si lo necesitas, puedes reintentar el correo desde Administración.');
+        } else if (statusType === 'partial_pdf') {
+            successNextStep = getMessage('partialPdfNextStep', 'No te preocupes: el informe quedó registrado. Puedes regenerar el PDF desde Administración cuando corresponda.');
+        }
+
         var fullMessage = successTitle + ' ' + baseMessage;
 
         if (reportId) {
@@ -1863,10 +1870,6 @@ function initPhotos() {
                 .done(function (response) {
                     if (response && response.success) {
                         var successState = buildSuccessMessage(response.data || {});
-
-                        if (response.data && response.data.mail_sent === false && response.data.mail_error) {
-                            successState.text += ' ' + response.data.mail_error;
-                        }
 
                         setStatusMessage(successState.text, successState.type);
                         renderSuccessActions(successState);
