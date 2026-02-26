@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.69] - 2026-02-26
+
+### Added
+- Se agrega logging técnico server-side para `agp_pv_submit` en `debug.log` (cuando `WP_DEBUG`/`agp_pv_debug` y `WP_DEBUG_LOG` están activos) cubriendo inicio de request, rechazos, fallas de validación y resultados de envío (`success`, `partial_mail`, `partial_pdf`).
+
+### Changed
+- El payload de logs del submit se mantiene sin datos sensibles: solo metadatos técnicos (conteo/campos con error, tipo de evento e IDs de envío/informe).
+
 ## [1.4.68] - 2026-02-26
 
 ### Fixed

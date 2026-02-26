@@ -27,18 +27,61 @@ class AGP_PV_Ajax {
         }
     }
 
+    private function is_submit_logging_enabled(): bool {
+        $debug_enabled = ( defined( 'WP_DEBUG' ) && WP_DEBUG ) || (bool) get_option( 'agp_pv_debug' );
+        if ( ! $debug_enabled ) {
+            return false;
+        }
+
+        $debug_log = defined( 'WP_DEBUG_LOG' ) ? WP_DEBUG_LOG : false;
+        $debug_log_enabled = ( true === $debug_log ) || ( is_string( $debug_log ) && '' !== trim( $debug_log ) );
+
+        return $debug_log_enabled;
+    }
+
+    private function log_submit_event( string $event, array $context = array() ): void {
+        if ( ! $this->is_submit_logging_enabled() ) {
+            return;
+        }
+
+        $payload = array( 'event' => $event );
+        foreach ( $context as $key => $value ) {
+            if ( is_scalar( $value ) || null === $value ) {
+                $payload[ (string) $key ] = $value;
+            }
+        }
+
+        $encoded = wp_json_encode( $payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+        if ( false === $encoded ) {
+            $encoded = '{"event":"' . esc_js( $event ) . '"}';
+        }
+
+        error_log( '[agp_pv_submit] ' . $encoded ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+    }
+
     public function handle_submit(): void {
         $this->enforce_post_request();
 
+        $this->log_submit_event(
+            'request_started',
+            array(
+                'logged_in' => is_user_logged_in() ? 1 : 0,
+                'has_files' => ! empty( $_FILES ) ? 1 : 0,
+            )
+        );
+
         if ( ! check_ajax_referer( 'agp_pv_submit', 'nonce', false ) ) {
+            $this->log_submit_event( 'request_rejected_nonce' );
             wp_send_json_error( array( 'message' => __( 'Nonce inválido.', 'agrocampo-post-venta' ) ) );
         }
 
         if ( ! empty( $_POST['agp_pv_hp'] ) ) {
+            $this->log_submit_event( 'request_rejected_honeypot' );
             wp_send_json_error( array( 'message' => __( 'Formulario inválido.', 'agrocampo-post-venta' ) ) );
         }
 
         if ( $this->is_rate_limited() ) {
+            $this->log_submit_event( 'request_rejected_rate_limit' );
             wp_send_json_error(
                 array(
                     'message' => __( 'Demasiados intentos. Espera unos minutos e inténtalo nuevamente.', 'agrocampo-post-venta' ),
@@ -55,16 +98,25 @@ class AGP_PV_Ajax {
         $errors = $this->validate_submission( $data );
 
         if ( ! empty( $errors ) ) {
+            $this->log_submit_event(
+                'validation_failed',
+                array(
+                    'error_count' => count( $errors ),
+                    'error_fields' => implode( ',', array_keys( $errors ) ),
+                )
+            );
             wp_send_json_error( array( 'errors' => $errors ) );
         }
 
         $upload_result = $this->handle_uploads();
         if ( ! $upload_result['success'] ) {
+            $this->log_submit_event( 'uploads_failed' );
             wp_send_json_error( array( 'message' => $upload_result['message'] ) );
         }
 
         $signature_result = $this->handle_signatures();
         if ( ! $signature_result['success'] ) {
+            $this->log_submit_event( 'signatures_failed' );
             wp_send_json_error( array( 'message' => $signature_result['message'] ) );
         }
 
@@ -76,11 +128,19 @@ class AGP_PV_Ajax {
         $submission_id = (int) ( $insert_result['submission_id'] ?? 0 );
         $report_id = (int) ( $insert_result['report_id'] ?? 0 );
         if ( ! $submission_id ) {
+            $this->log_submit_event( 'db_insert_failed' );
             wp_send_json_error( array( 'message' => __( 'No se pudo guardar el envío.', 'agrocampo-post-venta' ) ) );
         }
 
         $email_result = AGP_PV_Email::send_submission_email( $submission_id );
         if ( empty( $email_result['mail_sent'] ) ) {
+            $this->log_submit_event(
+                'submit_partial_mail',
+                array(
+                    'submission_id' => $submission_id,
+                    'report_id' => $report_id > 0 ? $report_id : $submission_id,
+                )
+            );
             wp_send_json_success(
                 array(
                     'message' => __( 'Informe guardado correctamente, pero NO se pudo enviar el correo.', 'agrocampo-post-venta' ),
@@ -95,6 +155,13 @@ class AGP_PV_Ajax {
         }
 
         if ( ! empty( $email_result['pdf_warning'] ) ) {
+            $this->log_submit_event(
+                'submit_partial_pdf',
+                array(
+                    'submission_id' => $submission_id,
+                    'report_id' => $report_id > 0 ? $report_id : $submission_id,
+                )
+            );
             wp_send_json_success(
                 array(
                     'message' => __( 'Informe enviado, pero el PDF no pudo adjuntarse.', 'agrocampo-post-venta' ),
@@ -105,6 +172,14 @@ class AGP_PV_Ajax {
                 )
             );
         }
+
+        $this->log_submit_event(
+            'submit_success',
+            array(
+                'submission_id' => $submission_id,
+                'report_id' => $report_id > 0 ? $report_id : $submission_id,
+            )
+        );
 
         wp_send_json_success(
             array(
