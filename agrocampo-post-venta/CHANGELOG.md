@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.68] - 2026-02-26
+
+### UX
+- Se refuerza la jerarquía visual del estado global con variantes de alerta (`success`, `warning`, `error`) en bloque destacado para facilitar lectura rápida tras enviar.
+- El estado `success` incorpora indicador visual de confirmación (check), mejor contraste y foco visible para navegación por teclado.
+- Las acciones post-éxito (`Copiar ID` / `Nuevo informe`) quedan integradas visualmente al mensaje exitoso como una sola tarjeta de confirmación en escritorio y móvil.
+
+### Accessibility
+- Se agrega estilo `:focus-visible` al estado global para mejorar percepción del foco cuando se anuncia el resultado del envío.
+
 ## [1.4.67] - 2026-02-26
 
 ### UX
