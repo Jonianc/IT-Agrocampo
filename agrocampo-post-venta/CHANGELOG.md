@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.68] - 2026-02-26
+
+### Fixed
+- Se corrige el orden del flujo post-submit exitoso/parcial: el foco y scroll suave al bloque de confirmación se ejecutan después de volver al paso 1, evitando que el enfoque automático del stepper pise el anuncio de resultado.
+
+### Accessibility
+- El estado final de teclado/lector de pantalla ahora queda en la confirmación global tras el envío, haciendo efectiva la mejora de visibilidad y foco del mensaje.
+
 ## [1.4.67] - 2026-02-26
 
 ### Accessibility

@@ -1795,7 +1795,6 @@ function initPhotos() {
                         }
 
                         setStatusMessage(successState.text, successState.type, { skipIfUnchanged: true });
-                        focusAndScrollStatusMessage();
                         emitFrontendEvent('submit_success', { statusType: (response.data && response.data.status_type) || 'success', reportId: (response.data && (response.data.report_id || response.data.submission_id)) || null });
 
                         // Reset UI (keep status)
@@ -1817,6 +1816,8 @@ function initPhotos() {
                         if (typeof goToStep === 'function') {
                             goToStep(1);
                         }
+
+                        focusAndScrollStatusMessage();
 
                         var clearDraft = $('#agp-pv-form').data('agpPvClearDraft');
                         if (typeof clearDraft === 'function') {
