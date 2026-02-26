@@ -856,6 +856,7 @@ function initPhotos() {
     function initStepper() {
         var $steps = $('.agp-pv-step');
         var $indicators = $('[data-step-indicator]');
+        var submittedState = null;
         var currentStep = 1;
 
         function getStep(step) {
@@ -944,6 +945,7 @@ function initPhotos() {
                 var $indicator = $indicators.filter('[data-step-indicator="' + stepNumber + '"]');
                 var state = getStepDraftState($step);
                 var stateLabel = '';
+                var baseLabel = $.trim(String($indicator.text() || ''));
 
                 $indicator.removeClass('is-draft-empty is-draft-in-progress is-draft-complete')
                     .removeAttr('data-step-state');
@@ -959,7 +961,6 @@ function initPhotos() {
                     stateLabel = getMessage('stepStateEmpty', 'vacío');
                 }
 
-                var baseLabel = $.trim(String($indicator.text() || ''));
                 $indicator.attr('aria-label', stateLabel ? (baseLabel + ' (' + stateLabel + ')') : baseLabel);
             });
         }
@@ -1022,15 +1023,40 @@ function initPhotos() {
             $indicators.each(function () {
                 var $i = $(this);
                 var n = parseInt($i.attr('data-step-indicator'), 10);
-                $i.removeClass('is-active is-completed');
+                $i.removeClass('is-active is-completed is-submitted is-warning');
                 $i.removeAttr('aria-current');
-                if (n < step) {
-                    $i.addClass('is-completed');
-                } else if (n === step) {
-                    $i.addClass('is-active');
-                    $i.attr('aria-current', 'step');
+
+                if (n === 5) {
+                    $i.attr('aria-label', $.trim(String($i.text() || '')));
+                }
+
+                if (n <= 4) {
+                    if (n < step) {
+                        $i.addClass('is-completed');
+                    } else if (n === step) {
+                        $i.addClass('is-active');
+                        $i.attr('aria-current', 'step');
+                    }
                 }
             });
+
+            if (submittedState) {
+                var $submittedIndicator = $indicators.filter('[data-step-indicator="5"]');
+                if ($submittedIndicator.length) {
+                    var submittedBaseLabel = $.trim(String($submittedIndicator.text() || ''));
+                    var submittedStateLabel = submittedState.type === 'warning'
+                        ? getMessage('stepStateSubmittedWarning', 'enviado con advertencia')
+                        : getMessage('stepStateSubmitted', 'enviado');
+
+                    $submittedIndicator.addClass('is-submitted');
+                    if (submittedState.type === 'warning') {
+                        $submittedIndicator.addClass('is-warning');
+                    }
+                    $submittedIndicator
+                        .attr('aria-current', 'step')
+                        .attr('aria-label', submittedBaseLabel + ' (' + submittedStateLabel + ')');
+                }
+            }
 
             updateStepErrorStates();
             updateStepDraftStates();
@@ -1123,6 +1149,7 @@ function initPhotos() {
         }
 
         $('#agp-pv-form').on('click', '.agp-pv-next', function () {
+            submittedState = null;
             clearFieldErrors();
             if (!validateCurrentStep()) {
                 return;
@@ -1134,6 +1161,7 @@ function initPhotos() {
         });
 
         $('#agp-pv-form').on('click', '.agp-pv-prev', function () {
+            submittedState = null;
             clearFieldErrors();
             var step = parseInt($(this).attr('data-prev-step'), 10);
             if (step) {
@@ -1151,7 +1179,20 @@ function initPhotos() {
             updateStepDraftStates();
         });
 
-        $('#agp-pv-form').data('agpPvGoToStep', goTo);
+        function setSubmittedState(type) {
+            if (type !== 'success' && type !== 'warning') {
+                submittedState = null;
+            } else {
+                submittedState = { type: type };
+            }
+
+            updateIndicators(currentStep);
+        }
+
+        $('#agp-pv-form')
+            .data('agpPvGoToStep', goTo)
+            .data('agpPvSetSubmittedState', setSubmittedState);
+
         goTo(1);
     }
 
@@ -1299,6 +1340,11 @@ function initPhotos() {
         }
 
         $form.on('input change', 'input, select, textarea', function () {
+            var setSubmittedState = $form.data('agpPvSetSubmittedState');
+            if (typeof setSubmittedState === 'function') {
+                setSubmittedState(null);
+            }
+
             if (!isDraftField(this)) {
                 return;
             }
@@ -1761,6 +1807,12 @@ function initPhotos() {
                         }
 
                         setStatusMessage(successState.text, successState.type);
+
+                        var setSubmittedState = $('#agp-pv-form').data('agpPvSetSubmittedState');
+                        if (typeof setSubmittedState === 'function') {
+                            setSubmittedState(successState.type);
+                        }
+
                         emitFrontendEvent('submit_success', { statusType: (response.data && response.data.status_type) || 'success', reportId: (response.data && (response.data.report_id || response.data.submission_id)) || null });
 
                         // Reset UI (keep status)

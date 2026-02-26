@@ -120,6 +120,8 @@ class AGP_PV_Plugin {
                     'stepStateEmpty' => __( 'vacío', 'agrocampo-post-venta' ),
                     'stepStateInProgress' => __( 'en progreso', 'agrocampo-post-venta' ),
                     'stepStateComplete' => __( 'completo', 'agrocampo-post-venta' ),
+                    'stepStateSubmitted' => __( 'enviado', 'agrocampo-post-venta' ),
+                    'stepStateSubmittedWarning' => __( 'enviado con advertencia', 'agrocampo-post-venta' ),
                     'networkOnline' => __( 'Conexión disponible.', 'agrocampo-post-venta' ),
                     'networkOffline' => __( 'Sin conexión. Puedes completar el formulario y reintentar el envío cuando vuelva Internet.', 'agrocampo-post-venta' ),
                     'networkOfflineSubmitBlocked' => __( 'Sin conexión. Guardamos el envío como pendiente para que puedas reintentarlo.', 'agrocampo-post-venta' ),

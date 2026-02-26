@@ -25,6 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <li data-step-indicator="2"><?php esc_html_e( 'Detalle', 'agrocampo-post-venta' ); ?></li>
                 <li data-step-indicator="3"><?php esc_html_e( 'Firmas', 'agrocampo-post-venta' ); ?></li>
                 <li data-step-indicator="4"><?php esc_html_e( 'Adjuntos', 'agrocampo-post-venta' ); ?></li>
+                <li data-step-indicator="5"><?php esc_html_e( 'Enviado', 'agrocampo-post-venta' ); ?></li>
             </ol>
         </nav>
 

@@ -30,7 +30,7 @@
     padding: 0;
     margin: 0;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 8px;
 }
 
@@ -79,6 +79,22 @@
 
 .agp-pv-stepper li.is-draft-complete {
     box-shadow: inset 0 -3px 0 #2e6f40;
+}
+
+
+.agp-pv-stepper li.is-submitted {
+    border-color: #1f5dff;
+    background: #eaf0ff;
+    color: #11348f;
+    font-weight: 700;
+    box-shadow: inset 0 -3px 0 #1f5dff;
+}
+
+.agp-pv-stepper li.is-submitted.is-warning {
+    border-color: #8a5a00;
+    background: #fff9ef;
+    color: #8a5a00;
+    box-shadow: inset 0 -3px 0 #d18b00;
 }
 
 .agp-pv-step {

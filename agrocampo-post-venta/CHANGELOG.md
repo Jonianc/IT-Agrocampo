@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.67] - 2026-02-26
+
+### UX
+- Se agrega un quinto indicador del stepper (`Enviado`) para representar el estado final tras un envío exitoso del formulario.
+- El indicador final distingue éxito completo y éxito parcial (`correo/PDF`) con estilo visual específico para advertencias.
+
+### Accessibility
+- El estado final del stepper ahora actualiza `aria-label` con contexto (`enviado` / `enviado con advertencia`) cuando la respuesta AJAX confirma guardado.
+
 ## [1.4.66] - 2026-02-26
 
 ### UX
