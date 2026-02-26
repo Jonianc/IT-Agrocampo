@@ -1200,6 +1200,115 @@ function initPhotos() {
     }
 
 
+
+    function initConnectivityAndPending() {
+        var PENDING_KEY = 'agp_pv_pending_submit_v1';
+        var $form = $('#agp-pv-form');
+        var $networkStatus = $('.agp-pv-network-status');
+        var $retryButton = $('.agp-pv-retry-pending');
+
+        function hasPendingSubmission() {
+            if (typeof window.localStorage === 'undefined') {
+                return false;
+            }
+
+            try {
+                return !!window.localStorage.getItem(PENDING_KEY);
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function savePendingSubmission(reason) {
+            if (typeof window.localStorage === 'undefined') {
+                return;
+            }
+
+            var payload = {
+                savedAt: Date.now(),
+                reason: reason || 'offline',
+                step: parseInt($form.data('agpPvCurrentStep'), 10) || 1
+            };
+
+            try {
+                window.localStorage.setItem(PENDING_KEY, JSON.stringify(payload));
+            } catch (e) {
+                // ignore localStorage issues
+            }
+        }
+
+        function clearPendingSubmission() {
+            if (typeof window.localStorage === 'undefined') {
+                return;
+            }
+
+            try {
+                window.localStorage.removeItem(PENDING_KEY);
+            } catch (e) {
+                // ignore localStorage issues
+            }
+        }
+
+        function refreshRetryVisibility() {
+            if (!$retryButton.length) {
+                return;
+            }
+
+            if (hasPendingSubmission()) {
+                $retryButton.removeAttr('hidden');
+            } else {
+                $retryButton.attr('hidden', true);
+            }
+        }
+
+        function updateNetworkState() {
+            var online = navigator.onLine !== false;
+
+            if ($networkStatus.length) {
+                if (online) {
+                    $networkStatus
+                        .removeClass('is-offline')
+                        .text(getMessage('networkOnline', 'Conexión disponible.'));
+                } else {
+                    $networkStatus
+                        .addClass('is-offline')
+                        .text(getMessage('networkOffline', 'Sin conexión. Puedes completar el formulario y reintentar el envío cuando vuelva Internet.'));
+                }
+            }
+
+            if (online && hasPendingSubmission()) {
+                setStatusMessage(getMessage('pendingReadyToRetry', 'Hay un envío pendiente listo para reintentar.'), 'warning');
+            }
+        }
+
+        $form.data('agpPvSavePendingSubmit', savePendingSubmission);
+        $form.data('agpPvClearPendingSubmit', clearPendingSubmission);
+        $form.data('agpPvHasPendingSubmit', hasPendingSubmission);
+
+        $form.on('click', '.agp-pv-retry-pending', function () {
+            if (navigator.onLine === false) {
+                setStatusMessage(getMessage('networkOfflineRetryBlocked', 'Sin conexión. No se puede reintentar todavía.'), 'warning');
+                return;
+            }
+
+            setStatusMessage(getMessage('pendingRetrying', 'Reintentando envío pendiente...'), 'warning');
+            $form.trigger('submit');
+        });
+
+        window.addEventListener('online', function () {
+            updateNetworkState();
+            refreshRetryVisibility();
+        });
+
+        window.addEventListener('offline', function () {
+            updateNetworkState();
+            refreshRetryVisibility();
+        });
+
+        updateNetworkState();
+        refreshRetryVisibility();
+    }
+
     function initForm() {
         ensureErrorIds();
 
@@ -1216,6 +1325,18 @@ function initPhotos() {
             e.preventDefault();
 
             clearFieldErrors();
+
+            var savePendingSubmit = $('#agp-pv-form').data('agpPvSavePendingSubmit');
+            var clearPendingSubmit = $('#agp-pv-form').data('agpPvClearPendingSubmit');
+
+            if (navigator.onLine === false) {
+                if (typeof savePendingSubmit === 'function') {
+                    savePendingSubmit('offline_before_submit');
+                }
+                setStatusMessage(getMessage('networkOfflineSubmitBlocked', 'Sin conexión. Guardamos el envío como pendiente para que puedas reintentarlo.'), 'warning');
+                $('.agp-pv-retry-pending').removeAttr('hidden');
+                return;
+            }
 
             var goToStep = $('#agp-pv-form').data('agpPvGoToStep');
             if (typeof goToStep === 'function') {
@@ -1307,6 +1428,11 @@ function initPhotos() {
                         if (typeof clearDraft === 'function') {
                             clearDraft();
                         }
+
+                        if (typeof clearPendingSubmit === 'function') {
+                            clearPendingSubmit();
+                        }
+                        $('.agp-pv-retry-pending').attr('hidden', true);
                     } else {
                         // Field errors
                         if (response && response.data && response.data.errors) {
@@ -1319,7 +1445,16 @@ function initPhotos() {
                         }
                     }
                 })
-                .fail(function () {
+                .fail(function (xhr) {
+                    if (navigator.onLine === false || (xhr && xhr.status === 0)) {
+                        if (typeof savePendingSubmit === 'function') {
+                            savePendingSubmit('network_error');
+                        }
+                        $('.agp-pv-retry-pending').removeAttr('hidden');
+                        setStatusMessage(getMessage('networkOfflineSubmitBlocked', 'Sin conexión. Guardamos el envío como pendiente para que puedas reintentarlo.'), 'warning');
+                        return;
+                    }
+
                     setStatusMessage(agpPvData.messages.invalid, 'error');
                 })
                 .always(function () {
@@ -1334,6 +1469,7 @@ function initPhotos() {
         initHeavyStepFeatures();
         initDraftPersistence();
         initTextLengthGuides();
+        initConnectivityAndPending();
         initForm();
     });
 })(jQuery);

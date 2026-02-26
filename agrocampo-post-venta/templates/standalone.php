@@ -264,10 +264,12 @@ if ( ! defined( 'ABSPATH' ) ) {
                     <button type="button" class="agp-pv-prev" data-prev-step="3"><?php esc_html_e( 'Anterior', 'agrocampo-post-venta' ); ?></button>
                     <button type="submit" class="agp-pv-submit">Enviar mensaje</button>
                 </div>
+                <button type="button" class="agp-pv-retry-pending" hidden><?php esc_html_e( 'Reintentar envío pendiente', 'agrocampo-post-venta' ); ?></button>
                 <button type="button" class="agp-pv-clear-draft"><?php esc_html_e( 'Limpiar borrador local', 'agrocampo-post-venta' ); ?></button>
             </div>
         </div>
     </form>
+    <span class="agp-pv-network-status" role="status" aria-live="polite"></span>
     <span class="agp-pv-status agp-pv-status--global" role="status" aria-live="polite"></span>
 </div>
 

@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.58] - 2026-02-26
+
+### Added
+- Se agrega estado de conectividad en frontend (`online/offline`) para el formulario standalone, con mensaje persistente y feedback en tiempo real al recuperar red.
+- Se incorpora botón `Reintentar envío pendiente` cuando hubo intento sin conexión o error de red sin respuesta.
+
+### Changed
+- El submit frontend ahora detecta modo offline antes de enviar y marca un estado local de envío pendiente para reintento manual.
+- En fallos de red (`xhr.status=0`) se conserva estado pendiente y se muestra guía de reintento, evitando perder el trabajo capturado en terreno.
+
 ## [1.4.57] - 2026-02-26
 
 ### Changed
