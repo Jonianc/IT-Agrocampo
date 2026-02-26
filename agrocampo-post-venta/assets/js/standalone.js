@@ -1385,6 +1385,74 @@ function initPhotos() {
         $status.text(text || '');
     }
 
+
+
+    function copyTextToClipboard(value) {
+        var text = String(value || '');
+        if (!text) {
+            return Promise.resolve(false);
+        }
+
+        if (window.navigator && window.navigator.clipboard && typeof window.navigator.clipboard.writeText === 'function') {
+            return window.navigator.clipboard.writeText(text)
+                .then(function () {
+                    return true;
+                })
+                .catch(function () {
+                    return false;
+                });
+        }
+
+        return new Promise(function (resolve) {
+            var didCopy = false;
+            try {
+                var input = document.createElement('input');
+                input.type = 'text';
+                input.value = text;
+                input.setAttribute('readonly', 'readonly');
+                input.style.position = 'fixed';
+                input.style.top = '-9999px';
+                document.body.appendChild(input);
+                input.focus();
+                input.select();
+                didCopy = document.execCommand('copy');
+                document.body.removeChild(input);
+            } catch (e) {
+                didCopy = false;
+            }
+            resolve(!!didCopy);
+        });
+    }
+
+    function renderSuccessActions(successState) {
+        var $actions = $('.agp-pv-success-actions');
+        var $copyButton = $('.agp-pv-copy-report-id');
+        var $newButton = $('.agp-pv-new-report');
+
+        if (!$actions.length || !$newButton.length || !$copyButton.length) {
+            return;
+        }
+
+        var hasId = !!(successState && successState.reportId);
+        $newButton.text(getMessage('newReport', 'Nuevo informe')).removeAttr('hidden');
+        if (hasId) {
+            $copyButton.text(getMessage('copyReportId', 'Copiar ID')).removeAttr('hidden').data('reportId', successState.reportId);
+        } else {
+            $copyButton.attr('hidden', true).removeData('reportId');
+        }
+
+        $actions.removeAttr('hidden');
+    }
+
+    function hideSuccessActions() {
+        var $actions = $('.agp-pv-success-actions');
+        var $copyButton = $('.agp-pv-copy-report-id');
+        var $newButton = $('.agp-pv-new-report');
+        $copyButton.attr('hidden', true).removeData('reportId');
+        $newButton.attr('hidden', true);
+        $actions.attr('hidden', true);
+    }
+
     function buildSuccessMessage(data) {
         var statusType = data && data.status_type ? data.status_type : 'success';
         var baseMessage = (data && data.message) || '';
@@ -1400,15 +1468,21 @@ function initPhotos() {
         }
 
         var reportId = data && data.report_id ? data.report_id : (data && data.submission_id ? data.submission_id : null);
+        var successTitle = getMessage('successTitle', '¡Envío exitoso!');
+        var successNextStep = getMessage('successNextStep', 'Puedes copiar el ID del informe o iniciar un nuevo envío de inmediato.');
+        var fullMessage = successTitle + ' ' + baseMessage;
 
         if (reportId) {
             var idPrefix = (agpPvData && agpPvData.messages && agpPvData.messages.reportIdPrefix) || 'ID informe';
-            baseMessage += ' (' + idPrefix + ': ' + reportId + ')';
+            fullMessage += ' (' + idPrefix + ': ' + reportId + ')';
         }
 
+        fullMessage += ' ' + successNextStep;
+
         return {
-            text: baseMessage,
-            type: statusType === 'success' ? 'success' : 'warning'
+            text: fullMessage,
+            type: statusType === 'success' ? 'success' : 'warning',
+            reportId: reportId
         };
     }
 
@@ -1650,6 +1724,37 @@ function initPhotos() {
         refreshRetryVisibility();
     }
 
+
+    function initSuccessActions() {
+        $(document).on('click', '.agp-pv-copy-report-id', function () {
+            var reportId = $(this).data('reportId');
+            copyTextToClipboard(reportId).then(function (copied) {
+                if (copied) {
+                    setStatusMessage(getMessage('copyReportIdSuccess', 'ID copiado al portapapeles.'), 'success');
+                    emitFrontendEvent('copy_report_id_success', { reportId: reportId });
+                    return;
+                }
+
+                setStatusMessage(getMessage('copyReportIdError', 'No se pudo copiar el ID automáticamente. Cópialo manualmente.'), 'warning');
+                emitFrontendEvent('copy_report_id_error', { reportId: reportId });
+            });
+        });
+
+        $(document).on('click', '.agp-pv-new-report', function () {
+            hideSuccessActions();
+            setStatusMessage('', 'success');
+            var goToStep = $('#agp-pv-form').data('agpPvGoToStep');
+            if (typeof goToStep === 'function') {
+                goToStep(1);
+            }
+            var $firstField = $('#agp-pv-form').find('input, select, textarea').filter(':visible:enabled').first();
+            if ($firstField.length) {
+                $firstField.trigger('focus');
+            }
+            emitFrontendEvent('new_report_clicked', {});
+        });
+    }
+
     function initForm() {
         ensureErrorIds();
 
@@ -1685,6 +1790,7 @@ function initPhotos() {
                 if (typeof savePendingSubmit === 'function') {
                     savePendingSubmit('offline_before_submit');
                 }
+                hideSuccessActions();
                 setStatusMessage(getMessage('networkOfflineSubmitBlocked', 'Sin conexión. Guardamos el envío como pendiente para que puedas reintentarlo.'), 'warning');
                 emitFrontendEvent('submit_blocked_offline', { reason: 'offline_before_submit' });
                 $('.agp-pv-retry-pending').removeAttr('hidden');
@@ -1724,6 +1830,7 @@ function initPhotos() {
                 });
 
                 renderErrorSummary(summaryItems, getMessage('errorSummaryTitle', 'Revisa los siguientes campos antes de continuar:'), true);
+                hideSuccessActions();
                 setStatusMessage(getMessage('statusReviewFields', 'Revisa los campos marcados.'), 'error');
                 emitFrontendEvent('submit_validation_failed', { invalidCount: summaryItems.length });
                 return;
@@ -1743,6 +1850,7 @@ function initPhotos() {
             formData.append('action', 'agp_pv_submit');
             formData.append('nonce', agpPvData.nonce);
 
+            hideSuccessActions();
             setStatusMessage(getMessage('statusSending', 'Enviando...'));
 
             $.ajax({
@@ -1761,6 +1869,8 @@ function initPhotos() {
                         }
 
                         setStatusMessage(successState.text, successState.type);
+                        renderSuccessActions(successState);
+                        $('.agp-pv-status').trigger('focus');
                         emitFrontendEvent('submit_success', { statusType: (response.data && response.data.status_type) || 'success', reportId: (response.data && (response.data.report_id || response.data.submission_id)) || null });
 
                         // Reset UI (keep status)
@@ -1796,12 +1906,15 @@ function initPhotos() {
                         // Field errors
                         if (response && response.data && response.data.errors) {
                             showFieldErrors(response.data.errors);
+                            hideSuccessActions();
                             setStatusMessage(getMessage('statusReviewFields', 'Revisa los campos marcados.'), 'error');
                             emitFrontendEvent('submit_server_field_errors', { fieldCount: Object.keys(response.data.errors || {}).length });
                         } else if (response && response.data && response.data.message) {
+                            hideSuccessActions();
                             setStatusMessage(response.data.message, 'error');
                             emitFrontendEvent('submit_server_error', { hasMessage: true });
                         } else {
+                            hideSuccessActions();
                             setStatusMessage(agpPvData.messages.invalid, 'error');
                             emitFrontendEvent('submit_server_error', { hasMessage: false });
                         }
@@ -1813,11 +1926,13 @@ function initPhotos() {
                             savePendingSubmit('network_error');
                         }
                         $('.agp-pv-retry-pending').removeAttr('hidden');
+                        hideSuccessActions();
                         setStatusMessage(getMessage('networkOfflineSubmitBlocked', 'Sin conexión. Guardamos el envío como pendiente para que puedas reintentarlo.'), 'warning');
                         emitFrontendEvent('submit_network_error', { offline: navigator.onLine === false, xhrStatus: xhr && typeof xhr.status !== 'undefined' ? xhr.status : null });
                         return;
                     }
 
+                    hideSuccessActions();
                     setStatusMessage(agpPvData.messages.invalid, 'error');
                     emitFrontendEvent('submit_request_failed', { xhrStatus: xhr && typeof xhr.status !== 'undefined' ? xhr.status : null });
                 })
@@ -1836,6 +1951,7 @@ function initPhotos() {
         initDraftPersistence();
         initTextLengthGuides();
         initConnectivityAndPending();
+        initSuccessActions();
         initForm();
     });
 })(jQuery);

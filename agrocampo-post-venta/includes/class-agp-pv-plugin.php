@@ -98,6 +98,12 @@ class AGP_PV_Plugin {
                 'messages' => array(
                     'invalid' => __( 'Error: tu formulario no es válido, ¡por favor, corrige los errores!', 'agrocampo-post-venta' ),
                     'success' => __( 'Informe enviado.', 'agrocampo-post-venta' ),
+                    'successTitle' => __( '¡Envío exitoso!', 'agrocampo-post-venta' ),
+                    'successNextStep' => __( 'Puedes copiar el ID del informe o iniciar un nuevo envío de inmediato.', 'agrocampo-post-venta' ),
+                    'copyReportId' => __( 'Copiar ID', 'agrocampo-post-venta' ),
+                    'copyReportIdSuccess' => __( 'ID copiado al portapapeles.', 'agrocampo-post-venta' ),
+                    'copyReportIdError' => __( 'No se pudo copiar el ID automáticamente. Cópialo manualmente.', 'agrocampo-post-venta' ),
+                    'newReport' => __( 'Nuevo informe', 'agrocampo-post-venta' ),
                     'successMailWarning' => __( 'Informe guardado correctamente, pero NO se pudo enviar el correo.', 'agrocampo-post-venta' ),
                     'successPdfWarning' => __( 'Informe enviado, pero el PDF no pudo adjuntarse.', 'agrocampo-post-venta' ),
                     'reportIdPrefix' => __( 'ID informe', 'agrocampo-post-venta' ),

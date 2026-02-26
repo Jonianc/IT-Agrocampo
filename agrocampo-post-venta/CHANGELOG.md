@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.67] - 2026-02-26
+
+### UX
+- Se mejora el mensaje de envío exitoso con estructura más clara (título + detalle + siguiente paso) para cierre de flujo en terreno.
+- Se agregan acciones rápidas tras éxito: `Copiar ID` (con fallback de portapapeles) y `Nuevo informe`.
+
+### Changed
+- El botón `Copiar ID` solo se muestra cuando el backend retorna `report_id/submission_id`.
+- Se ocultan las acciones de éxito automáticamente cuando el estado vuelve a `enviando`, `warning` o `error` para evitar inconsistencias visuales.
+
 ## [1.4.66] - 2026-02-26
 
 ### UX

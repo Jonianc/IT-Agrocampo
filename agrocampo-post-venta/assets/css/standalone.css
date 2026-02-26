@@ -223,6 +223,34 @@
     font-weight: 600;
 }
 
+.agp-pv-success-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.agp-pv-success-actions button {
+    min-height: 40px;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.agp-pv-copy-report-id {
+    border: 1px solid #1a4d2a;
+    background: #fff;
+    color: #1a4d2a;
+}
+
+.agp-pv-new-report {
+    border: 1px solid #2e6f40;
+    background: #2e6f40;
+    color: #fff;
+}
+
 
 .agp-pv-error-summary {
     margin: 8px 0 16px;
