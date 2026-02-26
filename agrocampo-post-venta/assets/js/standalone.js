@@ -1176,6 +1176,30 @@ function initPhotos() {
         });
     }
 
+    function initHeavyStepFeatures() {
+        var signaturesInitialized = false;
+        var photosInitialized = false;
+        function maybeInitForStep(step) {
+            if (step === 3 && !signaturesInitialized) {
+                initSignatures();
+                signaturesInitialized = true;
+            }
+
+            if (step === 4 && !photosInitialized) {
+                initPhotos();
+                photosInitialized = true;
+            }
+        }
+
+        $('#agp-pv-form').on('agpPvStepChanged', function (e, step) {
+            maybeInitForStep(parseInt(step, 10) || 1);
+        });
+
+        var currentStep = parseInt($('#agp-pv-form').data('agpPvCurrentStep'), 10) || 1;
+        maybeInitForStep(currentStep);
+    }
+
+
     function initForm() {
         ensureErrorIds();
 
@@ -1306,9 +1330,8 @@ function initPhotos() {
 
     $(function () {
         initConditionalFields();
-        initSignatures();
-        initPhotos();
         initStepper();
+        initHeavyStepFeatures();
         initDraftPersistence();
         initTextLengthGuides();
         initForm();

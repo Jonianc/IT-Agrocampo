@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.56] - 2026-02-26
+
+### Performance
+- Se aplica inicialización diferida (lazy-init) en frontend para módulos pesados: `Firmas` (canvas) y `Adjuntos/Fotos`, cargándolos solo al entrar por primera vez a sus pasos.
+- Se reduce el trabajo en la carga inicial del formulario standalone al evitar registrar listeners de firmas/fotos antes de que el usuario los necesite.
+
+### Changed
+- El bootstrap del formulario ahora inicializa `initStepper()` primero y delega la activación de `initSignatures()`/`initPhotos()` al evento `agpPvStepChanged`.
+
 ## [1.4.55] - 2026-02-26
 
 ### Changed
