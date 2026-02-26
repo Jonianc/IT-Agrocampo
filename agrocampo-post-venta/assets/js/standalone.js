@@ -862,6 +862,108 @@ function initPhotos() {
             return $steps.filter('[data-step="' + step + '"]');
         }
 
+        function isStepperDraftField(el) {
+            var name = (el && el.name) ? String(el.name) : '';
+            if (!name) {
+                return false;
+            }
+
+            if (
+                name === 'nonce'
+                || name === 'agp_pv_hp'
+                || name === 'firma_cliente'
+                || name === 'firma_tecnico'
+                || name === 'fotos[]'
+            ) {
+                return false;
+            }
+
+            return true;
+        }
+
+        function getApplicableStepFields($scope) {
+            return $scope.find('input, select, textarea').filter(function () {
+                var el = this;
+                var $el = $(el);
+
+                if (!isStepperDraftField(el) || el.disabled) {
+                    return false;
+                }
+
+                if (el.type === 'hidden' || el.hidden || $el.is('[hidden]')) {
+                    return false;
+                }
+
+                var $conditionalWrap = $el.closest('[data-condition]');
+                if ($conditionalWrap.length && $conditionalWrap.is(':hidden')) {
+                    return false;
+                }
+
+                return true;
+            });
+        }
+
+        function getStepDraftState($step) {
+            var $fields = getApplicableStepFields($step);
+            if (!$fields.length) {
+                return 'empty';
+            }
+
+            var filledCount = 0;
+            $fields.each(function () {
+                var el = this;
+                var $el = $(el);
+
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                    if ($el.is(':checked')) {
+                        filledCount += 1;
+                    }
+                    return;
+                }
+
+                if ($.trim(String($el.val() || '')).length > 0) {
+                    filledCount += 1;
+                }
+            });
+
+            if (filledCount <= 0) {
+                return 'empty';
+            }
+
+            return getRequiredInvalidFields($step).length > 0 ? 'in_progress' : 'complete';
+        }
+
+        function updateStepDraftStates() {
+            $steps.each(function () {
+                var $step = $(this);
+                var stepNumber = parseInt($step.attr('data-step'), 10);
+                if (!stepNumber) {
+                    return;
+                }
+
+                var $indicator = $indicators.filter('[data-step-indicator="' + stepNumber + '"]');
+                var state = getStepDraftState($step);
+                var stateLabel = '';
+
+                $indicator.removeClass('is-draft-empty is-draft-in-progress is-draft-complete')
+                    .removeAttr('data-step-state');
+
+                if (state === 'complete') {
+                    $indicator.addClass('is-draft-complete').attr('data-step-state', 'complete');
+                    stateLabel = getMessage('stepStateComplete', 'completo');
+                } else if (state === 'in_progress') {
+                    $indicator.addClass('is-draft-in-progress').attr('data-step-state', 'in_progress');
+                    stateLabel = getMessage('stepStateInProgress', 'en progreso');
+                } else {
+                    $indicator.addClass('is-draft-empty').attr('data-step-state', 'empty');
+                    stateLabel = getMessage('stepStateEmpty', 'vacío');
+                }
+
+                var baseLabel = $.trim(String($indicator.text() || ''));
+                $indicator.attr('aria-label', stateLabel ? (baseLabel + ' (' + stateLabel + ')') : baseLabel);
+            });
+        }
+
         function getRequiredInvalidFields($scope) {
             return $scope.find('input, select, textarea').filter(function () {
                 var el = this;
@@ -931,6 +1033,7 @@ function initPhotos() {
             });
 
             updateStepErrorStates();
+            updateStepDraftStates();
         }
 
         function goTo(step) {
@@ -1040,10 +1143,12 @@ function initPhotos() {
 
         $('#agp-pv-form').on('input change blur', 'input, select, textarea', function () {
             updateStepErrorStates();
+            updateStepDraftStates();
         });
 
-        $('#agp-pv-form').on('agpPvStepChanged agpPvConditionsChanged', function () {
+        $('#agp-pv-form').on('agpPvStepChanged agpPvConditionsChanged agpPvDraftStateChanged', function () {
             updateStepErrorStates();
+            updateStepDraftStates();
         });
 
         $('#agp-pv-form').data('agpPvGoToStep', goTo);
@@ -1116,6 +1221,8 @@ function initPhotos() {
             } catch (e) {
                 // ignore localStorage quota/access issues
             }
+
+            $form.trigger('agpPvDraftStateChanged');
         }
 
         function clearDraft() {
@@ -1124,6 +1231,8 @@ function initPhotos() {
             } catch (e) {
                 // ignore
             }
+
+            $form.trigger('agpPvDraftStateChanged');
         }
 
         function restoreDraft() {
@@ -1186,6 +1295,7 @@ function initPhotos() {
             }
 
             $('.agp-pv-status').text(getMessage('draftRecovered', 'Se recuperó un borrador local.'));
+            $form.trigger('agpPvDraftStateChanged');
         }
 
         $form.on('input change', 'input, select, textarea', function () {

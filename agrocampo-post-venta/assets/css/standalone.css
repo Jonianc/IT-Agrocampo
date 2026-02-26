@@ -68,6 +68,19 @@
     background: #fdecef;
 }
 
+
+.agp-pv-stepper li.is-draft-empty {
+    box-shadow: inset 0 0 0 1px rgba(95, 99, 104, 0.2);
+}
+
+.agp-pv-stepper li.is-draft-in-progress {
+    box-shadow: inset 0 -3px 0 #d18b00;
+}
+
+.agp-pv-stepper li.is-draft-complete {
+    box-shadow: inset 0 -3px 0 #2e6f40;
+}
+
 .agp-pv-step {
     display: none;
 }

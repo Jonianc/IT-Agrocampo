@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.66] - 2026-02-26
+
+### UX
+- El stepper ahora muestra estado de avance por paso basado en borrador/formulario (`vacío`, `en progreso`, `completo`) mediante clases y metadatos por indicador.
+
+### Changed
+- Se recalcula el estado de avance del stepper en interacción de campos, cambios de paso, cambios condicionales y eventos de persistencia de borrador (guardar, limpiar, restaurar).
+- Se añaden etiquetas accesibles (`aria-label`) por indicador con el estado del paso para reforzar contexto en navegación asistida.
+
 ## [1.4.65] - 2026-02-26
 
 ### Changed
