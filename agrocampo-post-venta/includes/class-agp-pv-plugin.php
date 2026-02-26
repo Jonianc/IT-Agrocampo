@@ -105,6 +105,7 @@ class AGP_PV_Plugin {
                     'errorSummaryTitle' => __( 'Revisa los siguientes campos antes de continuar:', 'agrocampo-post-venta' ),
                     'statusSending' => __( 'Enviando...', 'agrocampo-post-venta' ),
                     'draftRecovered' => __( 'Se recuperó un borrador local.', 'agrocampo-post-venta' ),
+                    'draftCleared' => __( 'Borrador local eliminado.', 'agrocampo-post-venta' ),
                     'photosMaxCount' => __( 'Máximo 10 fotos.', 'agrocampo-post-venta' ),
                     'photosMaxCountTrimmed' => __( 'Máximo 10 fotos. El resto fue descartado.', 'agrocampo-post-venta' ),
                     'photoMaxSize' => __( 'Cada foto debe pesar máximo 5 MB.', 'agrocampo-post-venta' ),

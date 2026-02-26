@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.60] - 2026-02-26
+
+### i18n
+- Se completa el cierre de internacionalización del frontend standalone, eliminando textos visibles hardcodeados en opciones de `Tipo de Servicio` y `Tipo de Mantención`, además del label del botón de envío.
+- Se agrega mensaje localizado `draftCleared` para evitar string fijo en JS al limpiar borrador local.
+
+### Changed
+- Se corrigen acentos en labels frontend traducibles (por ejemplo `Garantía`, `Diagnóstico Técnico`) manteniendo valores internos de opción para compatibilidad.
+
 ## [1.4.59] - 2026-02-26
 
 ### Added

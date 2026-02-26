@@ -1052,7 +1052,7 @@ function initPhotos() {
 
         $form.on('click', '.agp-pv-clear-draft', function () {
             clearDraft();
-            $('.agp-pv-status').text('Borrador local eliminado.');
+            $('.agp-pv-status').text(getMessage('draftCleared', 'Borrador local eliminado.'));
         });
 
         restoreDraft();

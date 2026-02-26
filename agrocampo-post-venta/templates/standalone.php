@@ -124,12 +124,12 @@ if ( ! defined( 'ABSPATH' ) ) {
                     <label for="agp-pv-tipo-servicio"><?php esc_html_e( 'Tipo de Servicio', 'agrocampo-post-venta' ); ?> *</label>
                     <select id="agp-pv-tipo-servicio" name="tipo_servicio" required>
                         <option value=""><?php esc_html_e( 'Seleccione', 'agrocampo-post-venta' ); ?></option>
-                        <option value="one">Factura Cliente</option>
-                        <option value="two">Garantia</option>
-                        <option value="Interno">Mantención</option>
-                        <option value="Visita-de-Cortesía">Visita de Cortesía</option>
-                        <option value="Diagnostico-Técnico">Diagnostico Técnico</option>
-                        <option value="Entrega-Técnica">Entrega Técnica</option>
+                        <option value="one"><?php esc_html_e( 'Factura Cliente', 'agrocampo-post-venta' ); ?></option>
+                        <option value="two"><?php esc_html_e( 'Garantía', 'agrocampo-post-venta' ); ?></option>
+                        <option value="Interno"><?php esc_html_e( 'Mantención', 'agrocampo-post-venta' ); ?></option>
+                        <option value="Visita-de-Cortesía"><?php esc_html_e( 'Visita de Cortesía', 'agrocampo-post-venta' ); ?></option>
+                        <option value="Diagnostico-Técnico"><?php esc_html_e( 'Diagnóstico Técnico', 'agrocampo-post-venta' ); ?></option>
+                        <option value="Entrega-Técnica"><?php esc_html_e( 'Entrega Técnica', 'agrocampo-post-venta' ); ?></option>
                     </select>
                     <span class="agp-pv-error" data-error-for="tipo_servicio"></span>
                 </div>
@@ -140,14 +140,14 @@ if ( ! defined( 'ABSPATH' ) ) {
                     <label for="agp-pv-tipo-mantencion"><?php esc_html_e( 'Tipo de Mantención', 'agrocampo-post-venta' ); ?> *</label>
                     <select id="agp-pv-tipo-mantencion" name="tipo_mantencion" required>
                         <option value=""><?php esc_html_e( 'Seleccione', 'agrocampo-post-venta' ); ?></option>
-                        <option value="one">100 Horas</option>
-                        <option value="two">400 Horas</option>
-                        <option value="500-Horas">500 Horas</option>
-                        <option value="800-Horas">800 Horas</option>
-                        <option value="1000-Horas">1000 Horas</option>
-                        <option value="1200">1200 Horas</option>
-                        <option value="1600-Horas">1500 Horas</option>
-                        <option value="OTRO">OTRO</option>
+                        <option value="one"><?php esc_html_e( '100 Horas', 'agrocampo-post-venta' ); ?></option>
+                        <option value="two"><?php esc_html_e( '400 Horas', 'agrocampo-post-venta' ); ?></option>
+                        <option value="500-Horas"><?php esc_html_e( '500 Horas', 'agrocampo-post-venta' ); ?></option>
+                        <option value="800-Horas"><?php esc_html_e( '800 Horas', 'agrocampo-post-venta' ); ?></option>
+                        <option value="1000-Horas"><?php esc_html_e( '1000 Horas', 'agrocampo-post-venta' ); ?></option>
+                        <option value="1200"><?php esc_html_e( '1200 Horas', 'agrocampo-post-venta' ); ?></option>
+                        <option value="1600-Horas"><?php esc_html_e( '1500 Horas', 'agrocampo-post-venta' ); ?></option>
+                        <option value="OTRO"><?php esc_html_e( 'OTRO', 'agrocampo-post-venta' ); ?></option>
                     </select>
                     <span class="agp-pv-error" data-error-for="tipo_mantencion"></span>
                 </div>
@@ -262,7 +262,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             <div class="agp-pv-field agp-pv-actions">
                 <div class="agp-pv-step-actions">
                     <button type="button" class="agp-pv-prev" data-prev-step="3"><?php esc_html_e( 'Anterior', 'agrocampo-post-venta' ); ?></button>
-                    <button type="submit" class="agp-pv-submit">Enviar mensaje</button>
+                    <button type="submit" class="agp-pv-submit"><?php esc_html_e( 'Enviar mensaje', 'agrocampo-post-venta' ); ?></button>
                 </div>
                 <button type="button" class="agp-pv-retry-pending" hidden><?php esc_html_e( 'Reintentar envío pendiente', 'agrocampo-post-venta' ); ?></button>
                 <button type="button" class="agp-pv-clear-draft"><?php esc_html_e( 'Limpiar borrador local', 'agrocampo-post-venta' ); ?></button>
