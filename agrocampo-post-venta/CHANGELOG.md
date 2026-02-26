@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.59] - 2026-02-26
+
+### Added
+- Se agrega observabilidad ligera en frontend mediante eventos `CustomEvent` (`agpPv:*`) para instrumentar estados clave: red, envío, validación, errores server y reintentos.
+- Se habilita logging técnico opcional en consola bajo `WP_DEBUG` (`debugFrontend`) para soporte en terreno sin introducir telemetría externa.
+
+### Changed
+- El flujo de submit/reintento emite eventos estructurados sin incluir payload sensible (sin firmas/base64/adjuntos), facilitando diagnóstico no intrusivo.
+
 ## [1.4.58] - 2026-02-26
 
 ### Added

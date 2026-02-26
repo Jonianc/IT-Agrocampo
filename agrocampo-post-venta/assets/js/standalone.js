@@ -1060,6 +1060,24 @@ function initPhotos() {
 
 
 
+
+    function isFrontendDebugEnabled() {
+        return !!(window.agpPvData && agpPvData.debugFrontend);
+    }
+
+    function emitFrontendEvent(name, detail) {
+        try {
+            var payload = detail || {};
+            window.dispatchEvent(new CustomEvent('agpPv:' + name, { detail: payload }));
+
+            if (isFrontendDebugEnabled() && window.console && typeof window.console.debug === 'function') {
+                window.console.debug('[agp-pv]', name, payload);
+            }
+        } catch (e) {
+            // ignore observability errors
+        }
+    }
+
     function getMessage(key, fallback) {
         if (agpPvData && agpPvData.messages && Object.prototype.hasOwnProperty.call(agpPvData.messages, key)) {
             return agpPvData.messages[key];
@@ -1232,6 +1250,7 @@ function initPhotos() {
 
             try {
                 window.localStorage.setItem(PENDING_KEY, JSON.stringify(payload));
+                emitFrontendEvent('pending_saved', { reason: payload.reason, step: payload.step });
             } catch (e) {
                 // ignore localStorage issues
             }
@@ -1244,6 +1263,7 @@ function initPhotos() {
 
             try {
                 window.localStorage.removeItem(PENDING_KEY);
+                emitFrontendEvent('pending_cleared', {});
             } catch (e) {
                 // ignore localStorage issues
             }
@@ -1263,6 +1283,8 @@ function initPhotos() {
 
         function updateNetworkState() {
             var online = navigator.onLine !== false;
+
+            emitFrontendEvent('network_state', { online: online });
 
             if ($networkStatus.length) {
                 if (online) {
@@ -1288,10 +1310,12 @@ function initPhotos() {
         $form.on('click', '.agp-pv-retry-pending', function () {
             if (navigator.onLine === false) {
                 setStatusMessage(getMessage('networkOfflineRetryBlocked', 'Sin conexión. No se puede reintentar todavía.'), 'warning');
+                emitFrontendEvent('pending_retry_blocked_offline', {});
                 return;
             }
 
             setStatusMessage(getMessage('pendingRetrying', 'Reintentando envío pendiente...'), 'warning');
+            emitFrontendEvent('pending_retry_click', { online: true });
             $form.trigger('submit');
         });
 
@@ -1326,6 +1350,8 @@ function initPhotos() {
 
             clearFieldErrors();
 
+            emitFrontendEvent('submit_attempt', { online: navigator.onLine !== false });
+
             var savePendingSubmit = $('#agp-pv-form').data('agpPvSavePendingSubmit');
             var clearPendingSubmit = $('#agp-pv-form').data('agpPvClearPendingSubmit');
 
@@ -1334,6 +1360,7 @@ function initPhotos() {
                     savePendingSubmit('offline_before_submit');
                 }
                 setStatusMessage(getMessage('networkOfflineSubmitBlocked', 'Sin conexión. Guardamos el envío como pendiente para que puedas reintentarlo.'), 'warning');
+                emitFrontendEvent('submit_blocked_offline', { reason: 'offline_before_submit' });
                 $('.agp-pv-retry-pending').removeAttr('hidden');
                 return;
             }
@@ -1371,6 +1398,7 @@ function initPhotos() {
 
                 renderErrorSummary(summaryItems, getMessage('errorSummaryTitle', 'Revisa los siguientes campos antes de continuar:'), true);
                 setStatusMessage(getMessage('statusReviewFields', 'Revisa los campos marcados.'), 'error');
+                emitFrontendEvent('submit_validation_failed', { invalidCount: summaryItems.length });
                 return;
             }
 
@@ -1403,6 +1431,7 @@ function initPhotos() {
                         }
 
                         setStatusMessage(successState.text, successState.type);
+                        emitFrontendEvent('submit_success', { statusType: (response.data && response.data.status_type) || 'success', reportId: (response.data && (response.data.report_id || response.data.submission_id)) || null });
 
                         // Reset UI (keep status)
                         formEl.reset();
@@ -1438,10 +1467,13 @@ function initPhotos() {
                         if (response && response.data && response.data.errors) {
                             showFieldErrors(response.data.errors);
                             setStatusMessage(getMessage('statusReviewFields', 'Revisa los campos marcados.'), 'error');
+                            emitFrontendEvent('submit_server_field_errors', { fieldCount: Object.keys(response.data.errors || {}).length });
                         } else if (response && response.data && response.data.message) {
                             setStatusMessage(response.data.message, 'error');
+                            emitFrontendEvent('submit_server_error', { hasMessage: true });
                         } else {
                             setStatusMessage(agpPvData.messages.invalid, 'error');
+                            emitFrontendEvent('submit_server_error', { hasMessage: false });
                         }
                     }
                 })
@@ -1452,10 +1484,12 @@ function initPhotos() {
                         }
                         $('.agp-pv-retry-pending').removeAttr('hidden');
                         setStatusMessage(getMessage('networkOfflineSubmitBlocked', 'Sin conexión. Guardamos el envío como pendiente para que puedas reintentarlo.'), 'warning');
+                        emitFrontendEvent('submit_network_error', { offline: navigator.onLine === false, xhrStatus: xhr && typeof xhr.status !== 'undefined' ? xhr.status : null });
                         return;
                     }
 
                     setStatusMessage(agpPvData.messages.invalid, 'error');
+                    emitFrontendEvent('submit_request_failed', { xhrStatus: xhr && typeof xhr.status !== 'undefined' ? xhr.status : null });
                 })
                 .always(function () {
                     $submit.prop('disabled', false).text(originalText);
