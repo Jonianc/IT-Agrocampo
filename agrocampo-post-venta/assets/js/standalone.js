@@ -1644,10 +1644,27 @@ function initPhotos() {
 
         var swUrl = String(agpPvData.serviceWorker.url || '');
         var swScope = String((agpPvData.serviceWorker && agpPvData.serviceWorker.scope) || '/post-venta/');
+        var swVersion = String((agpPvData.serviceWorker && agpPvData.serviceWorker.version) || 'v1');
+        var shellPath = String((agpPvData.serviceWorker && agpPvData.serviceWorker.shellPath) || '/post-venta/');
+        var assetPrefix = String((agpPvData.serviceWorker && agpPvData.serviceWorker.assetPrefix) || '/wp-content/plugins/agrocampo-post-venta/assets/');
 
-        navigator.serviceWorker.register(swUrl, { scope: swScope }).catch(function () {
-            // noop
-        });
+        try {
+            var parsedSwUrl = new URL(swUrl, window.location.origin);
+            parsedSwUrl.searchParams.set('ver', swVersion);
+            parsedSwUrl.searchParams.set('shell', shellPath);
+            parsedSwUrl.searchParams.set('assetPrefix', assetPrefix);
+            swUrl = parsedSwUrl.toString();
+        } catch (e) {
+            // keep original swUrl if URL parsing fails
+        }
+
+        navigator.serviceWorker.register(swUrl, { scope: swScope })
+            .then(function () {
+                emitFrontendEvent('service_worker_registered', { scope: swScope });
+            })
+            .catch(function () {
+                emitFrontendEvent('service_worker_register_failed', { scope: swScope });
+            });
     }
 
     function initConnectivityAndPending() {

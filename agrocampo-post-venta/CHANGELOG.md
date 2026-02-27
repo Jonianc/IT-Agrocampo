@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.79] - 2026-02-27
+
+### Changed
+- Se endurece el Service Worker con parámetros dinámicos (`ver`, `shell`, `assetPrefix`) para mejorar invalidación por versión y compatibilidad en instalaciones WordPress fuera de rutas estándar.
+- El frontend ahora registra el Service Worker con telemetría ligera de resultado (`service_worker_registered` / `service_worker_register_failed`) en el canal de observabilidad existente.
+
+### Security
+- El Service Worker excluye explícitamente solicitudes del manifest dinámico (`agp_pv_manifest`) del cache para evitar persistencia accidental de metadatos de instalación.
+
 ## [1.4.78] - 2026-02-27
 
 ### Added
