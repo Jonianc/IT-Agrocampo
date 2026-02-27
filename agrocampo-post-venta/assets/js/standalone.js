@@ -1343,13 +1343,14 @@ function initPhotos() {
             $form.trigger('agpPvDraftStateChanged');
         }
 
-        $form.on('input change', 'input, select, textarea', function () {
+        $form.on('input change', 'input, select, textarea', function (e) {
             if ($form.data('agpPvInternalReset')) {
                 return;
             }
 
             var setSubmittedState = $form.data('agpPvSetSubmittedState');
-            if (typeof setSubmittedState === 'function') {
+            var isUserInitiated = e && e.originalEvent;
+            if (typeof setSubmittedState === 'function' && isUserInitiated) {
                 setSubmittedState(null);
             }
 
