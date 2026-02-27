@@ -1647,6 +1647,63 @@ function initPhotos() {
         var swVersion = String((agpPvData.serviceWorker && agpPvData.serviceWorker.version) || 'v1');
         var shellPath = String((agpPvData.serviceWorker && agpPvData.serviceWorker.shellPath) || '/post-venta/');
         var assetPrefix = String((agpPvData.serviceWorker && agpPvData.serviceWorker.assetPrefix) || '/wp-content/plugins/agrocampo-post-venta/assets/');
+        var hasControllerChangeReloaded = false;
+
+        function showUpdateBanner(registration) {
+            var $existing = $('#agp-pv-sw-update-banner');
+            if ($existing.length) {
+                return;
+            }
+
+            var $banner = $('<div />', { id: 'agp-pv-sw-update-banner', class: 'agp-pv-sw-update' });
+            var $text = $('<p />', { class: 'agp-pv-sw-update__text', text: getMessage('swUpdateAvailable', 'Hay una nueva versión disponible del formulario.') });
+            var $button = $('<button />', { type: 'button', class: 'agp-pv-sw-update__button', text: getMessage('swUpdateCta', 'Actualizar ahora') });
+
+            $button.on('click', function () {
+                var waiting = registration && registration.waiting ? registration.waiting : null;
+                if (!waiting || typeof waiting.postMessage !== 'function') {
+                    return;
+                }
+
+                $(this).prop('disabled', true).text(getMessage('swUpdateReloading', 'Actualizando…'));
+                waiting.postMessage({ type: 'SKIP_WAITING' });
+            });
+
+            $banner.append($text).append($button);
+            $('.agp-pv-standalone__wrapper').first().prepend($banner);
+        }
+
+        function bindRegistrationEvents(registration) {
+            if (!registration) {
+                return;
+            }
+
+            if (registration.waiting) {
+                showUpdateBanner(registration);
+            }
+
+            registration.addEventListener('updatefound', function () {
+                var newWorker = registration.installing;
+                if (!newWorker) {
+                    return;
+                }
+
+                newWorker.addEventListener('statechange', function () {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        showUpdateBanner(registration);
+                    }
+                });
+            });
+        }
+
+        navigator.serviceWorker.addEventListener('controllerchange', function () {
+            if (hasControllerChangeReloaded) {
+                return;
+            }
+
+            hasControllerChangeReloaded = true;
+            window.location.reload();
+        });
 
         try {
             var parsedSwUrl = new URL(swUrl, window.location.origin);
@@ -1659,8 +1716,9 @@ function initPhotos() {
         }
 
         navigator.serviceWorker.register(swUrl, { scope: swScope })
-            .then(function () {
+            .then(function (registration) {
                 emitFrontendEvent('service_worker_registered', { scope: swScope });
+                bindRegistrationEvents(registration);
             })
             .catch(function () {
                 emitFrontendEvent('service_worker_register_failed', { scope: swScope });

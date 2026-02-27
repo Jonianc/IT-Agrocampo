@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.4.80] - 2026-02-27
+
+### UX
+- Se agrega aviso visual en frontend cuando el Service Worker detecta una versión nueva del formulario, con acción directa “Actualizar ahora”.
+
+### Changed
+- El registro del Service Worker ahora observa `updatefound`/`statechange` y recarga automáticamente tras `controllerchange` para aplicar la nueva versión de forma controlada.
+
+### Security
+- Se incorpora listener `postMessage` (`SKIP_WAITING`) en el Service Worker para actualizar de forma explícita sin relajar las reglas de cache existentes.
+
 ## [1.4.79] - 2026-02-27
 
 ### Changed

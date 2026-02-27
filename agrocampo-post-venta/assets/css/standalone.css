@@ -610,3 +610,38 @@
 .agp-pv-app-shortcut__button {
     margin-top: 10px;
 }
+
+
+.agp-pv-sw-update {
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border: 1px solid #c7d2fe;
+    border-radius: 8px;
+    background: #eef2ff;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.agp-pv-sw-update__text {
+    margin: 0;
+    color: #1e293b;
+    font-size: 14px;
+}
+
+.agp-pv-sw-update__button {
+    border: 1px solid #1f3f8f;
+    background: #1f3f8f;
+    color: #fff;
+    border-radius: 6px;
+    min-height: 34px;
+    padding: 6px 10px;
+    cursor: pointer;
+}
+
+.agp-pv-sw-update__button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}

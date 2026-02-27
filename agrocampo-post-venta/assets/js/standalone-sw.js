@@ -101,3 +101,12 @@ self.addEventListener('fetch', (event) => {
         })
     );
 });
+
+
+self.addEventListener('message', (event) => {
+    if (!event || !event.data || event.data.type !== 'SKIP_WAITING') {
+        return;
+    }
+
+    self.skipWaiting();
+});
