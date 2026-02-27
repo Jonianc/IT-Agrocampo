@@ -45,7 +45,63 @@ class AGP_PV_Plugin {
 
     public function register_query_var( array $vars ): array {
         $vars[] = 'agp_pv_standalone';
+        $vars[] = 'agp_pv_manifest';
         return $vars;
+    }
+
+    private function is_manifest_request(): bool {
+        return '1' === get_query_var( 'agp_pv_manifest' );
+    }
+
+    private function get_manifest_payload(): array {
+        $payload = array(
+            'name' => __( 'Informe Técnico Agrocampo', 'agrocampo-post-venta' ),
+            'short_name' => __( 'Informe Técnico', 'agrocampo-post-venta' ),
+            'description' => __( 'Formulario post venta de Agrocampo para captura de informes técnicos en terreno.', 'agrocampo-post-venta' ),
+            'lang' => get_bloginfo( 'language' ) ? get_bloginfo( 'language' ) : 'es-CL',
+            'start_url' => home_url( '/post-venta/' ),
+            'scope' => home_url( '/post-venta/' ),
+            'display' => 'standalone',
+            'orientation' => 'portrait',
+            'background_color' => '#f5f8ff',
+            'theme_color' => '#1f3f8f',
+            'icons' => array(),
+        );
+
+        $icon_192_id = absint( get_option( 'agp_pv_app_icon_192_attachment_id', 0 ) );
+        $icon_512_id = absint( get_option( 'agp_pv_app_icon_512_attachment_id', 0 ) );
+        $icon_192_url = $icon_192_id ? wp_get_attachment_url( $icon_192_id ) : '';
+        $icon_512_url = $icon_512_id ? wp_get_attachment_url( $icon_512_id ) : '';
+
+        if ( $icon_192_url ) {
+            $payload['icons'][] = array(
+                'src' => esc_url_raw( $icon_192_url ),
+                'sizes' => '192x192',
+                'type' => get_post_mime_type( $icon_192_id ) ?: 'image/png',
+                'purpose' => 'any maskable',
+            );
+        }
+
+        if ( $icon_512_url ) {
+            $payload['icons'][] = array(
+                'src' => esc_url_raw( $icon_512_url ),
+                'sizes' => '512x512',
+                'type' => get_post_mime_type( $icon_512_id ) ?: 'image/png',
+                'purpose' => 'any maskable',
+            );
+        }
+
+        return $payload;
+    }
+
+    private function render_manifest(): void {
+        status_header( 200 );
+        nocache_headers();
+        header( 'Content-Type: application/manifest+json; charset=' . get_bloginfo( 'charset' ) );
+        header( 'X-Content-Type-Options: nosniff' );
+
+        echo wp_json_encode( $this->get_manifest_payload(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+        exit;
     }
 
     public function is_standalone(): bool {
@@ -53,6 +109,10 @@ class AGP_PV_Plugin {
     }
 
     public function render_standalone(): void {
+        if ( $this->is_manifest_request() ) {
+            $this->render_manifest();
+        }
+
         if ( ! $this->is_standalone() ) {
             return;
         }
@@ -130,6 +190,11 @@ class AGP_PV_Plugin {
                     'submittedStepCopyReport' => __( 'Copiar ID informe', 'agrocampo-post-venta' ),
                     'submittedStepCopySuccess' => __( 'ID informe copiado al portapapeles.', 'agrocampo-post-venta' ),
                     'submittedStepCopyUnavailable' => __( 'No se pudo copiar automáticamente. Puedes copiarlo manualmente desde el mensaje.', 'agrocampo-post-venta' ),
+                    'appShortcutAvailable' => __( 'Instala este formulario como acceso directo para abrirlo como app desde tu dispositivo.', 'agrocampo-post-venta' ),
+                    'appShortcutInstallButton' => __( 'Agregar acceso directo', 'agrocampo-post-venta' ),
+                    'appShortcutIos' => __( 'En iPhone/iPad: toca Compartir y luego “Agregar a pantalla de inicio”.', 'agrocampo-post-venta' ),
+                    'appShortcutManual' => __( 'En tu navegador, abre el menú y elige “Instalar app” o “Agregar a pantalla de inicio”.', 'agrocampo-post-venta' ),
+                    'appShortcutInstalled' => __( 'Este formulario ya está abierto como app.', 'agrocampo-post-venta' ),
                     'networkOnline' => __( 'Conexión disponible.', 'agrocampo-post-venta' ),
                     'networkOffline' => __( 'Sin conexión. Puedes completar el formulario y reintentar el envío cuando vuelva Internet.', 'agrocampo-post-venta' ),
                     'networkOfflineSubmitBlocked' => __( 'Sin conexión. Guardamos el envío como pendiente para que puedas reintentarlo.', 'agrocampo-post-venta' ),

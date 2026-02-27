@@ -93,6 +93,10 @@ class AGP_PV_Admin {
         $logo_id = absint( get_option( 'agp_pv_logo_attachment_id', 0 ) );
         $logo_width = (float) get_option( 'agp_pv_logo_width_mm', 38 );
         $logo_url = $logo_id ? wp_get_attachment_url( $logo_id ) : '';
+        $app_icon_192_id = absint( get_option( 'agp_pv_app_icon_192_attachment_id', 0 ) );
+        $app_icon_512_id = absint( get_option( 'agp_pv_app_icon_512_attachment_id', 0 ) );
+        $app_icon_192_url = $app_icon_192_id ? wp_get_attachment_url( $app_icon_192_id ) : '';
+        $app_icon_512_url = $app_icon_512_id ? wp_get_attachment_url( $app_icon_512_id ) : '';
         $pdf_header_title = (string) get_option( 'agp_pv_pdf_header_title', __( 'INFORME TÉCNICO', 'agrocampo-post-venta' ) );
         $pdf_footer_text = (string) get_option( 'agp_pv_pdf_footer_text', __( 'Talca • Linares • Parral   |   +56 9 9748 5650', 'agrocampo-post-venta' ) );
         $pdf_it_label_template = (string) get_option( 'agp_pv_pdf_it_label_template', __( 'IT: %d', 'agrocampo-post-venta' ) );
@@ -137,6 +141,27 @@ class AGP_PV_Admin {
 
         echo '<p><label for="agp-pv-pdf-footer-text"><strong>' . esc_html__( 'Texto pie de página PDF', 'agrocampo-post-venta' ) . '</strong></label><br>';
         echo '<input type="text" class="large-text" maxlength="110" id="agp-pv-pdf-footer-text" name="agp_pv_pdf_footer_text" value="' . esc_attr( $pdf_footer_text ) . '"></p>';
+
+
+        echo '<h3>' . esc_html__( 'Iconos app (PWA)', 'agrocampo-post-venta' ) . '</h3>';
+        echo '<p class="description">' . esc_html__( 'Configura iconos desde la biblioteca de medios para el manifiesto de instalación.', 'agrocampo-post-venta' ) . '</p>';
+
+        echo '<input type="hidden" name="agp_pv_app_icon_192_attachment_id" id="agp-pv-app-icon-192-id" value="' . esc_attr( (string) $app_icon_192_id ) . '">';
+        echo '<p><strong>' . esc_html__( 'Icono 192x192', 'agrocampo-post-venta' ) . '</strong></p>';
+        echo '<p><img id="agp-pv-app-icon-192-preview" src="' . esc_url( $app_icon_192_url ) . '" style="max-width:96px;display:' . ( $app_icon_192_url ? 'block' : 'none' ) . ';" alt=""></p>';
+        echo '<p>';
+        echo '<button type="button" class="button button-secondary" id="agp-pv-app-icon-192-select">' . esc_html__( 'Seleccionar icono 192x192', 'agrocampo-post-venta' ) . '</button> ';
+        echo '<button type="button" class="button button-secondary" id="agp-pv-app-icon-192-remove">' . esc_html__( 'Quitar icono 192x192', 'agrocampo-post-venta' ) . '</button>';
+        echo '</p>';
+
+        echo '<input type="hidden" name="agp_pv_app_icon_512_attachment_id" id="agp-pv-app-icon-512-id" value="' . esc_attr( (string) $app_icon_512_id ) . '">';
+        echo '<p><strong>' . esc_html__( 'Icono 512x512', 'agrocampo-post-venta' ) . '</strong></p>';
+        echo '<p><img id="agp-pv-app-icon-512-preview" src="' . esc_url( $app_icon_512_url ) . '" style="max-width:128px;display:' . ( $app_icon_512_url ? 'block' : 'none' ) . ';" alt=""></p>';
+        echo '<p>';
+        echo '<button type="button" class="button button-secondary" id="agp-pv-app-icon-512-select">' . esc_html__( 'Seleccionar icono 512x512', 'agrocampo-post-venta' ) . '</button> ';
+        echo '<button type="button" class="button button-secondary" id="agp-pv-app-icon-512-remove">' . esc_html__( 'Quitar icono 512x512', 'agrocampo-post-venta' ) . '</button>';
+        echo '</p>';
+        echo '<p class="description">' . esc_html__( 'Tip: usa PNG/JPG desde medios. Esto evita mantener binarios en el repositorio del plugin.', 'agrocampo-post-venta' ) . '</p>';
 
         echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Guardar branding PDF', 'agrocampo-post-venta' ) . '</button></p>';
         echo '</form>';
@@ -595,6 +620,8 @@ class AGP_PV_Admin {
         $header_title = isset( $_POST['agp_pv_pdf_header_title'] ) ? sanitize_text_field( wp_unslash( $_POST['agp_pv_pdf_header_title'] ) ) : __( 'INFORME TÉCNICO', 'agrocampo-post-venta' );
         $footer_text = isset( $_POST['agp_pv_pdf_footer_text'] ) ? sanitize_text_field( wp_unslash( $_POST['agp_pv_pdf_footer_text'] ) ) : __( 'Talca • Linares • Parral   |   +56 9 9748 5650', 'agrocampo-post-venta' );
         $it_label_template = isset( $_POST['agp_pv_pdf_it_label_template'] ) ? sanitize_text_field( wp_unslash( $_POST['agp_pv_pdf_it_label_template'] ) ) : __( 'IT: %d', 'agrocampo-post-venta' );
+        $app_icon_192_id = isset( $_POST['agp_pv_app_icon_192_attachment_id'] ) ? absint( $_POST['agp_pv_app_icon_192_attachment_id'] ) : 0;
+        $app_icon_512_id = isset( $_POST['agp_pv_app_icon_512_attachment_id'] ) ? absint( $_POST['agp_pv_app_icon_512_attachment_id'] ) : 0;
 
         if ( '' === $it_label_template || false === strpos( $it_label_template, '%' ) ) {
             $it_label_template = __( 'IT: %d', 'agrocampo-post-venta' );
@@ -615,6 +642,8 @@ class AGP_PV_Admin {
         update_option( 'agp_pv_pdf_header_title', $header_title );
         update_option( 'agp_pv_pdf_footer_text', $footer_text );
         update_option( 'agp_pv_pdf_it_label_template', $it_label_template );
+        update_option( 'agp_pv_app_icon_192_attachment_id', $app_icon_192_id );
+        update_option( 'agp_pv_app_icon_512_attachment_id', $app_icon_512_id );
 
         wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=logo_saved' ) );
         exit;

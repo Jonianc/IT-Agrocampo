@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.4.77] - 2026-02-27
+
+### Changed
+- El manifest PWA pasa a generarse dinámicamente desde WordPress (`?agp_pv_manifest=1`) para evitar depender de archivos estáticos en el repositorio.
+- Se eliminan del plugin los archivos estáticos `manifest.webmanifest` e íconos SVG; ahora los iconos de app se configuran desde Ajustes usando la biblioteca de medios.
+- La pantalla de Ajustes incorpora selectores para ícono 192x192 y 512x512, guardados como opciones y usados por el manifest dinámico.
+
+## [1.4.76] - 2026-02-27
+
+### Changed
+- Se retira la etiqueta `apple-touch-icon` del standalone para evitar una referencia SVG no soportada de forma consistente por iOS en contexto de iconos de inicio.
+- Se mantiene el flujo PWA sin binarios (manifest + iconos SVG) para navegadores compatibles con instalación web app.
+
+## [1.4.75] - 2026-02-27
+
+### Changed
+- Se reemplazan los íconos binarios (`.png`) del flujo tipo app por íconos SVG de texto plano para compatibilidad con repositorios que no aceptan binarios.
+- El manifest ahora referencia `image/svg+xml` para los iconos de instalación (`192x192` y `512x512`).
+- El `apple-touch-icon` del standalone también apunta a SVG para mantener consistencia sin archivos binarios.
+
+## [1.4.74] - 2026-02-27
+
+### Added
+- Se incorpora `manifest.webmanifest` para habilitar instalación tipo app del formulario standalone con `display: standalone`, `start_url` y `scope` en `/post-venta/`.
+- Se agregan íconos de aplicación (`192x192` y `512x512`) para instalación en Android/desktop y soporte `apple-touch-icon`.
+
+### Changed
+- El template standalone ahora publica `<link rel="manifest">` y `theme-color` para completar el flujo de instalación iniciado en la tarea anterior.
+
+## [1.4.73] - 2026-02-27
+
+### UX
+- Se agrega un bloque visible en el frontend standalone para crear un acceso directo del formulario tipo app, con CTA dedicado cuando el navegador expone instalación.
+- Se muestran instrucciones contextuales para instalación manual en iOS/otros navegadores cuando no existe prompt nativo de instalación.
+
+### Changed
+- El frontend detecta modo app instalado (`display-mode: standalone`) y ajusta el mensaje para evitar mostrar acciones redundantes.
+
 ## [1.4.72] - 2026-02-26
 
 ### UX
