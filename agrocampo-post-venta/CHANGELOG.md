@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.72] - 2026-02-26
+
+### UX
+- Se mejora la pantalla final de confirmación (paso 5) con microcopy contextual según resultado (`success` o `warning`) y acción directa para copiar el ID del informe.
+- El botón `Iniciar nuevo envío` ahora limpia metadatos de confirmación (ID/meta) antes de regresar al paso 1.
+
+### Accessibility
+- La confirmación final mantiene feedback textual persistente y reutiliza el canal de estado global para informar éxito/error de copiado de ID.
+
 ## [1.4.71] - 2026-02-26
 
 ### Fixed

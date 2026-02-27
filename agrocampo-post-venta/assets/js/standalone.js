@@ -1462,7 +1462,9 @@ function initPhotos() {
 
         return {
             text: baseMessage,
-            type: statusType === 'success' ? 'success' : 'warning'
+            type: statusType === 'success' ? 'success' : 'warning',
+            reportId: reportId,
+            statusType: statusType
         };
     }
 
@@ -1707,19 +1709,43 @@ function initPhotos() {
     function initForm() {
         ensureErrorIds();
 
-        function updateSubmittedStepContent(message) {
+        function updateSubmittedStepContent(successState) {
             var $submittedStep = $('[data-step="5"]');
             if (!$submittedStep.length) {
                 return;
             }
 
+            var payload = successState && typeof successState === 'object' ? successState : {};
             var title = getMessage('submittedStepTitle', 'Envío completado');
             var cta = getMessage('submittedStepCta', 'Iniciar nuevo envío');
             var fallback = getMessage('submittedStepFallbackMessage', 'Tu informe fue enviado. Puedes iniciar un nuevo envío cuando lo necesites.');
+            var type = payload.type === 'warning' ? 'warning' : 'success';
+            var message = payload.text || fallback;
+            var reportId = payload.reportId;
+
+            var $copy = $submittedStep.find('.agp-pv-copy-report');
+            var $meta = $submittedStep.find('#agp-pv-success-meta');
+            var $message = $submittedStep.find('#agp-pv-success-message');
 
             $submittedStep.find('.agp-pv-section-title').text(title);
             $submittedStep.find('.agp-pv-new-report').text(cta);
-            $submittedStep.find('#agp-pv-success-message').text(message || fallback);
+            $copy.text(getMessage('submittedStepCopyReport', 'Copiar ID informe'));
+
+            $message
+                .text(message)
+                .toggleClass('is-warning', type === 'warning');
+
+            $meta.text(
+                type === 'warning'
+                    ? getMessage('submittedStepMetaWarning', 'El informe quedó guardado con advertencias revisables en el mensaje superior.')
+                    : getMessage('submittedStepMetaSuccess', 'Guardamos tu informe correctamente.')
+            );
+
+            if (reportId) {
+                $copy.data('reportId', String(reportId)).removeAttr('hidden');
+            } else {
+                $copy.removeData('reportId').attr('hidden', true);
+            }
         }
 
         // clear invalid state on user input
@@ -1744,11 +1770,34 @@ function initPhotos() {
                 setSubmittedState(null);
             }
 
+            $('[data-step="5"]').find('.agp-pv-copy-report').removeData('reportId').attr('hidden', true);
+            $('[data-step="5"]').find('#agp-pv-success-meta').text('');
+
             setStatusMessage('');
 
             if (typeof goToStep === 'function') {
                 goToStep(1);
             }
+        });
+
+        $('#agp-pv-form').on('click', '.agp-pv-copy-report', function () {
+            var reportId = String($(this).data('reportId') || '');
+            if (!reportId) {
+                return;
+            }
+
+            if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                navigator.clipboard.writeText(reportId)
+                    .then(function () {
+                        setStatusMessage(getMessage('submittedStepCopySuccess', 'ID informe copiado al portapapeles.'), 'success');
+                    })
+                    .catch(function () {
+                        setStatusMessage(getMessage('submittedStepCopyUnavailable', 'No se pudo copiar automáticamente. Puedes copiarlo manualmente desde el mensaje.'), 'warning');
+                    });
+                return;
+            }
+
+            setStatusMessage(getMessage('submittedStepCopyUnavailable', 'No se pudo copiar automáticamente. Puedes copiarlo manualmente desde el mensaje.'), 'warning');
         });
 
         $('#agp-pv-form').on('submit', function (e) {
@@ -1871,7 +1920,7 @@ function initPhotos() {
                             setSubmittedState(successState.type);
                         }
 
-                        updateSubmittedStepContent(successState.text);
+                        updateSubmittedStepContent(successState);
 
                         var goToStep = $('#agp-pv-form').data('agpPvGoToStep');
                         if (typeof goToStep === 'function') {

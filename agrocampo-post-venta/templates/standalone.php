@@ -281,7 +281,9 @@ if ( ! defined( 'ABSPATH' ) ) {
         <div class="agp-pv-step agp-pv-step--submitted" data-step="5" hidden>
             <h2 class="agp-pv-section-title"><?php esc_html_e( 'Envío completado', 'agrocampo-post-venta' ); ?></h2>
             <p class="agp-pv-success-copy" id="agp-pv-success-message"></p>
-            <div class="agp-pv-step-actions">
+            <p class="agp-pv-success-meta" id="agp-pv-success-meta"></p>
+            <div class="agp-pv-step-actions agp-pv-step-actions--submitted">
+                <button type="button" class="agp-pv-copy-report" hidden><?php esc_html_e( 'Copiar ID informe', 'agrocampo-post-venta' ); ?></button>
                 <button type="button" class="agp-pv-new-report"><?php esc_html_e( 'Iniciar nuevo envío', 'agrocampo-post-venta' ); ?></button>
             </div>
         </div>

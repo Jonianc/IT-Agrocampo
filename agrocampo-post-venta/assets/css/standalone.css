@@ -131,6 +131,34 @@
     cursor: pointer;
 }
 
+.agp-pv-success-copy.is-warning {
+    border-color: #f2c779;
+    background: #fff8ea;
+    color: #8a5a00;
+}
+
+.agp-pv-success-meta {
+    margin: 0 0 12px;
+    color: #5f6368;
+    font-size: 13px;
+}
+
+.agp-pv-step-actions--submitted {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+}
+
+.agp-pv-copy-report {
+    min-height: 42px;
+    border: 1px solid #2e6f40;
+    background: #2e6f40;
+    color: #fff;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
 
 .agp-pv-grid {
     display: grid;
