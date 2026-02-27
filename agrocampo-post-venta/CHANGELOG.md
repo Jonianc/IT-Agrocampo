@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.4.78] - 2026-02-27
+
+### Added
+- Se agrega Service Worker del formulario standalone para cachear el shell del frontend (`/post-venta/`, CSS/JS del plugin) y mejorar resiliencia de carga.
+
+### Security
+- El Service Worker excluye endpoints sensibles (`admin-ajax.php`, `wp-admin`, `wp-login.php`) y cualquier request no `GET`, evitando cache accidental de envíos o rutas administrativas.
+
+### Changed
+- El frontend standalone registra el Service Worker solo en contexto seguro (`https`/localhost) usando URL y scope localizados desde backend.
+
 ## [1.4.77] - 2026-02-27
 
 ### Changed

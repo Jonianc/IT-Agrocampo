@@ -1628,6 +1628,28 @@ function initPhotos() {
 
 
 
+
+    function initServiceWorker() {
+        if (!('serviceWorker' in navigator)) {
+            return;
+        }
+
+        if (!window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            return;
+        }
+
+        if (!window.agpPvData || !agpPvData.serviceWorker || !agpPvData.serviceWorker.url) {
+            return;
+        }
+
+        var swUrl = String(agpPvData.serviceWorker.url || '');
+        var swScope = String((agpPvData.serviceWorker && agpPvData.serviceWorker.scope) || '/post-venta/');
+
+        navigator.serviceWorker.register(swUrl, { scope: swScope }).catch(function () {
+            // noop
+        });
+    }
+
     function initConnectivityAndPending() {
         var PENDING_KEY = 'agp_pv_pending_submit_v1';
         var PENDING_TTL_MS = 24 * 60 * 60 * 1000;
@@ -2056,6 +2078,7 @@ function initPhotos() {
         initStepper();
         initHeavyStepFeatures();
         initAppShortcut();
+        initServiceWorker();
         initDraftPersistence();
         initTextLengthGuides();
         initConnectivityAndPending();
