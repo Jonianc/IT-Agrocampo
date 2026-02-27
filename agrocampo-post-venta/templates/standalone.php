@@ -277,6 +277,14 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <button type="button" class="agp-pv-clear-draft"><?php esc_html_e( 'Limpiar borrador local', 'agrocampo-post-venta' ); ?></button>
             </div>
         </div>
+
+        <div class="agp-pv-step agp-pv-step--submitted" data-step="5" hidden>
+            <h2 class="agp-pv-section-title"><?php esc_html_e( 'Envío completado', 'agrocampo-post-venta' ); ?></h2>
+            <p class="agp-pv-success-copy" id="agp-pv-success-message"></p>
+            <div class="agp-pv-step-actions">
+                <button type="button" class="agp-pv-new-report"><?php esc_html_e( 'Iniciar nuevo envío', 'agrocampo-post-venta' ); ?></button>
+            </div>
+        </div>
     </form>
     <span class="agp-pv-network-status" role="status" aria-live="polite"></span>
     <span class="agp-pv-status agp-pv-status--global" role="status" aria-live="polite"></span>

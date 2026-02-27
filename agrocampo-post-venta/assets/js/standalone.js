@@ -1344,6 +1344,10 @@ function initPhotos() {
         }
 
         $form.on('input change', 'input, select, textarea', function () {
+            if ($form.data('agpPvInternalReset')) {
+                return;
+            }
+
             var setSubmittedState = $form.data('agpPvSetSubmittedState');
             if (typeof setSubmittedState === 'function') {
                 setSubmittedState(null);
@@ -1703,6 +1707,21 @@ function initPhotos() {
     function initForm() {
         ensureErrorIds();
 
+        function updateSubmittedStepContent(message) {
+            var $submittedStep = $('[data-step="5"]');
+            if (!$submittedStep.length) {
+                return;
+            }
+
+            var title = getMessage('submittedStepTitle', 'Envío completado');
+            var cta = getMessage('submittedStepCta', 'Iniciar nuevo envío');
+            var fallback = getMessage('submittedStepFallbackMessage', 'Tu informe fue enviado. Puedes iniciar un nuevo envío cuando lo necesites.');
+
+            $submittedStep.find('.agp-pv-section-title').text(title);
+            $submittedStep.find('.agp-pv-new-report').text(cta);
+            $submittedStep.find('#agp-pv-success-message').text(message || fallback);
+        }
+
         // clear invalid state on user input
         $('#agp-pv-form').on('input change', 'input, select, textarea', function () {
             $(this).removeClass('agp-pv-invalid').removeAttr('aria-invalid');
@@ -1713,6 +1732,22 @@ function initPhotos() {
 
             if (name === 'trabajos_realizados' || name === 'observaciones') {
                 syncDetalleMinimumConstraint(false);
+            }
+        });
+
+        $('#agp-pv-form').on('click', '.agp-pv-new-report', function () {
+            var $form = $('#agp-pv-form');
+            var setSubmittedState = $form.data('agpPvSetSubmittedState');
+            var goToStep = $form.data('agpPvGoToStep');
+
+            if (typeof setSubmittedState === 'function') {
+                setSubmittedState(null);
+            }
+
+            setStatusMessage('');
+
+            if (typeof goToStep === 'function') {
+                goToStep(1);
             }
         });
 
@@ -1812,12 +1847,9 @@ function initPhotos() {
 
                         setStatusMessage(successState.text, successState.type);
 
-                        var setSubmittedState = $('#agp-pv-form').data('agpPvSetSubmittedState');
-                        if (typeof setSubmittedState === 'function') {
-                            setSubmittedState(successState.type);
-                        }
-
                         emitFrontendEvent('submit_success', { statusType: (response.data && response.data.status_type) || 'success', reportId: (response.data && (response.data.report_id || response.data.submission_id)) || null });
+
+                        $('#agp-pv-form').data('agpPvInternalReset', true);
 
                         // Reset UI (keep status)
                         formEl.reset();
@@ -1834,9 +1866,16 @@ function initPhotos() {
                         // Re-apply conditional logic after reset
                         $('#agp-pv-tipo-servicio').trigger('change');
 
+                        var setSubmittedState = $('#agp-pv-form').data('agpPvSetSubmittedState');
+                        if (typeof setSubmittedState === 'function') {
+                            setSubmittedState(successState.type);
+                        }
+
+                        updateSubmittedStepContent(successState.text);
+
                         var goToStep = $('#agp-pv-form').data('agpPvGoToStep');
                         if (typeof goToStep === 'function') {
-                            goToStep(4);
+                            goToStep(5);
                         }
 
                         var clearDraft = $('#agp-pv-form').data('agpPvClearDraft');
@@ -1848,6 +1887,7 @@ function initPhotos() {
                             clearPendingSubmit();
                         }
                         $('.agp-pv-retry-pending').attr('hidden', true);
+                        $('#agp-pv-form').data('agpPvInternalReset', false);
                     } else {
                         // Field errors
                         if (response && response.data && response.data.errors) {
@@ -1881,6 +1921,7 @@ function initPhotos() {
                     $submit.prop('disabled', false).text(originalText);
                     $retryButton.prop('disabled', false);
                     $('#agp-pv-form').data('agpPvSubmitInFlight', false);
+                    $('#agp-pv-form').data('agpPvInternalReset', false);
                 });
         });
     }

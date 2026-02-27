@@ -105,6 +105,33 @@
     display: block;
 }
 
+
+.agp-pv-step--submitted {
+    text-align: left;
+}
+
+.agp-pv-success-copy {
+    margin: 0 0 12px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid #9ed0ae;
+    background: #edf8f1;
+    color: #1a4d2a;
+    font-weight: 600;
+}
+
+.agp-pv-new-report {
+    min-height: 42px;
+    border: 1px solid #2e6f40;
+    background: #fff;
+    color: #2e6f40;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+
 .agp-pv-grid {
     display: grid;
     gap: 14px;

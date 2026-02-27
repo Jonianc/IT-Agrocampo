@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.71] - 2026-02-26
+
+### Fixed
+- Se unifica el estado post-envío en mobile/desktop: tras submit exitoso el formulario navega al nuevo paso 5 (`Enviado`) en vez de quedar en pasos editables (1 o 4 según dispositivo).
+- Se evita que eventos `change` internos del reset post-submit limpien accidentalmente el estado terminal del stepper durante la transición.
+
+### UX
+- Se agrega vista dedicada de confirmación (`Envío completado`) con mensaje de resultado y acción explícita para iniciar un nuevo envío.
+
 ## [1.4.70] - 2026-02-26
 
 ### Fixed
