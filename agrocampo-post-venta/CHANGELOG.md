@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.73] - 2026-02-27
+
+### UX
+- Se agrega un bloque visible en el frontend standalone para crear un acceso directo del formulario tipo app, con CTA dedicado cuando el navegador expone instalación.
+- Se muestran instrucciones contextuales para instalación manual en iOS/otros navegadores cuando no existe prompt nativo de instalación.
+
+### Changed
+- El frontend detecta modo app instalado (`display-mode: standalone`) y ajusta el mensaje para evitar mostrar acciones redundantes.
+
 ## [1.4.72] - 2026-02-26
 
 ### UX

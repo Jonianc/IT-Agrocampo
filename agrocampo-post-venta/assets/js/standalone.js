@@ -1528,6 +1528,81 @@ function initPhotos() {
         });
     }
 
+
+    function initAppShortcut() {
+        var $container = $('#agp-pv-app-shortcut');
+        if (!$container.length) {
+            return;
+        }
+
+        var $text = $('#agp-pv-app-shortcut-text');
+        var $button = $('#agp-pv-app-shortcut-install');
+        var deferredPrompt = null;
+
+        function isIos() {
+            var ua = window.navigator.userAgent || '';
+            var platform = window.navigator.platform || '';
+            return /iPad|iPhone|iPod/.test(ua) || (platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
+        }
+
+        function isInStandaloneMode() {
+            var mediaStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+            var navigatorStandalone = typeof window.navigator.standalone !== 'undefined' && !!window.navigator.standalone;
+            return !!(mediaStandalone || navigatorStandalone);
+        }
+
+        function setShortcutCopy(message, showButton) {
+            $text.text(message);
+            if (showButton) {
+                $button.removeAttr('hidden').text(getMessage('appShortcutInstallButton', 'Agregar acceso directo'));
+            } else {
+                $button.attr('hidden', true);
+            }
+            $container.removeAttr('hidden');
+        }
+
+        if (isInStandaloneMode()) {
+            setShortcutCopy(getMessage('appShortcutInstalled', 'Este formulario ya está abierto como app.'), false);
+            return;
+        }
+
+        if (isIos()) {
+            setShortcutCopy(getMessage('appShortcutIos', 'En iPhone/iPad: toca Compartir y luego “Agregar a pantalla de inicio”.'), false);
+            return;
+        }
+
+        setShortcutCopy(getMessage('appShortcutManual', 'En tu navegador, abre el menú y elige “Instalar app” o “Agregar a pantalla de inicio”.'), false);
+
+        window.addEventListener('beforeinstallprompt', function (event) {
+            event.preventDefault();
+            deferredPrompt = event;
+            setShortcutCopy(getMessage('appShortcutAvailable', 'Instala este formulario como acceso directo para abrirlo como app desde tu dispositivo.'), true);
+        });
+
+        $button.on('click', function () {
+            if (!deferredPrompt || typeof deferredPrompt.prompt !== 'function') {
+                setStatusMessage(getMessage('appShortcutManual', 'En tu navegador, abre el menú y elige “Instalar app” o “Agregar a pantalla de inicio”.'), 'warning');
+                return;
+            }
+
+            deferredPrompt.prompt();
+            if (deferredPrompt.userChoice && typeof deferredPrompt.userChoice.then === 'function') {
+                deferredPrompt.userChoice.finally(function () {
+                    deferredPrompt = null;
+                    $button.attr('hidden', true);
+                });
+            } else {
+                deferredPrompt = null;
+                $button.attr('hidden', true);
+            }
+        });
+
+        window.addEventListener('appinstalled', function () {
+            deferredPrompt = null;
+            setShortcutCopy(getMessage('appShortcutInstalled', 'Este formulario ya está abierto como app.'), false);
+        });
+    }
+
     function initHeavyStepFeatures() {
         var signaturesInitialized = false;
         var photosInitialized = false;
@@ -1980,6 +2055,7 @@ function initPhotos() {
         initConditionalFields();
         initStepper();
         initHeavyStepFeatures();
+        initAppShortcut();
         initDraftPersistence();
         initTextLengthGuides();
         initConnectivityAndPending();

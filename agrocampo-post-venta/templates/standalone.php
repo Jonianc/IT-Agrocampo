@@ -16,6 +16,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 <div class="agp-pv-standalone__wrapper">
     <h1><?php esc_html_e( 'Informe Técnico', 'agrocampo-post-venta' ); ?></h1>
 
+    <section class="agp-pv-app-shortcut" id="agp-pv-app-shortcut" hidden>
+        <h2 class="agp-pv-app-shortcut__title"><?php esc_html_e( 'Acceso directo tipo app', 'agrocampo-post-venta' ); ?></h2>
+        <p class="agp-pv-app-shortcut__text" id="agp-pv-app-shortcut-text"><?php esc_html_e( 'Puedes instalar este formulario como acceso directo para abrirlo más rápido desde tu equipo.', 'agrocampo-post-venta' ); ?></p>
+        <button type="button" class="button button-secondary agp-pv-app-shortcut__button" id="agp-pv-app-shortcut-install" hidden>
+            <?php esc_html_e( 'Agregar acceso directo', 'agrocampo-post-venta' ); ?>
+        </button>
+    </section>
+
     <form id="agp-pv-form" enctype="multipart/form-data">
         <input type="text" name="agp_pv_hp" class="agp-pv-honeypot" tabindex="-1" autocomplete="off">
 

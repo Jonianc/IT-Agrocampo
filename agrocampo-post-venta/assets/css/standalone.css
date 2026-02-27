@@ -585,3 +585,28 @@
     border-color: #90959c;
     color: #333;
 }
+
+.agp-pv-app-shortcut {
+    margin: 0 0 16px;
+    padding: 12px;
+    border: 1px solid #d8e4ff;
+    border-radius: 10px;
+    background: #f5f8ff;
+}
+
+.agp-pv-app-shortcut__title {
+    margin: 0 0 8px;
+    font-size: 16px;
+    color: #1f3f8f;
+}
+
+.agp-pv-app-shortcut__text {
+    margin: 0;
+    color: #334155;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.agp-pv-app-shortcut__button {
+    margin-top: 10px;
+}
