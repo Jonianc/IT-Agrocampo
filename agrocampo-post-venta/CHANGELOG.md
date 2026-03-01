@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.4.81] - 2026-03-01
+
+### Fixed
+- Se normaliza la plantilla PDF de Informe Técnico para evitar solapes en la sección Servicio usando layout estable de una sola columna para labels/valores.
+- Se unifica el render de fechas a formato `dd-mm-YYYY` y se diferencia explícitamente `Fecha servicio` en Equipo y `Fecha reparación`/`Fecha cierre` en Servicio.
+- Se estandariza `N° Interno` para usar placeholder único `No informado` cuando llega vacío o con rellenos inválidos (`0`, `0000`, etc.).
+
+### Changed
+- Se homogeneiza capitalización de campos de entidad (`Máquina`, `Cliente`, `Faena / Lugar`) para evitar salidas en minúsculas accidentales.
+- La sección `Detalle` ahora siempre renderiza el set completo (`Lubricantes`, `Filtros Utilizados`, `Componentes Utilizados`, `Trabajos Realizados`, `Observaciones`) con regla consistente para vacíos (`No informado`).
+- Se normaliza formato de insumos con cantidad al estilo `Nombre (xN)` cuando el contenido permite inferir cantidad.
+
+### UX
+- En firmas se mantiene render unificado: imagen centrada si existe y fallback `Firma no disponible` centrado con estilo consistente cuando no existe.
+
 ## [1.4.80] - 2026-02-27
 
 ### UX
