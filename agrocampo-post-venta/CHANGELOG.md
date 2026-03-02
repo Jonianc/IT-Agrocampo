@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.4.83] - 2026-03-02
+
+### Fixed
+- Se corrige layout del PDF para evitar superposición en filas de `Equipo` (incluyendo `Fecha servicio`) usando renderizado vertical seguro de filas label/valor.
+- Se ajusta el flujo de paginación previo a `Firmas` para minimizar saltos donde la sección quedaba sola en página siguiente.
+
+### Changed
+- En PDF ya no se muestra el placeholder `No informado` en campos generales: los campos vacíos se ocultan.
+- Excepción explícita: `Correo` mantiene `No informado` cuando no existe dato.
+- `Servicio` y `Detalle` ahora renderizan solo campos con contenido visible, conservando orden y wrapping sin romper cajas.
+
 ## [1.4.82] - 2026-03-02
 
 ### Added
