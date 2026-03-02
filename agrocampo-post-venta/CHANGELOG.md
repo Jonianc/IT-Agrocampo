@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.82] - 2026-03-02
+
+### Added
+- Se agrega exportador CSV compatible con el importador legacy del plugin (`agp_pv_export_legacy_csv`) disponible en Ajustes.
+- La tabla de informes mantiene exportación masiva, ahora emitiendo formato compatible con el importador (mismos encabezados y estructura esperada).
+
+### Security
+- El exportador protege acceso con `manage_options` + `nonce` y aplica mitigación de CSV Injection para celdas que comienzan con `=`, `+`, `-`, `@`.
+
+### Changed
+- Se normaliza el mapeo de `tipo_servicio`/`tipo_mantencion` al exportar para priorizar labels y usar fallback legible cuando falta el label persistido.
+
 ## [1.4.81] - 2026-03-01
 
 ### Fixed

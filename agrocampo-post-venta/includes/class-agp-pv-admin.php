@@ -26,6 +26,7 @@ class AGP_PV_Admin {
         add_action( 'admin_post_agp_pv_save_recipients', array( $this, 'handle_save_recipients' ) );
         add_action( 'admin_post_agp_pv_save_logo', array( $this, 'handle_save_logo' ) );
         add_action( 'admin_post_agp_pv_import_legacy_csv', array( $this, 'handle_import_legacy_csv' ) );
+        add_action( 'admin_post_agp_pv_export_legacy_csv', array( $this, 'handle_export_legacy_csv' ) );
         add_action( 'admin_post_agp_pv_delete_all_submissions', array( $this, 'handle_delete_all_submissions' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
         add_action( 'admin_init', array( $this, 'handle_view_pdf_request' ) );
@@ -200,6 +201,7 @@ class AGP_PV_Admin {
         echo '<input type="file" id="agp-pv-legacy-csv" name="agp_pv_legacy_csv" accept=".csv,text/csv" required></p>';
         echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Importar informes', 'agrocampo-post-venta' ) . '</button></p>';
         echo '</form>';
+        echo '<p><a class="button button-secondary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=agp_pv_export_legacy_csv' ), 'agp_pv_export_legacy_csv' ) ) . '">' . esc_html__( 'Exportar informes (CSV compatible)', 'agrocampo-post-venta' ) . '</a></p>';
         echo '</section>';
 
 
@@ -724,6 +726,173 @@ class AGP_PV_Admin {
         exit;
     }
 
+    public function handle_export_legacy_csv(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ) );
+        }
+
+        check_admin_referer( 'agp_pv_export_legacy_csv' );
+
+        global $wpdb;
+        $table = AGP_PV_DB::table_name();
+        $rows = $wpdb->get_results( "SELECT * FROM {$table} ORDER BY created_at DESC", ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+
+        if ( empty( $rows ) ) {
+            wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=import_failed&agp_pv_notice_message=' . rawurlencode( __( 'No hay informes para exportar.', 'agrocampo-post-venta' ) ) ) );
+            exit;
+        }
+
+        $this->stream_legacy_compatible_csv( $rows, 'informes-tecnicos-compatibles-importador' );
+    }
+
+    /**
+     * @param array<int,array<string,mixed>> $rows
+     */
+    private function stream_legacy_compatible_csv( array $rows, string $file_prefix ): void {
+        nocache_headers();
+        header( 'Content-Type: text/csv; charset=utf-8' );
+        header( 'Content-Disposition: attachment; filename=' . sanitize_file_name( $file_prefix ) . '-' . gmdate( 'Ymd-His' ) . '.csv' );
+
+        $output = fopen( 'php://output', 'w' );
+        if ( false === $output ) {
+            return;
+        }
+
+        $headers = $this->legacy_export_headers();
+        fputcsv( $output, $headers );
+
+        foreach ( $rows as $row ) {
+            $legacy_row = $this->map_submission_to_legacy_export_row( $row );
+            $ordered = array();
+            foreach ( $headers as $header ) {
+                $ordered[] = $this->escape_csv_formula_injection( (string) ( $legacy_row[ $header ] ?? '' ) );
+            }
+            fputcsv( $output, $ordered );
+        }
+
+        fclose( $output );
+        exit;
+    }
+
+    /**
+     * @return string[]
+     */
+    private function legacy_export_headers(): array {
+        return array(
+            'legacy_id',
+            'Técnico',
+            'Cliente',
+            'Correo cliente',
+            'Address - Faena Lugar',
+            'Máquina',
+            'Modelo',
+            'Serie',
+            'N° Interno',
+            'Fecha',
+            'Horas',
+            'Tipo de servicio',
+            'Tipo de mantención',
+            'Cantidad de horas',
+            'Fecha reparación',
+            'Fecha cierre',
+            'Lubricantes',
+            'Filtros utilizados',
+            'Componentes utilizados',
+            'Trabajos realizados',
+            'Observaciones',
+            'Correo copia',
+            'Hora de envío',
+        );
+    }
+
+    /**
+     * @param array<string,mixed> $row
+     * @return array<string,string>
+     */
+    private function map_submission_to_legacy_export_row( array $row ): array {
+        $legacy_id = isset( $row['legacy_id'] ) ? absint( (string) $row['legacy_id'] ) : 0;
+        if ( $legacy_id <= 0 ) {
+            $legacy_id = isset( $row['id'] ) ? absint( (string) $row['id'] ) : 0;
+        }
+
+        $tipo_servicio_label = trim( (string) ( $row['tipo_servicio_label'] ?? '' ) );
+        if ( '' === $tipo_servicio_label ) {
+            $tipo_servicio_label = $this->map_stored_tipo_servicio_to_legacy_label( (string) ( $row['tipo_servicio'] ?? '' ) );
+        }
+
+        $tipo_mantencion_label = trim( (string) ( $row['tipo_mantencion_label'] ?? '' ) );
+        if ( '' === $tipo_mantencion_label ) {
+            $tipo_mantencion_label = $this->map_stored_tipo_mantencion_to_legacy_label( (string) ( $row['tipo_mantencion'] ?? '' ) );
+        }
+
+        return array(
+            'legacy_id' => (string) $legacy_id,
+            'Técnico' => sanitize_text_field( (string) ( $row['tecnico'] ?? '' ) ),
+            'Cliente' => sanitize_text_field( (string) ( $row['cliente'] ?? '' ) ),
+            'Correo cliente' => sanitize_email( (string) ( $row['email_cliente'] ?? '' ) ),
+            'Address - Faena Lugar' => sanitize_text_field( (string) ( $row['faena_lugar'] ?? '' ) ),
+            'Máquina' => sanitize_text_field( (string) ( $row['maquina'] ?? '' ) ),
+            'Modelo' => sanitize_text_field( (string) ( $row['modelo'] ?? '' ) ),
+            'Serie' => sanitize_text_field( (string) ( $row['serie'] ?? '' ) ),
+            'N° Interno' => sanitize_text_field( (string) ( $row['numero_interno'] ?? '' ) ),
+            'Fecha' => sanitize_text_field( (string) ( $row['fecha'] ?? '' ) ),
+            'Horas' => sanitize_text_field( (string) ( $row['horas'] ?? '' ) ),
+            'Tipo de servicio' => sanitize_text_field( $tipo_servicio_label ),
+            'Tipo de mantención' => sanitize_text_field( $tipo_mantencion_label ),
+            'Cantidad de horas' => sanitize_text_field( (string) ( $row['cantidad_horas'] ?? '' ) ),
+            'Fecha reparación' => sanitize_text_field( (string) ( $row['fecha_reparacion'] ?? '' ) ),
+            'Fecha cierre' => sanitize_text_field( (string) ( $row['fecha_cierre'] ?? '' ) ),
+            'Lubricantes' => sanitize_textarea_field( (string) ( $row['lubricantes'] ?? '' ) ),
+            'Filtros utilizados' => sanitize_textarea_field( (string) ( $row['filtros_utilizados'] ?? '' ) ),
+            'Componentes utilizados' => sanitize_textarea_field( (string) ( $row['componentes_utilizados'] ?? '' ) ),
+            'Trabajos realizados' => sanitize_textarea_field( (string) ( $row['trabajos_realizados'] ?? '' ) ),
+            'Observaciones' => sanitize_textarea_field( (string) ( $row['observaciones'] ?? '' ) ),
+            'Correo copia' => sanitize_email( (string) ( $row['correo_copia'] ?? '' ) ),
+            'Hora de envío' => sanitize_text_field( (string) ( $row['created_at'] ?? '' ) ),
+        );
+    }
+
+    private function map_stored_tipo_servicio_to_legacy_label( string $value ): string {
+        $map = array(
+            'one' => __( 'Factura Cliente', 'agrocampo-post-venta' ),
+            'two' => __( 'Garantía', 'agrocampo-post-venta' ),
+            'Interno' => __( 'Mantención', 'agrocampo-post-venta' ),
+            'Visita-de-Cortesía' => __( 'Visita de Cortesía', 'agrocampo-post-venta' ),
+            'Diagnostico-Técnico' => __( 'Diagnóstico Técnico', 'agrocampo-post-venta' ),
+            'Entrega-Técnica' => __( 'Entrega Técnica', 'agrocampo-post-venta' ),
+        );
+
+        return $map[ $value ] ?? sanitize_text_field( $value );
+    }
+
+    private function map_stored_tipo_mantencion_to_legacy_label( string $value ): string {
+        $map = array(
+            'one' => __( '100 Horas', 'agrocampo-post-venta' ),
+            'two' => __( '400 Horas', 'agrocampo-post-venta' ),
+            '500-Horas' => __( '500 Horas', 'agrocampo-post-venta' ),
+            '800-Horas' => __( '800 Horas', 'agrocampo-post-venta' ),
+            '1000-Horas' => __( '1000 Horas', 'agrocampo-post-venta' ),
+            '1200' => __( '1200 Horas', 'agrocampo-post-venta' ),
+            '1600-Horas' => __( '1500 Horas', 'agrocampo-post-venta' ),
+            'OTRO' => __( 'OTRO', 'agrocampo-post-venta' ),
+        );
+
+        return $map[ $value ] ?? sanitize_text_field( $value );
+    }
+
+    private function escape_csv_formula_injection( string $value ): string {
+        if ( '' === $value ) {
+            return $value;
+        }
+
+        $first = substr( $value, 0, 1 );
+        if ( in_array( $first, array( '=', '+', '-', '@' ), true ) ) {
+            return "'" . $value;
+        }
+
+        return $value;
+    }
+
     private function import_legacy_csv_file( string $file_path ): array {
         $handle = fopen( $file_path, 'r' );
         if ( false === $handle ) {
@@ -1117,7 +1286,7 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
         return array(
             'bulk_resend' => __( 'Reintentar envío de correo', 'agrocampo-post-venta' ),
             'bulk_regenerate_pdf' => __( 'Regenerar PDF', 'agrocampo-post-venta' ),
-            'bulk_export_csv' => __( 'Exportar CSV', 'agrocampo-post-venta' ),
+            'bulk_export_csv' => __( 'Exportar CSV compatible', 'agrocampo-post-venta' ),
             'bulk_delete' => __( 'Eliminar', 'agrocampo-post-venta' ),
         );
     }
@@ -1387,22 +1556,156 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
             return;
         }
 
+        $this->stream_legacy_compatible_csv( $rows, 'informes-tecnicos-seleccionados' );
+    }
+
+
+    /**
+     * @param array<int,array<string,mixed>> $rows
+     */
+    private function stream_legacy_compatible_csv( array $rows, string $file_prefix ): void {
         nocache_headers();
         header( 'Content-Type: text/csv; charset=utf-8' );
-        header( 'Content-Disposition: attachment; filename=informes-tecnicos-' . gmdate( 'Ymd-His' ) . '.csv' );
+        header( 'Content-Disposition: attachment; filename=' . sanitize_file_name( $file_prefix ) . '-' . gmdate( 'Ymd-His' ) . '.csv' );
 
         $output = fopen( 'php://output', 'w' );
         if ( false === $output ) {
             return;
         }
 
-        fputcsv( $output, array_keys( $rows[0] ) );
+        $headers = $this->legacy_export_headers();
+        fputcsv( $output, $headers );
+
         foreach ( $rows as $row ) {
-            fputcsv( $output, $row );
+            $legacy_row = $this->map_submission_to_legacy_export_row( $row );
+            $ordered = array();
+            foreach ( $headers as $header ) {
+                $ordered[] = $this->escape_csv_formula_injection( (string) ( $legacy_row[ $header ] ?? '' ) );
+            }
+            fputcsv( $output, $ordered );
         }
 
         fclose( $output );
         exit;
+    }
+
+    /**
+     * @return string[]
+     */
+    private function legacy_export_headers(): array {
+        return array(
+            'legacy_id',
+            'Técnico',
+            'Cliente',
+            'Correo cliente',
+            'Address - Faena Lugar',
+            'Máquina',
+            'Modelo',
+            'Serie',
+            'N° Interno',
+            'Fecha',
+            'Horas',
+            'Tipo de servicio',
+            'Tipo de mantención',
+            'Cantidad de horas',
+            'Fecha reparación',
+            'Fecha cierre',
+            'Lubricantes',
+            'Filtros utilizados',
+            'Componentes utilizados',
+            'Trabajos realizados',
+            'Observaciones',
+            'Correo copia',
+            'Hora de envío',
+        );
+    }
+
+    /**
+     * @param array<string,mixed> $row
+     * @return array<string,string>
+     */
+    private function map_submission_to_legacy_export_row( array $row ): array {
+        $legacy_id = isset( $row['legacy_id'] ) ? absint( (string) $row['legacy_id'] ) : 0;
+        if ( $legacy_id <= 0 ) {
+            $legacy_id = isset( $row['id'] ) ? absint( (string) $row['id'] ) : 0;
+        }
+
+        $tipo_servicio_label = trim( (string) ( $row['tipo_servicio_label'] ?? '' ) );
+        if ( '' === $tipo_servicio_label ) {
+            $tipo_servicio_label = $this->map_stored_tipo_servicio_to_legacy_label( (string) ( $row['tipo_servicio'] ?? '' ) );
+        }
+
+        $tipo_mantencion_label = trim( (string) ( $row['tipo_mantencion_label'] ?? '' ) );
+        if ( '' === $tipo_mantencion_label ) {
+            $tipo_mantencion_label = $this->map_stored_tipo_mantencion_to_legacy_label( (string) ( $row['tipo_mantencion'] ?? '' ) );
+        }
+
+        return array(
+            'legacy_id' => (string) $legacy_id,
+            'Técnico' => sanitize_text_field( (string) ( $row['tecnico'] ?? '' ) ),
+            'Cliente' => sanitize_text_field( (string) ( $row['cliente'] ?? '' ) ),
+            'Correo cliente' => sanitize_email( (string) ( $row['email_cliente'] ?? '' ) ),
+            'Address - Faena Lugar' => sanitize_text_field( (string) ( $row['faena_lugar'] ?? '' ) ),
+            'Máquina' => sanitize_text_field( (string) ( $row['maquina'] ?? '' ) ),
+            'Modelo' => sanitize_text_field( (string) ( $row['modelo'] ?? '' ) ),
+            'Serie' => sanitize_text_field( (string) ( $row['serie'] ?? '' ) ),
+            'N° Interno' => sanitize_text_field( (string) ( $row['numero_interno'] ?? '' ) ),
+            'Fecha' => sanitize_text_field( (string) ( $row['fecha'] ?? '' ) ),
+            'Horas' => sanitize_text_field( (string) ( $row['horas'] ?? '' ) ),
+            'Tipo de servicio' => sanitize_text_field( $tipo_servicio_label ),
+            'Tipo de mantención' => sanitize_text_field( $tipo_mantencion_label ),
+            'Cantidad de horas' => sanitize_text_field( (string) ( $row['cantidad_horas'] ?? '' ) ),
+            'Fecha reparación' => sanitize_text_field( (string) ( $row['fecha_reparacion'] ?? '' ) ),
+            'Fecha cierre' => sanitize_text_field( (string) ( $row['fecha_cierre'] ?? '' ) ),
+            'Lubricantes' => sanitize_textarea_field( (string) ( $row['lubricantes'] ?? '' ) ),
+            'Filtros utilizados' => sanitize_textarea_field( (string) ( $row['filtros_utilizados'] ?? '' ) ),
+            'Componentes utilizados' => sanitize_textarea_field( (string) ( $row['componentes_utilizados'] ?? '' ) ),
+            'Trabajos realizados' => sanitize_textarea_field( (string) ( $row['trabajos_realizados'] ?? '' ) ),
+            'Observaciones' => sanitize_textarea_field( (string) ( $row['observaciones'] ?? '' ) ),
+            'Correo copia' => sanitize_email( (string) ( $row['correo_copia'] ?? '' ) ),
+            'Hora de envío' => sanitize_text_field( (string) ( $row['created_at'] ?? '' ) ),
+        );
+    }
+
+    private function map_stored_tipo_servicio_to_legacy_label( string $value ): string {
+        $map = array(
+            'one' => __( 'Factura Cliente', 'agrocampo-post-venta' ),
+            'two' => __( 'Garantía', 'agrocampo-post-venta' ),
+            'Interno' => __( 'Mantención', 'agrocampo-post-venta' ),
+            'Visita-de-Cortesía' => __( 'Visita de Cortesía', 'agrocampo-post-venta' ),
+            'Diagnostico-Técnico' => __( 'Diagnóstico Técnico', 'agrocampo-post-venta' ),
+            'Entrega-Técnica' => __( 'Entrega Técnica', 'agrocampo-post-venta' ),
+        );
+
+        return $map[ $value ] ?? sanitize_text_field( $value );
+    }
+
+    private function map_stored_tipo_mantencion_to_legacy_label( string $value ): string {
+        $map = array(
+            'one' => __( '100 Horas', 'agrocampo-post-venta' ),
+            'two' => __( '400 Horas', 'agrocampo-post-venta' ),
+            '500-Horas' => __( '500 Horas', 'agrocampo-post-venta' ),
+            '800-Horas' => __( '800 Horas', 'agrocampo-post-venta' ),
+            '1000-Horas' => __( '1000 Horas', 'agrocampo-post-venta' ),
+            '1200' => __( '1200 Horas', 'agrocampo-post-venta' ),
+            '1600-Horas' => __( '1500 Horas', 'agrocampo-post-venta' ),
+            'OTRO' => __( 'OTRO', 'agrocampo-post-venta' ),
+        );
+
+        return $map[ $value ] ?? sanitize_text_field( $value );
+    }
+
+    private function escape_csv_formula_injection( string $value ): string {
+        if ( '' === $value ) {
+            return $value;
+        }
+
+        $first = substr( $value, 0, 1 );
+        if ( in_array( $first, array( '=', '+', '-', '@' ), true ) ) {
+            return "'" . $value;
+        }
+
+        return $value;
     }
 
 
