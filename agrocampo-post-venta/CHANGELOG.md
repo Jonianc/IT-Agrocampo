@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.88] - 2026-03-03
+
+### Changed
+- Se ajusta el formato del nombre de PDF para separar elementos con guion bajo (`_`) en lugar de `+` (`IT_ID_MODELO_SERIE_o_INTERNO_CLIENTE.pdf`).
+- Se actualiza el saneamiento del nombre de archivo para el nuevo esquema con `_` y fallback `IT_ID.pdf`.
+
 ## [1.4.87] - 2026-03-03
 
 ### Fixed

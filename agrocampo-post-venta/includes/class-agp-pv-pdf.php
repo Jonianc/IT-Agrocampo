@@ -1109,10 +1109,10 @@ class AGP_PV_PDF {
         $serie_o_interno = '' !== $serie ? $serie : $interno;
         $cliente = self::filename_segment( (string) ( $submission['cliente'] ?? '' ), 36, 'CLIENTE' );
 
-        $filename = sprintf( 'IT+%s+%s+%s+%s', (string) $report_ref, $modelo, $serie_o_interno, $cliente );
+        $filename = sprintf( 'IT_%s_%s_%s_%s', (string) $report_ref, $modelo, $serie_o_interno, $cliente );
         $filename = self::sanitize_pdf_filename( $filename );
         if ( '' === $filename ) {
-            $filename = 'IT-' . (string) $report_ref;
+            $filename = 'IT_' . (string) $report_ref;
         }
 
         return $filename . '.pdf';
@@ -1137,7 +1137,7 @@ class AGP_PV_PDF {
 
     private static function sanitize_pdf_filename( string $value ): string {
         $value = remove_accents( $value );
-        $value = preg_replace( '/[^A-Za-z0-9+_.-]+/', '-', $value ) ?? '';
+        $value = preg_replace( '/[^A-Za-z0-9_.-]+/', '-', $value ) ?? '';
         $value = preg_replace( '/-+/', '-', $value ) ?? '';
 
         return trim( (string) $value, '-_.' );
