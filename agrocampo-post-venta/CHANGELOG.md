@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.85] - 2026-03-03
+
+### Fixed
+- Se corrige el formato del nombre de PDF para emitir explícitamente `IT+ID+MODELO+SERIE_o_INTERNO+CLIENTE.pdf`.
+- Se elimina la forzada de minúsculas en los segmentos del nombre y se conserva el prefijo `IT` en mayúsculas.
+
+### Changed
+- Se agrega saneamiento específico de nombre de archivo PDF que preserva `+` y elimina caracteres no válidos, manteniendo compatibilidad con sistemas de archivos.
+
 ## [1.4.84] - 2026-03-03
 
 ### Changed
