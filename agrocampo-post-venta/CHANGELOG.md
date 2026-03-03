@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.84] - 2026-03-03
+
+### Changed
+- Se actualiza el nombre de archivo PDF para usar el patrón `it-IT-MODELO-SERIE_o_INTERNO-CLIENTE.pdf`, priorizando `Serie` y usando `N° Interno` como fallback cuando no hay serie.
+- Se normalizan segmentos del nombre de archivo (sin acentos, minúsculas, solo alfanumérico con guiones) y se recortan longitudes para mantener compatibilidad en sistemas de archivos.
+
 ## [1.4.83] - 2026-03-02
 
 ### Fixed

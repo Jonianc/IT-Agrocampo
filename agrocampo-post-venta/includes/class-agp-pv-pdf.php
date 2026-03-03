@@ -1102,15 +1102,32 @@ class AGP_PV_PDF {
     private static function build_pdf_filename( int $submission_id, array $submission ): string {
         $report_id = AGP_PV_DB::get_visible_report_id( $submission );
         $report_ref = $report_id > 0 ? $report_id : $submission_id;
-        $issue_date = date_i18n( 'Ymd' );
+        $modelo = self::filename_segment( (string) ( $submission['modelo'] ?? '' ), 32, 'modelo' );
+        $serie_o_interno = self::filename_segment( (string) ( $submission['serie'] ?? '' ), 28, '' );
+        if ( '' === $serie_o_interno || 'no-informado' === $serie_o_interno ) {
+            $serie_o_interno = self::filename_segment( (string) ( $submission['numero_interno'] ?? '' ), 28, 'interno' );
+        }
+        $cliente = self::filename_segment( (string) ( $submission['cliente'] ?? '' ), 36, 'cliente' );
 
-        $base = sprintf( 'it-%s-%s', (string) $report_ref, $issue_date );
-        $base = sanitize_file_name( $base );
+        $base = sprintf( 'it-%s-%s-%s-%s', (string) $report_ref, $modelo, $serie_o_interno, $cliente );
+        $base = sanitize_file_name( strtolower( $base ) );
         if ( '' === $base ) {
             $base = 'it-' . (string) $report_ref;
         }
 
         return $base . '.pdf';
+    }
+
+    private static function filename_segment( string $value, int $max_length = 40, string $fallback = 'no-informado' ): string {
+        $value = self::normalize_pdf_value( $value, '' );
+        $value = remove_accents( $value );
+        $value = preg_replace( '/[^A-Za-z0-9]+/', '-', $value ) ?? '';
+        $value = trim( strtolower( $value ), '-_' );
+        if ( '' === $value ) {
+            return $fallback;
+        }
+
+        return substr( $value, 0, max( 4, $max_length ) );
     }
 
     /**
