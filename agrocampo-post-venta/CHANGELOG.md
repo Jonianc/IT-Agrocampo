@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.86] - 2026-03-03
+
+### Added
+- Se agrega gestión de técnicos en Admin > Ajustes, con guardado seguro (`manage_options` + `nonce`) y soporte de lista editable (uno por línea).
+- El selector `Técnico` del formulario standalone ahora carga dinámicamente desde la configuración administrable.
+
+### Changed
+- Se centraliza la lista por defecto de técnicos en el plugin para usarla como fallback cuando no hay configuración guardada.
+
 ## [1.4.85] - 2026-03-03
 
 ### Fixed

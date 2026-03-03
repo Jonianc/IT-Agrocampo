@@ -26,6 +26,57 @@ class AGP_PV_Plugin {
         return self::$instance;
     }
 
+
+    /**
+     * @return string[]
+     */
+    public static function default_technicians(): array {
+        return array(
+            'Enrique Rivas Diaz',
+            'Juan Castro Meza',
+            'Bastián Cancino Ortega',
+            'Maximiliano Tapia Briones',
+            'Luis Zúñiga Medel',
+            'Daniel Rojas Zúñiga',
+            'Alejandro Vásquez Gonzales',
+            'Darwin Reveco Vásquez',
+            'Moisés Acevedo Abaca',
+            'Jeremy Castillo Díaz',
+            'Eduardo Espinoza',
+            'Guillermo Jerez',
+            'Jorge Valdez',
+            'Benjamín Castro',
+        );
+    }
+
+    /**
+     * @return string[]
+     */
+    public static function get_technicians(): array {
+        $stored = get_option( 'agp_pv_technicians', array() );
+        $list = array();
+
+        if ( is_string( $stored ) ) {
+            $stored = preg_split( '/\r\n|\r|\n/', $stored ) ?: array();
+        }
+
+        if ( is_array( $stored ) ) {
+            foreach ( $stored as $name ) {
+                $name = sanitize_text_field( (string) $name );
+                if ( '' === $name ) {
+                    continue;
+                }
+                $list[] = $name;
+            }
+        }
+
+        if ( empty( $list ) ) {
+            return self::default_technicians();
+        }
+
+        return array_values( array_unique( $list ) );
+    }
+
     public static function activate(): void {
         AGP_PV_DB::maybe_upgrade();
         flush_rewrite_rules();

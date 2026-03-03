@@ -24,6 +24,7 @@ class AGP_PV_Admin {
         add_action( 'admin_post_agp_pv_regenerate_pdf', array( $this, 'handle_regenerate_pdf' ) );
         add_action( 'admin_post_agp_pv_send_test_email', array( $this, 'handle_send_test_email' ) );
         add_action( 'admin_post_agp_pv_save_recipients', array( $this, 'handle_save_recipients' ) );
+        add_action( 'admin_post_agp_pv_save_technicians', array( $this, 'handle_save_technicians' ) );
         add_action( 'admin_post_agp_pv_save_logo', array( $this, 'handle_save_logo' ) );
         add_action( 'admin_post_agp_pv_import_legacy_csv', array( $this, 'handle_import_legacy_csv' ) );
         add_action( 'admin_post_agp_pv_export_legacy_csv', array( $this, 'handle_export_legacy_csv' ) );
@@ -103,6 +104,7 @@ class AGP_PV_Admin {
         $pdf_it_label_template = (string) get_option( 'agp_pv_pdf_it_label_template', __( 'IT: %d', 'agrocampo-post-venta' ) );
         $recipients = AGP_PV_Email::get_configured_recipients();
         $recipients_value = implode( ', ', $recipients );
+        $technicians_value = implode( "\n", AGP_PV_Plugin::get_technicians() );
 
         echo '<div class="wrap agp-pv-admin">';
         echo '<h1>' . esc_html__( 'Ajustes Informe Técnico', 'agrocampo-post-venta' ) . '</h1>';
@@ -180,6 +182,17 @@ class AGP_PV_Admin {
         echo '</section>';
 
         echo '<section class="card agp-pv-card">';
+        echo '<h2>' . esc_html__( 'Técnicos', 'agrocampo-post-venta' ) . '</h2>';
+        echo '<p>' . esc_html__( 'Gestiona los técnicos disponibles en el selector del formulario (uno por línea).', 'agrocampo-post-venta' ) . '</p>';
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+        echo '<input type="hidden" name="action" value="agp_pv_save_technicians">';
+        wp_nonce_field( 'agp_pv_save_technicians' );
+        echo '<textarea name="agp_pv_technicians" rows="8" class="large-text code" placeholder="Nombre Apellido">' . esc_textarea( $technicians_value ) . '</textarea>';
+        echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Guardar técnicos', 'agrocampo-post-venta' ) . '</button></p>';
+        echo '</form>';
+        echo '</section>';
+
+        echo '<section class="card agp-pv-card">';
         echo '<h2>' . esc_html__( 'Prueba de correo', 'agrocampo-post-venta' ) . '</h2>';
         echo '<p>' . esc_html__( 'Si tu hosting no tiene habilitada la función mail(), configura SMTP con un plugin como WP Mail SMTP.', 'agrocampo-post-venta' ) . '</p>';
         echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
@@ -244,6 +257,9 @@ class AGP_PV_Admin {
         }
         if ( 'recipients_saved' === $notice ) {
             $message = __( 'Destinatarios actualizados.', 'agrocampo-post-venta' );
+        }
+        if ( 'technicians_saved' === $notice ) {
+            $message = __( 'Técnicos actualizados.', 'agrocampo-post-venta' );
         }
         if ( 'logo_saved' === $notice ) {
             $message = __( 'Logo actualizado.', 'agrocampo-post-venta' );
@@ -592,6 +608,32 @@ class AGP_PV_Admin {
         wp_safe_redirect(
             admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=test_failed&agp_pv_notice_message=' . rawurlencode( $message ) )
         );
+        exit;
+    }
+
+
+    public function handle_save_technicians(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ) );
+        }
+
+        check_admin_referer( 'agp_pv_save_technicians' );
+
+        $raw = isset( $_POST['agp_pv_technicians'] ) ? sanitize_textarea_field( wp_unslash( $_POST['agp_pv_technicians'] ) ) : '';
+        $rows = preg_split( '/\r\n|\r|\n/', $raw ) ?: array();
+        $items = array();
+        foreach ( $rows as $row ) {
+            $name = sanitize_text_field( (string) $row );
+            if ( '' === $name ) {
+                continue;
+            }
+            $items[] = $name;
+        }
+
+        $items = array_values( array_unique( $items ) );
+        update_option( 'agp_pv_technicians', $items );
+
+        wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=technicians_saved' ) );
         exit;
     }
 

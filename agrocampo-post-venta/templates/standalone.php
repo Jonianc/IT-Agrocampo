@@ -51,20 +51,9 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <label for="agp-pv-tecnico"><?php esc_html_e( 'Técnico', 'agrocampo-post-venta' ); ?> *</label>
                 <select id="agp-pv-tecnico" name="tecnico" required>
                     <option value=""><?php esc_html_e( 'Seleccione su nombre', 'agrocampo-post-venta' ); ?></option>
-                    <option value="Enrique Rivas Diaz">Enrique Rivas Diaz</option>
-                    <option value="Juan Castro Meza">Juan Castro Meza</option>
-                    <option value="Bastián Cancino Ortega">Bastián Cancino Ortega</option>
-                    <option value="Maximiliano Tapia Briones">Maximiliano Tapia Briones</option>
-                    <option value="Luis Zúñiga Medel">Luis Zúñiga Medel</option>
-                    <option value="Daniel Rojas Zúñiga">Daniel Rojas Zúñiga</option>
-                    <option value="Alejandro Vásquez Gonzales">Alejandro Vásquez Gonzales</option>
-                    <option value="Darwin Reveco Vásquez">Darwin Reveco Vásquez</option>
-                    <option value="Moisés Acevedo Abaca">Moisés Acevedo Abaca</option>
-                    <option value="Jeremy Castillo Díaz">Jeremy Castillo Díaz</option>
-                    <option value="Eduardo Espinoza">Eduardo Espinoza</option>
-                    <option value="Guillermo Jerez">Guillermo Jerez</option>
-                    <option value="Jorge Valdez">Jorge Valdez</option>
-                    <option value="Benjamín Castro">Benjamín Castro</option>
+                    <?php foreach ( AGP_PV_Plugin::get_technicians() as $technician ) : ?>
+                        <option value="<?php echo esc_attr( $technician ); ?>"><?php echo esc_html( $technician ); ?></option>
+                    <?php endforeach; ?>
                 </select>
                 <span class="agp-pv-error" data-error-for="tecnico"></span>
             </div>
