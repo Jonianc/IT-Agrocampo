@@ -54,27 +54,48 @@ class AGP_PV_Plugin {
      */
     public static function get_technicians(): array {
         $stored = get_option( 'agp_pv_technicians', array() );
-        $list = array();
-
-        if ( is_string( $stored ) ) {
-            $stored = preg_split( '/\r\n|\r|\n/', $stored ) ?: array();
-        }
-
-        if ( is_array( $stored ) ) {
-            foreach ( $stored as $name ) {
-                $name = sanitize_text_field( (string) $name );
-                if ( '' === $name ) {
-                    continue;
-                }
-                $list[] = $name;
-            }
-        }
+        $list = self::normalize_technicians( $stored );
 
         if ( empty( $list ) ) {
             return self::default_technicians();
         }
 
-        return array_values( array_unique( $list ) );
+        return $list;
+    }
+
+    /**
+     * @param string|string[] $raw
+     * @return string[]
+     */
+    public static function normalize_technicians( $raw ): array {
+        if ( is_string( $raw ) ) {
+            $raw = preg_split( '/\r\n|\r|\n/', $raw ) ?: array();
+        }
+
+        if ( ! is_array( $raw ) ) {
+            return array();
+        }
+
+        $items = array();
+        foreach ( $raw as $row ) {
+            $name = sanitize_text_field( (string) $row );
+            if ( function_exists( 'mb_substr' ) ) {
+                $name = (string) mb_substr( $name, 0, 80 );
+            } else {
+                $name = substr( $name, 0, 80 );
+            }
+            if ( '' === $name ) {
+                continue;
+            }
+            $items[] = $name;
+        }
+
+        $items = array_values( array_unique( $items ) );
+        if ( count( $items ) > 100 ) {
+            $items = array_slice( $items, 0, 100 );
+        }
+
+        return $items;
     }
 
     public static function activate(): void {

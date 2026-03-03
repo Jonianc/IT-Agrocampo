@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.87] - 2026-03-03
+
+### Fixed
+- Se refuerza el guardado de técnicos en Ajustes usando una normalización centralizada para evitar diferencias entre lectura/escritura de la opción.
+- Si la lista enviada queda vacía tras sanitización, se elimina la opción para volver automáticamente al listado por defecto.
+
+### Changed
+- Se agrega límite defensivo en la gestión de técnicos (máximo 100 entradas y 80 caracteres por nombre).
+
 ## [1.4.86] - 2026-03-03
 
 ### Added

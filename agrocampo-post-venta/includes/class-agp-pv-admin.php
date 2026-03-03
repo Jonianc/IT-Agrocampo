@@ -620,18 +620,13 @@ class AGP_PV_Admin {
         check_admin_referer( 'agp_pv_save_technicians' );
 
         $raw = isset( $_POST['agp_pv_technicians'] ) ? sanitize_textarea_field( wp_unslash( $_POST['agp_pv_technicians'] ) ) : '';
-        $rows = preg_split( '/\r\n|\r|\n/', $raw ) ?: array();
-        $items = array();
-        foreach ( $rows as $row ) {
-            $name = sanitize_text_field( (string) $row );
-            if ( '' === $name ) {
-                continue;
-            }
-            $items[] = $name;
-        }
+        $items = AGP_PV_Plugin::normalize_technicians( $raw );
 
-        $items = array_values( array_unique( $items ) );
-        update_option( 'agp_pv_technicians', $items );
+        if ( empty( $items ) ) {
+            delete_option( 'agp_pv_technicians' );
+        } else {
+            update_option( 'agp_pv_technicians', $items );
+        }
 
         wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=technicians_saved' ) );
         exit;
