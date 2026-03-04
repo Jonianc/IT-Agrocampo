@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.84] - 2026-03-04
+
+### Changed
+- Bump de versión para ciclo de testing.
+
 ## [1.4.83] - 2026-03-02
 
 ### Fixed
