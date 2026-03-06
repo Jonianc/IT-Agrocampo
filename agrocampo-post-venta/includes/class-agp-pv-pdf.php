@@ -1841,21 +1841,36 @@ class AGP_PV_PDF {
             return $fallback;
         }
 
+        $raw = trim( $raw );
+
         if ( preg_match( '/^(\d{4})-(\d{2})-(\d{2})$/', $raw, $matches ) ) {
-            return sprintf( '%02d-%02d-%04d', (int) $matches[2], (int) $matches[3], (int) $matches[1] );
+            return sprintf( '%02d/%02d/%04d', (int) $matches[3], (int) $matches[2], (int) $matches[1] );
         }
 
         if ( preg_match( '/^(\d{2})-(\d{2})-(\d{4})$/', $raw, $matches ) ) {
-            return sprintf( '%02d-%02d-%04d', (int) $matches[1], (int) $matches[2], (int) $matches[3] );
+            return sprintf( '%02d/%02d/%04d', (int) $matches[1], (int) $matches[2], (int) $matches[3] );
         }
 
         if ( preg_match( '/^(\d{2})\/(\d{2})\/(\d{4})$/', $raw, $matches ) ) {
-            return sprintf( '%02d-%02d-%04d', (int) $matches[1], (int) $matches[2], (int) $matches[3] );
+            $first  = (int) $matches[1];
+            $second = (int) $matches[2];
+            $year   = (int) $matches[3];
+
+            // Formularios legacy pueden guardar MM/DD/YYYY. Se normaliza siempre a DD/MM/YYYY.
+            if ( $first <= 12 && $second <= 12 ) {
+                return sprintf( '%02d/%02d/%04d', $second, $first, $year );
+            }
+
+            if ( $first > 12 && $second <= 12 ) {
+                return sprintf( '%02d/%02d/%04d', $first, $second, $year );
+            }
+
+            return sprintf( '%02d/%02d/%04d', $second, $first, $year );
         }
 
         $timestamp = strtotime( $raw );
         if ( false !== $timestamp ) {
-            return gmdate( 'd-m-Y', $timestamp );
+            return gmdate( 'd/m/Y', $timestamp );
         }
 
         return $raw;

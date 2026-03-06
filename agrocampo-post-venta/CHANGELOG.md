@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.89] - 2026-03-06
+
+### Changed
+- Se estandariza el formato de fechas en PDF a `DD/MM/AAAA` para cabecera y campos de servicio, incluyendo normalización de entradas legacy en `MM/DD/AAAA`.
+
 ## [1.4.88] - 2026-03-03
 
 ### Changed
