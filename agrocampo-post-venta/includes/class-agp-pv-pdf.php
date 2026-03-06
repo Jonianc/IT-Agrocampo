@@ -1856,16 +1856,17 @@ class AGP_PV_PDF {
             $second = (int) $matches[2];
             $year   = (int) $matches[3];
 
-            // Formularios legacy pueden guardar MM/DD/YYYY. Se normaliza siempre a DD/MM/YYYY.
-            if ( $first <= 12 && $second <= 12 ) {
-                return sprintf( '%02d/%02d/%04d', $second, $first, $year );
-            }
-
             if ( $first > 12 && $second <= 12 ) {
                 return sprintf( '%02d/%02d/%04d', $first, $second, $year );
             }
 
-            return sprintf( '%02d/%02d/%04d', $second, $first, $year );
+            // Formularios legacy pueden guardar MM/DD/YYYY cuando el segundo componente excede 12.
+            if ( $first <= 12 && $second > 12 ) {
+                return sprintf( '%02d/%02d/%04d', $second, $first, $year );
+            }
+
+            // Si la fecha es ambigua (ambos <= 12), se preserva DD/MM/YYYY para evitar intercambios erróneos.
+            return sprintf( '%02d/%02d/%04d', $first, $second, $year );
         }
 
         $timestamp = strtotime( $raw );
