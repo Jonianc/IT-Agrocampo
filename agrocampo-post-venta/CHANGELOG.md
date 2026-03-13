@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.8.1] - 2026-03-13
+
+### Changed
+- En el gestor frontend de observaciones se ajusta el orden para priorizar `legacy_id` de mayor a menor (con fallback por `id` descendente cuando no existe `legacy_id`).
+- Se agrega acción `Ver PDF` por fila en el frontend, abriendo en nueva pestaña con URL nonceada usando el mismo mecanismo de previsualización ya existente.
+
 ## [1.8.0] - 2026-03-13
 
 ### Added

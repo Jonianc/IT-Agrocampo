@@ -24,7 +24,7 @@ if ( in_array( $review_status, array( 'pending_review', 'reviewed' ), true ) ) {
 }
 
 $where = 'WHERE ' . implode( ' AND ', $clauses );
-$sql = "SELECT id, legacy_id, tecnico, cliente, observaciones, review_status, reviewed_by, reviewed_at, created_at FROM {$table} {$where} ORDER BY created_at DESC LIMIT 200";
+$sql = "SELECT id, legacy_id, tecnico, cliente, observaciones, review_status, reviewed_by, reviewed_at, created_at FROM {$table} {$where} ORDER BY (legacy_id > 0) DESC, legacy_id DESC, id DESC LIMIT 200";
 $query = empty( $values ) ? $sql : $wpdb->prepare( $sql, $values );
 $rows = $wpdb->get_results( $query, ARRAY_A );
 
@@ -77,12 +77,13 @@ $notice = isset( $_GET['agp_pv_notice'] ) ? sanitize_key( wp_unslash( $_GET['agp
             <th><?php esc_html_e( 'Estado revisión', 'agrocampo-post-venta' ); ?></th>
             <th><?php esc_html_e( 'Revisado por', 'agrocampo-post-venta' ); ?></th>
             <th><?php esc_html_e( 'Fecha revisión', 'agrocampo-post-venta' ); ?></th>
+            <th><?php esc_html_e( 'PDF', 'agrocampo-post-venta' ); ?></th>
             <th><?php esc_html_e( 'Acción', 'agrocampo-post-venta' ); ?></th>
         </tr>
         </thead>
         <tbody>
         <?php if ( empty( $rows ) ) : ?>
-            <tr><td colspan="8"><?php esc_html_e( 'No hay informes con observaciones para los filtros seleccionados.', 'agrocampo-post-venta' ); ?></td></tr>
+            <tr><td colspan="9"><?php esc_html_e( 'No hay informes con observaciones para los filtros seleccionados.', 'agrocampo-post-venta' ); ?></td></tr>
         <?php else : ?>
             <?php foreach ( $rows as $row ) : ?>
                 <?php
@@ -99,6 +100,10 @@ $notice = isset( $_GET['agp_pv_notice'] ) ? sanitize_key( wp_unslash( $_GET['agp
                     $reviewed_at = '—';
                 }
                 $status = (string) ( $row['review_status'] ?? '' );
+                $view_pdf_url = wp_nonce_url(
+                    admin_url( 'admin.php?page=agp-pv-observations&view=' . $submission_id ),
+                    'agp_pv_view_pdf_' . $submission_id
+                );
                 ?>
                 <tr>
                     <td><?php echo esc_html( (string) $visible_id ); ?></td>
@@ -108,6 +113,7 @@ $notice = isset( $_GET['agp_pv_notice'] ) ? sanitize_key( wp_unslash( $_GET['agp
                     <td><?php echo esc_html( 'pending_review' === $status ? __( 'Pendiente de revisión', 'agrocampo-post-venta' ) : ( 'reviewed' === $status ? __( 'Revisado', 'agrocampo-post-venta' ) : $status ) ); ?></td>
                     <td><?php echo esc_html( (string) $reviewer ); ?></td>
                     <td><?php echo esc_html( $reviewed_at ); ?></td>
+                    <td><a href="<?php echo esc_url( $view_pdf_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Ver PDF', 'agrocampo-post-venta' ); ?></a></td>
                     <td>
                         <?php if ( 'reviewed' !== $status && $submission_id > 0 ) : ?>
                             <form method="post">
