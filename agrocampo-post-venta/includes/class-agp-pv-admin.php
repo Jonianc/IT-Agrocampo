@@ -471,14 +471,18 @@ class AGP_PV_Admin {
         }
 
         global $wpdb;
+        $reviewed_by = get_current_user_id();
+        $reviewed_at = current_time( 'mysql' );
         $updated = $wpdb->update(
             AGP_PV_DB::table_name(),
             array(
                 'review_status' => 'reviewed',
+                'reviewed_by' => $reviewed_by,
+                'reviewed_at' => $reviewed_at,
                 'updated_at' => current_time( 'mysql' ),
             ),
             array( 'id' => $submission_id ),
-            array( '%s', '%s' ),
+            array( '%s', '%d', '%s', '%s' ),
             array( '%d' )
         );
 
@@ -1417,6 +1421,8 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
             'serie' => __( 'Serie', 'agrocampo-post-venta' ),
             'tipo_servicio' => __( 'Tipo de servicio', 'agrocampo-post-venta' ),
             'review_status' => __( 'Revisión', 'agrocampo-post-venta' ),
+            'reviewed_by' => __( 'Revisado por', 'agrocampo-post-venta' ),
+            'reviewed_at' => __( 'Fecha revisión', 'agrocampo-post-venta' ),
             'mail_status' => __( 'Correo', 'agrocampo-post-venta' ),
             'pdf_status' => __( 'PDF', 'agrocampo-post-venta' ),
             'pdf_metrics' => __( 'Métricas PDF', 'agrocampo-post-venta' ),
@@ -1425,6 +1431,8 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
 
         if ( ! $this->observations_only ) {
             unset( $columns['review_status'] );
+            unset( $columns['reviewed_by'] );
+            unset( $columns['reviewed_at'] );
         }
 
         return $columns;
@@ -1442,6 +1450,7 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
 
         if ( $this->observations_only ) {
             $columns['review_status'] = array( 'review_status', false );
+            $columns['reviewed_at'] = array( 'reviewed_at', false );
         }
 
         return $columns;
@@ -1626,7 +1635,7 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
     }
 
     private function get_order_by(): string {
-        $allowed = array( 'id', 'tecnico', 'cliente', 'created_at', 'mail_status', 'pdf_status', 'review_status' );
+        $allowed = array( 'id', 'tecnico', 'cliente', 'created_at', 'mail_status', 'pdf_status', 'review_status', 'reviewed_at' );
         $orderby = isset( $_GET['orderby'] ) ? sanitize_key( wp_unslash( $_GET['orderby'] ) ) : 'created_at';
         return in_array( $orderby, $allowed, true ) ? $orderby : 'created_at';
     }
@@ -1908,6 +1917,29 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
 
         if ( 'review_status' === $column_name ) {
             return '<span class="agp-pv-status agp-pv-status-' . esc_attr( $item['review_status'] ?? '' ) . '">' . esc_html( $this->format_status( (string) ( $item['review_status'] ?? '' ) ) ) . '</span>';
+        }
+
+        if ( 'reviewed_by' === $column_name ) {
+            $user_id = isset( $item['reviewed_by'] ) ? absint( $item['reviewed_by'] ) : 0;
+            if ( $user_id <= 0 ) {
+                return '&mdash;';
+            }
+
+            $user = get_user_by( 'id', $user_id );
+            if ( ! $user ) {
+                return sprintf( '#%d', $user_id );
+            }
+
+            return esc_html( $user->display_name );
+        }
+
+        if ( 'reviewed_at' === $column_name ) {
+            $reviewed_at = isset( $item['reviewed_at'] ) ? (string) $item['reviewed_at'] : '';
+            if ( '' === $reviewed_at || '0000-00-00 00:00:00' === $reviewed_at ) {
+                return '&mdash;';
+            }
+
+            return esc_html( $reviewed_at );
         }
 
         if ( 'pdf_status' === $column_name ) {

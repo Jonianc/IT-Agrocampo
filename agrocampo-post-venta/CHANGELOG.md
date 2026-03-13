@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.7.0] - 2026-03-13
+
+### Added
+- Se agrega trazabilidad de revisión en informes: `reviewed_by` (ID de usuario) y `reviewed_at` (fecha/hora).
+- El gestor de observaciones muestra `Revisado por` y `Fecha revisión` para seguimiento administrativo.
+
+### Changed
+- La acción `Marcar revisado` ahora registra además del estado `reviewed` el usuario autenticado que ejecuta la revisión y el timestamp de la operación.
+
 ## [1.6.0] - 2026-03-13
 
 ### Added
