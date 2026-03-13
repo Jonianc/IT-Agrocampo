@@ -70,21 +70,22 @@ $notice = isset( $_GET['agp_pv_notice'] ) ? sanitize_key( wp_unslash( $_GET['agp
         <a class="agp-pv-link-reset" href="<?php echo esc_url( AGP_PV_Plugin::observations_standalone_url() ); ?>"><?php esc_html_e( 'Limpiar', 'agrocampo-post-venta' ); ?></a>
     </form>
 
-    <table class="agp-pv-observations-table">
-        <thead>
-        <tr>
-            <th><?php esc_html_e( 'ID', 'agrocampo-post-venta' ); ?></th>
-            <th><?php esc_html_e( 'Técnico', 'agrocampo-post-venta' ); ?></th>
-            <th><?php esc_html_e( 'Cliente', 'agrocampo-post-venta' ); ?></th>
-            <th><?php esc_html_e( 'Observaciones', 'agrocampo-post-venta' ); ?></th>
-            <th><?php esc_html_e( 'Estado revisión', 'agrocampo-post-venta' ); ?></th>
-            <th><?php esc_html_e( 'Revisado por', 'agrocampo-post-venta' ); ?></th>
-            <th><?php esc_html_e( 'Fecha revisión', 'agrocampo-post-venta' ); ?></th>
-            <th><?php esc_html_e( 'PDF', 'agrocampo-post-venta' ); ?></th>
-            <th><?php esc_html_e( 'Acción', 'agrocampo-post-venta' ); ?></th>
-        </tr>
-        </thead>
-        <tbody>
+    <div class="agp-pv-observations-table-scroll" role="region" aria-label="<?php esc_attr_e( 'Tabla de informes con observaciones', 'agrocampo-post-venta' ); ?>" tabindex="0">
+        <table class="agp-pv-observations-table">
+            <thead>
+            <tr>
+                <th><?php esc_html_e( 'ID', 'agrocampo-post-venta' ); ?></th>
+                <th><?php esc_html_e( 'Técnico', 'agrocampo-post-venta' ); ?></th>
+                <th><?php esc_html_e( 'Cliente', 'agrocampo-post-venta' ); ?></th>
+                <th><?php esc_html_e( 'Observaciones', 'agrocampo-post-venta' ); ?></th>
+                <th><?php esc_html_e( 'Estado revisión', 'agrocampo-post-venta' ); ?></th>
+                <th><?php esc_html_e( 'Revisado por', 'agrocampo-post-venta' ); ?></th>
+                <th><?php esc_html_e( 'Fecha revisión', 'agrocampo-post-venta' ); ?></th>
+                <th><?php esc_html_e( 'PDF', 'agrocampo-post-venta' ); ?></th>
+                <th><?php esc_html_e( 'Acción', 'agrocampo-post-venta' ); ?></th>
+            </tr>
+            </thead>
+            <tbody>
         <?php if ( empty( $rows ) ) : ?>
             <tr><td colspan="9"><?php esc_html_e( 'No hay informes con observaciones para los filtros seleccionados.', 'agrocampo-post-venta' ); ?></td></tr>
         <?php else : ?>
@@ -136,8 +137,9 @@ $notice = isset( $_GET['agp_pv_notice'] ) ? sanitize_key( wp_unslash( $_GET['agp
                 </tr>
             <?php endforeach; ?>
         <?php endif; ?>
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 </main>
 <?php wp_footer(); ?>
 </body>

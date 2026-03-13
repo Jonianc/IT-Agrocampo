@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.8.3] - 2026-03-13
+
+### Changed
+- Mejora visual del gestor frontend de observaciones: se agrega contenedor con scroll horizontal accesible para la tabla, cabecera sticky y anchos mínimos por columna para mantener legibilidad en pantallas pequeñas.
+- Se ajusta el estilo de filtros y contenedor para una experiencia responsive más consistente en móvil y escritorio, sin cambios funcionales en acciones ni datos.
+
 ## [1.8.2] - 2026-03-13
 
 ### Fixed

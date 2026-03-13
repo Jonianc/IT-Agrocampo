@@ -1,13 +1,172 @@
-body.agp-pv-observations-standalone { font-family: Arial, sans-serif; background:#f6f7fb; margin:0; }
-.agp-pv-observations-wrap { max-width:1200px; margin:24px auto; background:#fff; padding:20px; border-radius:10px; }
-.agp-pv-observations-header h1 { margin:0 0 6px; }
-.agp-pv-observations-filters { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin:16px 0; }
-.agp-pv-observations-filters label { display:flex; flex-direction:column; font-size:13px; gap:4px; }
-.agp-pv-observations-filters input, .agp-pv-observations-filters select { min-width:220px; padding:8px; }
-.agp-pv-link-reset { text-decoration:none; }
-.agp-pv-observations-table { width:100%; border-collapse:collapse; font-size:14px; }
-.agp-pv-observations-table th, .agp-pv-observations-table td { border:1px solid #d9dbe3; padding:8px; vertical-align:top; }
-.agp-pv-observations-table th { background:#eef2ff; }
-.agp-pv-notice { padding:10px 12px; border-radius:6px; margin-bottom:12px; }
-.agp-pv-notice-success { background:#e8f7ee; color:#145a32; }
-.agp-pv-notice-error { background:#fdecea; color:#7a1f1f; }
+body.agp-pv-observations-standalone {
+    font-family: Arial, sans-serif;
+    background: #f6f7fb;
+    margin: 0;
+    color: #1f2937;
+}
+
+.agp-pv-observations-wrap {
+    max-width: 1200px;
+    margin: 24px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 6px 16px rgba(31, 41, 55, 0.06);
+}
+
+.agp-pv-observations-header h1 {
+    margin: 0 0 6px;
+}
+
+.agp-pv-observations-filters {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin: 16px 0;
+    padding: 12px;
+    background: #f8faff;
+    border: 1px solid #dbe4ff;
+    border-radius: 8px;
+}
+
+.agp-pv-observations-filters label {
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    gap: 4px;
+    font-weight: 600;
+    color: #1f3f8f;
+}
+
+.agp-pv-observations-filters input,
+.agp-pv-observations-filters select {
+    min-width: 220px;
+    padding: 8px;
+    border: 1px solid #c9d3eb;
+    border-radius: 6px;
+    background: #fff;
+}
+
+.agp-pv-observations-filters button {
+    min-height: 36px;
+    border: 0;
+    border-radius: 6px;
+    padding: 0 14px;
+    background: #1f3f8f;
+    color: #fff;
+    cursor: pointer;
+}
+
+.agp-pv-link-reset {
+    text-decoration: none;
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.agp-pv-observations-table-scroll {
+    border: 1px solid #d9dbe3;
+    border-radius: 8px;
+    overflow: auto;
+    max-width: 100%;
+    background: #fff;
+}
+
+.agp-pv-observations-table {
+    width: 100%;
+    min-width: 980px;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+}
+
+.agp-pv-observations-table th,
+.agp-pv-observations-table td {
+    border-bottom: 1px solid #d9dbe3;
+    border-right: 1px solid #eceef3;
+    padding: 10px;
+    vertical-align: top;
+    background: #fff;
+}
+
+.agp-pv-observations-table th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #eef2ff;
+    text-align: left;
+}
+
+.agp-pv-observations-table th:last-child,
+.agp-pv-observations-table td:last-child {
+    border-right: 0;
+}
+
+.agp-pv-observations-table tr:last-child td {
+    border-bottom: 0;
+}
+
+.agp-pv-observations-table td:nth-child(1) {
+    min-width: 88px;
+}
+
+.agp-pv-observations-table td:nth-child(2),
+.agp-pv-observations-table td:nth-child(3) {
+    min-width: 150px;
+}
+
+.agp-pv-observations-table td:nth-child(4) {
+    min-width: 280px;
+}
+
+.agp-pv-observations-table td:nth-child(5),
+.agp-pv-observations-table td:nth-child(6),
+.agp-pv-observations-table td:nth-child(7) {
+    min-width: 150px;
+}
+
+.agp-pv-observations-table td:nth-child(8),
+.agp-pv-observations-table td:nth-child(9) {
+    min-width: 120px;
+}
+
+.agp-pv-observations-table-scroll:focus {
+    outline: 2px solid #1f3f8f;
+    outline-offset: 1px;
+}
+
+.agp-pv-notice {
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+
+.agp-pv-notice-success {
+    background: #e8f7ee;
+    color: #145a32;
+}
+
+.agp-pv-notice-error {
+    background: #fdecea;
+    color: #7a1f1f;
+}
+
+@media (max-width: 767px) {
+    .agp-pv-observations-wrap {
+        margin: 12px;
+        padding: 14px;
+    }
+
+    .agp-pv-observations-filters {
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .agp-pv-observations-filters label,
+    .agp-pv-observations-filters input,
+    .agp-pv-observations-filters select,
+    .agp-pv-observations-filters button {
+        width: 100%;
+    }
+}
