@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.8.2] - 2026-03-13
+
+### Fixed
+- El gestor frontend de observaciones excluye registros con `observaciones` vacías y también valores legacy `'NULL'` (incluyendo variantes con espacios/case).
+- En la tabla frontend, cuando una observación viene con marcador legacy `'NULL'`, se renderiza como vacío (`—`) en lugar de mostrar el texto literal.
+
 ## [1.8.1] - 2026-03-13
 
 ### Changed

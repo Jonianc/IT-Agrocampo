@@ -9,7 +9,10 @@ $table = AGP_PV_DB::table_name();
 $search = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
 $review_status = isset( $_GET['review_status'] ) ? sanitize_key( wp_unslash( $_GET['review_status'] ) ) : '';
 
-$clauses = array( "COALESCE(TRIM(observaciones), '') <> ''" );
+$clauses = array(
+    "COALESCE(TRIM(observaciones), '') <> ''",
+    "UPPER(TRIM(COALESCE(observaciones, ''))) <> 'NULL'",
+);
 $values = array();
 
 if ( '' !== $search ) {
@@ -100,6 +103,10 @@ $notice = isset( $_GET['agp_pv_notice'] ) ? sanitize_key( wp_unslash( $_GET['agp
                     $reviewed_at = '—';
                 }
                 $status = (string) ( $row['review_status'] ?? '' );
+                $observaciones = trim( (string) ( $row['observaciones'] ?? '' ) );
+                if ( 'NULL' === strtoupper( $observaciones ) ) {
+                    $observaciones = '';
+                }
                 $view_pdf_url = wp_nonce_url(
                     admin_url( 'admin.php?page=agp-pv-observations&view=' . $submission_id ),
                     'agp_pv_view_pdf_' . $submission_id
@@ -109,7 +116,7 @@ $notice = isset( $_GET['agp_pv_notice'] ) ? sanitize_key( wp_unslash( $_GET['agp
                     <td><?php echo esc_html( (string) $visible_id ); ?></td>
                     <td><?php echo esc_html( (string) ( $row['tecnico'] ?? '' ) ); ?></td>
                     <td><?php echo esc_html( (string) ( $row['cliente'] ?? '' ) ); ?></td>
-                    <td><?php echo esc_html( (string) ( $row['observaciones'] ?? '' ) ); ?></td>
+                    <td><?php echo '' !== $observaciones ? esc_html( $observaciones ) : '&mdash;'; ?></td>
                     <td><?php echo esc_html( 'pending_review' === $status ? __( 'Pendiente de revisión', 'agrocampo-post-venta' ) : ( 'reviewed' === $status ? __( 'Revisado', 'agrocampo-post-venta' ) : $status ) ); ?></td>
                     <td><?php echo esc_html( (string) $reviewer ); ?></td>
                     <td><?php echo esc_html( $reviewed_at ); ?></td>
