@@ -522,6 +522,8 @@ class AGP_PV_Ajax {
         global $wpdb;
         $table = AGP_PV_DB::table_name();
         $now = current_time( 'mysql' );
+        $has_observaciones = '' !== trim( (string) ( $data['observaciones'] ?? '' ) );
+        $review_status = $has_observaciones ? 'pending_review' : 'not_required';
         $lock_name = $this->get_report_id_lock_name();
         $should_release_lock = false;
 
@@ -572,6 +574,7 @@ class AGP_PV_Ajax {
                 'mail_status' => 'pending',
                 'mail_error' => '',
                 'mail_last_attempt_at' => null,
+                'review_status' => $review_status,
                 'created_at' => $now,
                 'updated_at' => $now,
             ),
@@ -614,6 +617,7 @@ class AGP_PV_Ajax {
                 '%s', // mail_status
                 '%s', // mail_error
                 '%s', // mail_last_attempt_at
+                '%s', // review_status
                 '%s', // created_at
                 '%s', // updated_at
             )

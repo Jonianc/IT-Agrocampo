@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0] - 2026-03-13
+
+### Added
+- Se agrega estado de revisión interna por informe (`review_status`) con soporte de valores `not_required`, `pending_review` y `reviewed`.
+
+### Changed
+- Al guardar envíos nuevos, el informe queda automáticamente en `pending_review` cuando `Observaciones` contiene texto no vacío (trim); si no contiene, se guarda como `not_required`.
+
 ## [1.4.89] - 2026-03-06
 
 ### Changed

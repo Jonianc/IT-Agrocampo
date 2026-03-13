@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class AGP_PV_DB {
-    public const VERSION = '1.5.1';
+    public const VERSION = '1.5.2';
     public const OPTION_KEY = 'agp_pv_db_version';
 
     public static function table_name(): string {
@@ -66,6 +66,7 @@ class AGP_PV_DB {
             mail_status VARCHAR(20) DEFAULT 'pending',
             mail_error VARCHAR(255) DEFAULT '',
             mail_last_attempt_at DATETIME NULL,
+            review_status VARCHAR(20) DEFAULT 'not_required',
             created_at DATETIME NOT NULL,
             updated_at DATETIME NOT NULL,
             PRIMARY KEY  (id),
