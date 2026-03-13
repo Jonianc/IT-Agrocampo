@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.8.0] - 2026-03-13
+
+### Added
+- Se agrega gestor de observaciones en frontend standalone sin theme bajo slug `/post-venta-observaciones/`.
+- El gestor frontend permite filtrar por búsqueda/estado de revisión y marcar informes como revisados manteniendo trazabilidad (`review_status`, `reviewed_by`, `reviewed_at`).
+
+### Changed
+- Se añade atajo en administración para abrir el gestor frontend de observaciones directamente desde los gestores internos.
+
 ## [1.7.0] - 2026-03-13
 
 ### Added

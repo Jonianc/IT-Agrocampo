@@ -92,6 +92,7 @@ class AGP_PV_Admin {
         echo '<div class="wrap agp-pv-admin">';
         echo '<h1>' . esc_html__( 'Gestor de informes técnicos', 'agrocampo-post-venta' ) . '</h1>';
         echo '<p class="description">' . esc_html__( 'Busca, filtra y ejecuta acciones sobre los informes enviados.', 'agrocampo-post-venta' ) . '</p>';
+        echo '<p><a class="button button-secondary" href="' . esc_url( AGP_PV_Plugin::observations_standalone_url() ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Abrir gestor frontend de observaciones', 'agrocampo-post-venta' ) . '</a></p>';
 
         $this->render_admin_notice();
 
@@ -130,6 +131,7 @@ class AGP_PV_Admin {
         echo '<div class="wrap agp-pv-admin">';
         echo '<h1>' . esc_html__( 'Gestor de informes con observaciones', 'agrocampo-post-venta' ) . '</h1>';
         echo '<p class="description">' . esc_html__( 'Administra informes que incluyen observaciones y marca su revisión administrativa.', 'agrocampo-post-venta' ) . '</p>';
+        echo '<p><a class="button button-secondary" href="' . esc_url( AGP_PV_Plugin::observations_standalone_url() ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Abrir gestor frontend sin theme', 'agrocampo-post-venta' ) . '</a></p>';
 
         $this->render_admin_notice();
 

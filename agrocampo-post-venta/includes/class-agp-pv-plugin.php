@@ -113,12 +113,18 @@ class AGP_PV_Plugin {
 
     public function register_rewrite(): void {
         add_rewrite_rule( '^post-venta/?$', 'index.php?agp_pv_standalone=1', 'top' );
+        add_rewrite_rule( '^post-venta-observaciones/?$', 'index.php?agp_pv_observations_standalone=1', 'top' );
     }
 
     public function register_query_var( array $vars ): array {
         $vars[] = 'agp_pv_standalone';
         $vars[] = 'agp_pv_manifest';
+        $vars[] = 'agp_pv_observations_standalone';
         return $vars;
+    }
+
+    public static function observations_standalone_url(): string {
+        return home_url( '/post-venta-observaciones/' );
     }
 
     private function is_manifest_request(): bool {
@@ -180,12 +186,80 @@ class AGP_PV_Plugin {
         return '1' === get_query_var( 'agp_pv_standalone' );
     }
 
+    public function is_observations_standalone(): bool {
+        return '1' === get_query_var( 'agp_pv_observations_standalone' );
+    }
+
+    private function process_observations_review_action(): void {
+        if ( ! isset( $_POST['agp_pv_front_action'] ) ) {
+            return;
+        }
+
+        $action = sanitize_key( wp_unslash( $_POST['agp_pv_front_action'] ) );
+        if ( 'mark_reviewed' !== $action ) {
+            return;
+        }
+
+        if ( ! check_admin_referer( 'agp_pv_front_mark_reviewed' ) ) {
+            wp_die( esc_html__( 'Solicitud inválida.', 'agrocampo-post-venta' ), esc_html__( 'Acceso denegado', 'agrocampo-post-venta' ), array( 'response' => 403 ) );
+        }
+
+        $submission_id = isset( $_POST['submission_id'] ) ? absint( wp_unslash( $_POST['submission_id'] ) ) : 0;
+        if ( $submission_id <= 0 ) {
+            wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'review_failed', self::observations_standalone_url() ) );
+            exit;
+        }
+
+        global $wpdb;
+        $updated = $wpdb->update(
+            AGP_PV_DB::table_name(),
+            array(
+                'review_status' => 'reviewed',
+                'reviewed_by' => get_current_user_id(),
+                'reviewed_at' => current_time( 'mysql' ),
+                'updated_at' => current_time( 'mysql' ),
+            ),
+            array( 'id' => $submission_id ),
+            array( '%s', '%d', '%s', '%s' ),
+            array( '%d' )
+        );
+
+        if ( false === $updated ) {
+            wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'review_failed', self::observations_standalone_url() ) );
+            exit;
+        }
+
+        wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'review_marked', self::observations_standalone_url() ) );
+        exit;
+    }
+
     public function render_standalone(): void {
         if ( $this->is_manifest_request() ) {
             $this->render_manifest();
         }
 
         if ( ! $this->is_standalone() ) {
+            if ( ! $this->is_observations_standalone() ) {
+                return;
+            }
+
+            if ( ! is_user_logged_in() || ! current_user_can( 'manage_options' ) ) {
+                wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ), esc_html__( 'Acceso denegado', 'agrocampo-post-venta' ), array( 'response' => 403 ) );
+            }
+
+            if ( 'POST' === strtoupper( sanitize_text_field( wp_unslash( (string) ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) ) ) ) {
+                $this->process_observations_review_action();
+            }
+
+            status_header( 200 );
+            nocache_headers();
+
+            $template = AGP_PV_PLUGIN_DIR . 'templates/observations-standalone.php';
+            if ( file_exists( $template ) ) {
+                include $template;
+                exit;
+            }
+
             return;
         }
 
@@ -200,6 +274,17 @@ class AGP_PV_Plugin {
     }
 
     public function enqueue_assets(): void {
+        if ( $this->is_observations_standalone() ) {
+            wp_enqueue_style(
+                'agp-pv-observations-standalone',
+                AGP_PV_PLUGIN_URL . 'assets/css/observations-standalone.css',
+                array(),
+                AGP_PV_VERSION
+            );
+
+            return;
+        }
+
         if ( ! $this->is_standalone() ) {
             return;
         }
