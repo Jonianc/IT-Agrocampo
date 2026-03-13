@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.6.0] - 2026-03-13
+
+### Added
+- Se agrega un gestor independiente en admin para informes con observaciones (`Informe Técnico > Con observaciones`) con listado dedicado.
+- En el gestor de observaciones se incorpora acción por fila `Marcar revisado` para actualizar `review_status` a `reviewed` con `manage_options` + nonce por informe.
+
+### Changed
+- El gestor independiente filtra exclusivamente informes con `Observaciones` no vacías (trim) y permite filtrar por estado de revisión (`pending_review` / `reviewed`).
+- Las acciones por fila y redirecciones de notices preservan el contexto del gestor desde el que se ejecutan (`general` u `observaciones`).
+
 ## [1.5.0] - 2026-03-13
 
 ### Added
