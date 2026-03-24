@@ -327,6 +327,8 @@ body.agp-pv-observations-standalone {
 
 .agp-pv-status-tab.is-overdue {
     background: #ffe3de;
+    color: #8f2718;
+    border-color: #efb2a8;
 }
 
 .agp-pv-status-tab.is-overdue strong {
@@ -337,6 +339,10 @@ body.agp-pv-observations-standalone {
     position: relative;
     z-index: 1;
     box-shadow: 0 -3px 0 0 var(--agp-blue) inset;
+}
+
+.agp-pv-status-tab.is-active.is-overdue {
+    box-shadow: 0 -3px 0 0 #c73420 inset;
 }
 
 .agp-pv-table-panel {
@@ -412,9 +418,10 @@ body.agp-pv-observations-standalone {
 }
 
 .agp-pv-status-pill.is-overdue {
-    background: #ffd9d1;
-    color: #b22f1d;
-    border: 1px solid #ffb3a5;
+    background: #ffd1c6;
+    color: #8f2718;
+    border: 1px solid #ef9d8f;
+    font-weight: 900;
 }
 
 .agp-pv-icon-link {

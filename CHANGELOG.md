@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.9.5] - 2026-03-24
+- Ajuste visual mínimo en el gestor standalone de observaciones para reforzar el estado **Vencidas** en rojo: tab vencidas activo ahora usa acento rojo (sin heredar azul) y badges vencidas elevan contraste para lectura más clara.
+- Cambio acotado a estilos CSS, sin alterar lógica de filtros, conteos, permisos, nonces ni persistencia.
+
 ## [1.9.4] - 2026-03-24
 - Se corrige la lógica de **Pendientes** para que la bandeja, contadores y filtros consideren como no revisado cualquier informe con observación real cuyo `review_status` no sea `reviewed`, manteniendo compatibilidad con históricos que quedaron sin estado útil.
 - La vista standalone actualiza tabs y resumen: **Pendientes** pasa a alerta amarilla más visible, **Vencidas** refuerza el rojo y ambas muestran correctamente los informes pendientes vencidos con badge en la fila.
