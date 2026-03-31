@@ -1,3 +1,7 @@
+## [1.10.16] - 2026-03-31
+- se corrige bloqueo de submit en desktop por validación de campos no enfocables en pasos ocultos (`trabajos_realizados`/`observaciones`).
+- `Trabajos realizados` ahora permite enviar correctamente con el límite exacto (`455/455`) sin invalidación artificial del contador.
+
 ## [1.10.15] - 2026-03-31
 - fix preventivo en frontend para desktop: se robustece la actualización visual del bloque "Estado de la máquina" para no bloquear el flujo de submit si faltan nodos UI esperados.
 - el botón Enviar mantiene comportamiento operativo aunque el bloque de badge/resumen no esté presente o llegue incompleto por caché.

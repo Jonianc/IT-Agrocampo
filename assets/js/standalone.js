@@ -904,6 +904,18 @@ function initPhotos() {
         return false;
     }
 
+    function clearDetalleMinimumConstraint() {
+        var $trabajos = $('#agp-pv-trabajos');
+        var $observaciones = $('#agp-pv-observaciones');
+
+        if ($trabajos.length) {
+            $trabajos.get(0).setCustomValidity('');
+        }
+        if ($observaciones.length) {
+            $observaciones.get(0).setCustomValidity('');
+        }
+    }
+
 
     function initStepper() {
         var $steps = $('.agp-pv-step');
@@ -1545,8 +1557,9 @@ function initPhotos() {
                 $field.val(val);
             }
 
-            var remaining = max - val.length;
-            var used = val.length;
+            var effectiveLength = val.replace(/\n/g, '\r\n').length;
+            var remaining = max - effectiveLength;
+            var used = effectiveLength;
             var counterFormat = String($field.data('maxlengthFormat') || 'remaining');
             var $counter = $('[data-maxlength-counter="' + key + '"]');
             if ($counter.length) {
@@ -1558,11 +1571,8 @@ function initPhotos() {
                 $counter.toggleClass('is-limit-near', remaining <= 10);
             }
 
-            if (remaining <= 0) {
-                $field.get(0).setCustomValidity(formatMessage(getMessage('fieldMaxReachedTemplate', 'Has alcanzado el máximo de %d caracteres.'), [max]));
-            } else {
-                $field.get(0).setCustomValidity('');
-            }
+            // No bloquear submit en límite exacto: maxlength nativo ya controla exceso.
+            $field.get(0).setCustomValidity('');
         }
 
         $form.find('[data-maxlength-target]').each(function () {
@@ -2057,7 +2067,12 @@ function initPhotos() {
 
             // Native validation first (works with conditional disable)
             var formEl = this;
-            syncDetalleMinimumConstraint(false);
+            var isDetalleStepActive = $('[data-step="2"]').hasClass('is-active');
+            if (isDetalleStepActive) {
+                syncDetalleMinimumConstraint(false);
+            } else {
+                clearDetalleMinimumConstraint();
+            }
             if (typeof formEl.checkValidity === 'function' && !formEl.checkValidity()) {
                 if (typeof formEl.reportValidity === 'function') {
                     formEl.reportValidity();
