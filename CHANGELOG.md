@@ -1,3 +1,7 @@
+## [1.10.11] - 2026-03-31
+- se agrega feedback visual por estado en el bloque "Estado de la máquina" (operativo/detenido/operativo con pendiente) mediante acentos de color.
+- el bloque usa clase por selección en frontend para mejorar lectura rápida sin alterar validación ni persistencia.
+
 ## [1.10.10] - 2026-03-31
 - se agrega microcopy contextual en "Fecha a contactar", visible solo cuando el estado es "Operativo con pendiente".
 - la ayuda contextual se oculta automáticamente en los demás estados, manteniendo lógica y validación existentes.

@@ -235,11 +235,23 @@
         var $garantiaFields = $('[data-condition="garantia"]');
         var $fechaContactoField = $('[data-condition="fecha-contacto"]');
         var $machineStatusHelp = $('[data-machine-status-help]');
+        var $machineStatusBlock = $('[data-machine-status-block]');
 
         function updateConditions() {
             var tipoServicio = $tipoServicio.val();
             var tipoMantencion = $tipoMantencion.val();
             var machineStatus = $machineStatus.val();
+
+            $machineStatusBlock.removeClass('is-operativo is-detenido is-operativo-con-pendiente is-status-empty');
+            if (machineStatus === 'operativo') {
+                $machineStatusBlock.addClass('is-operativo');
+            } else if (machineStatus === 'detenido') {
+                $machineStatusBlock.addClass('is-detenido');
+            } else if (machineStatus === 'operativo_con_pendiente') {
+                $machineStatusBlock.addClass('is-operativo-con-pendiente');
+            } else {
+                $machineStatusBlock.addClass('is-status-empty');
+            }
 
             // Fecha: required unless Garantia
             setVisibility($fechaField, tipoServicio !== 'two');

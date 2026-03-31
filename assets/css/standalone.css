@@ -659,6 +659,38 @@
     color: #7c2d12;
 }
 
+.agp-pv-machine-status-block.is-status-empty {
+    border-color: #fed7aa;
+    border-left-color: #ea580c;
+    background: #fff7ed;
+}
+
+.agp-pv-machine-status-block.is-operativo {
+    border-color: #bbf7d0;
+    border-left-color: #15803d;
+    background: #f0fdf4;
+}
+
+.agp-pv-machine-status-block.is-operativo label {
+    color: #14532d;
+}
+
+.agp-pv-machine-status-block.is-detenido {
+    border-color: #fecaca;
+    border-left-color: #b91c1c;
+    background: #fef2f2;
+}
+
+.agp-pv-machine-status-block.is-detenido label {
+    color: #7f1d1d;
+}
+
+.agp-pv-machine-status-block.is-operativo-con-pendiente {
+    border-color: #fed7aa;
+    border-left-color: #c2410c;
+    background: #fff7ed;
+}
+
 .agp-pv-grid--machine-status {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
