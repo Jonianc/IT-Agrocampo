@@ -109,6 +109,7 @@ $render_machine_status_block = static function () use ( $machine_status_options,
                     <label for="agp-pv-faena"><?php esc_html_e( 'Faena Lugar', 'agrocampo-post-venta' ); ?></label>
                     <input id="agp-pv-faena" name="faena_lugar" type="text" maxlength="80" data-maxlength-target="faena_lugar" autocomplete="street-address" autocapitalize="sentences">
                     <small class="agp-pv-help agp-pv-charcount" data-maxlength-counter="faena_lugar"></small>
+                    <span class="agp-pv-error" data-error-for="faena_lugar"></span>
                 </div>
                 <div class="agp-pv-field">
                     <label for="agp-pv-maquina"><?php esc_html_e( 'Máquina', 'agrocampo-post-venta' ); ?> *</label>
@@ -259,6 +260,13 @@ $render_machine_status_block = static function () use ( $machine_status_options,
         <div class="agp-pv-step" data-step="3" hidden>
             <h2 class="agp-pv-section-title"><?php esc_html_e( 'Firmas', 'agrocampo-post-venta' ); ?></h2>
 
+            <div class="agp-pv-field" data-condition="garantia">
+                <label for="agp-pv-jefe-taller"><?php esc_html_e( 'Nombre Jefe de Taller', 'agrocampo-post-venta' ); ?> *</label>
+                <input id="agp-pv-jefe-taller" name="jefe_taller_nombre" type="text" required maxlength="80" data-maxlength-target="jefe_taller_nombre" autocomplete="name" autocapitalize="words">
+                <small class="agp-pv-help agp-pv-charcount" data-maxlength-counter="jefe_taller_nombre"></small>
+                <span class="agp-pv-error" data-error-for="jefe_taller_nombre"></span>
+            </div>
+
             <div class="agp-pv-field">
                 <label><?php esc_html_e( 'Firma Cliente', 'agrocampo-post-venta' ); ?></label>
                 <div class="agp-pv-signature" data-signature="cliente">
@@ -277,6 +285,16 @@ $render_machine_status_block = static function () use ( $machine_status_options,
                     <button type="button" class="agp-pv-signature-clear" data-signature-clear="tecnico"><?php esc_html_e( 'Limpiar', 'agrocampo-post-venta' ); ?></button>
                 </div>
                 <input type="hidden" name="firma_tecnico" id="agp-pv-firma-tecnico">
+            </div>
+
+            <div class="agp-pv-field" data-condition="garantia">
+                <label><?php esc_html_e( 'Firma Jefe de Taller', 'agrocampo-post-venta' ); ?> *</label>
+                <div class="agp-pv-signature" data-signature="jefe_taller">
+                    <canvas width="600" height="200"></canvas>
+                    <div class="agp-pv-signature-hint"><?php esc_html_e( 'Firme aquí', 'agrocampo-post-venta' ); ?></div>
+                    <button type="button" class="agp-pv-signature-clear" data-signature-clear="jefe_taller"><?php esc_html_e( 'Limpiar', 'agrocampo-post-venta' ); ?></button>
+                </div>
+                <input type="hidden" name="firma_jefe_taller" id="agp-pv-firma-jefe-taller">
             </div>
 
             <div class="agp-pv-step-actions">

@@ -1,3 +1,8 @@
+## [1.10.18] - 2026-03-31
+- para tipo de servicio Garantía ahora son obligatorios `Faena Lugar`, `Nombre Jefe de Taller` y `Firma Jefe de Taller`.
+- se agrega persistencia de `jefe_taller_nombre` y `firma_jefe_taller_id` en base de datos, junto con guardado de firma en frontend/backend.
+- el correo del informe incluye enlace a `Firma Jefe de Taller` cuando existe.
+
 ## [1.10.17] - 2026-03-31
 - en activación del plugin ahora se registran explícitamente las reglas `post-venta` y `post-venta-observaciones` antes de `flush_rewrite_rules()`.
 - evita tener que guardar manualmente los enlaces permanentes tras instalación para habilitar las rutas standalone.

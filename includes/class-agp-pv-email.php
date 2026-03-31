@@ -175,6 +175,9 @@ class AGP_PV_Email {
         if ( ! empty( $submission['firma_tecnico_id'] ) ) {
             $links[] = '<a href="' . esc_url( wp_get_attachment_url( $submission['firma_tecnico_id'] ) ) . '">Firma Técnico</a>';
         }
+        if ( ! empty( $submission['firma_jefe_taller_id'] ) ) {
+            $links[] = '<a href="' . esc_url( wp_get_attachment_url( $submission['firma_jefe_taller_id'] ) ) . '">Firma Jefe de Taller</a>';
+        }
 
         $fotos = json_decode( (string) $submission['fotos_ids'], true );
         if ( is_array( $fotos ) ) {

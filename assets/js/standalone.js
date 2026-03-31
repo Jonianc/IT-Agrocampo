@@ -221,6 +221,8 @@
             $('#agp-pv-firma-cliente').val('');
         } else if (type === 'tecnico') {
             $('#agp-pv-firma-tecnico').val('');
+        } else if (type === 'jefe_taller') {
+            $('#agp-pv-firma-jefe-taller').val('');
         }
     }
 
@@ -280,6 +282,8 @@
             if (tipoServicio !== 'two') {
                 // clear tecnico signature when not in garantia mode
                 clearSignature($('.agp-pv-signature[data-signature="tecnico"]'));
+                clearSignature($('.agp-pv-signature[data-signature="jefe_taller"]'));
+                $('#agp-pv-jefe-taller').val('');
             }
 
             // Tipo mantencion only for Interno
@@ -455,9 +459,11 @@
     function collectSignatureData() {
         var $clienteWrap = $('.agp-pv-signature[data-signature="cliente"]');
         var $tecnicoWrap = $('.agp-pv-signature[data-signature="tecnico"]');
+        var $jefeTallerWrap = $('.agp-pv-signature[data-signature="jefe_taller"]');
 
         var clienteCanvas = $clienteWrap.find('canvas').get(0);
         var tecnicoCanvas = $tecnicoWrap.find('canvas').get(0);
+        var jefeTallerCanvas = $jefeTallerWrap.find('canvas').get(0);
 
         if (clienteCanvas && $clienteWrap.hasClass('has-signature')) {
             $('#agp-pv-firma-cliente').val(clienteCanvas.toDataURL('image/png'));
@@ -470,6 +476,13 @@
             $('#agp-pv-firma-tecnico').val(tecnicoCanvas.toDataURL('image/png'));
         } else {
             $('#agp-pv-firma-tecnico').val('');
+        }
+
+        var jefeTallerVisible = jefeTallerCanvas && !$jefeTallerWrap.closest('[data-condition="garantia"]').is(':hidden');
+        if (jefeTallerVisible && $jefeTallerWrap.hasClass('has-signature')) {
+            $('#agp-pv-firma-jefe-taller').val(jefeTallerCanvas.toDataURL('image/png'));
+        } else {
+            $('#agp-pv-firma-jefe-taller').val('');
         }
     }
 
@@ -938,6 +951,7 @@ function initPhotos() {
                 || name === 'agp_pv_hp'
                 || name === 'firma_cliente'
                 || name === 'firma_tecnico'
+                || name === 'firma_jefe_taller'
                 || name === 'fotos[]'
             ) {
                 return false;
@@ -1285,6 +1299,7 @@ function initPhotos() {
                 || name === 'agp_pv_hp'
                 || name === 'firma_cliente'
                 || name === 'firma_tecnico'
+                || name === 'firma_jefe_taller'
                 || name === 'fotos[]'
             ) {
                 return false;
@@ -2146,6 +2161,7 @@ function initPhotos() {
                         // Clear signatures and previews
                         clearSignature($('.agp-pv-signature[data-signature="cliente"]'));
                         clearSignature($('.agp-pv-signature[data-signature="tecnico"]'));
+                        clearSignature($('.agp-pv-signature[data-signature="jefe_taller"]'));
 
                         var resetPhotos = $('#agp-pv-fotos').data('agpPvReset');
                         if (typeof resetPhotos === 'function') {

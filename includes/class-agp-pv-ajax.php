@@ -115,7 +115,7 @@ class AGP_PV_Ajax {
             wp_send_json_error( array( 'message' => $upload_result['message'] ) );
         }
 
-        $signature_result = $this->handle_signatures();
+        $signature_result = $this->handle_signatures( (string) $data['tipo_servicio'] );
         if ( ! $signature_result['success'] ) {
             $this->log_submit_event( 'signatures_failed' );
             wp_send_json_error( array( 'message' => $signature_result['message'] ) );
@@ -123,6 +123,7 @@ class AGP_PV_Ajax {
 
         $data['firma_cliente_id'] = $signature_result['firma_cliente_id'];
         $data['firma_tecnico_id'] = $signature_result['firma_tecnico_id'];
+        $data['firma_jefe_taller_id'] = $signature_result['firma_jefe_taller_id'];
         $data['fotos_ids'] = wp_json_encode( $upload_result['fotos_ids'] );
 
         $insert_result = $this->insert_submission( $data );
@@ -200,6 +201,7 @@ class AGP_PV_Ajax {
             'cliente' => sanitize_text_field( $raw['cliente'] ?? '' ),
             'email_cliente' => sanitize_email( $raw['email_cliente'] ?? '' ),
             'faena_lugar' => sanitize_text_field( $raw['faena_lugar'] ?? '' ),
+            'jefe_taller_nombre' => sanitize_text_field( $raw['jefe_taller_nombre'] ?? '' ),
             'maquina' => sanitize_text_field( $raw['maquina'] ?? '' ),
             'modelo' => sanitize_text_field( $raw['modelo'] ?? '' ),
             'serie' => sanitize_text_field( $raw['serie'] ?? '' ),
@@ -266,6 +268,14 @@ class AGP_PV_Ajax {
             $errors['fecha_reparacion'] = __( 'Fecha Reparación es obligatorio.', 'agrocampo-post-venta' );
         }
 
+        if ( 'two' === $data['tipo_servicio'] && '' === $data['faena_lugar'] ) {
+            $errors['faena_lugar'] = __( 'Faena Lugar es obligatorio para Garantía.', 'agrocampo-post-venta' );
+        }
+
+        if ( 'two' === $data['tipo_servicio'] && '' === $data['jefe_taller_nombre'] ) {
+            $errors['jefe_taller_nombre'] = __( 'Nombre Jefe de Taller es obligatorio para Garantía.', 'agrocampo-post-venta' );
+        }
+
         $allowed_machine_statuses = array_keys( AGP_PV_Plugin::get_machine_status_options() );
         if ( '' !== $data['estado_maquina'] && ! in_array( $data['estado_maquina'], $allowed_machine_statuses, true ) ) {
             $errors['estado_maquina'] = __( 'Selecciona un estado de la máquina válido.', 'agrocampo-post-venta' );
@@ -289,6 +299,7 @@ class AGP_PV_Ajax {
         $max_lengths = array(
             'cliente' => 80,
             'faena_lugar' => 80,
+            'jefe_taller_nombre' => 80,
             'maquina' => 50,
             'modelo' => 50,
             'serie' => 60,
@@ -350,16 +361,18 @@ class AGP_PV_Ajax {
         return $map[ $value ] ?? $value;
     }
 
-    private function handle_signatures(): array {
+    private function handle_signatures( string $tipo_servicio = '' ): array {
         $result = array(
             'success' => true,
             'message' => '',
             'firma_cliente_id' => 0,
             'firma_tecnico_id' => 0,
+            'firma_jefe_taller_id' => 0,
         );
 
         $firma_cliente = $this->normalize_signature_data_url( $_POST['firma_cliente'] ?? '' );
         $firma_tecnico = $this->normalize_signature_data_url( $_POST['firma_tecnico'] ?? '' );
+        $firma_jefe_taller = $this->normalize_signature_data_url( $_POST['firma_jefe_taller'] ?? '' );
 
         if ( $firma_cliente ) {
             $result['firma_cliente_id'] = $this->store_signature( $firma_cliente, 'firma-cliente' );
@@ -379,6 +392,23 @@ class AGP_PV_Ajax {
                     'message' => __( 'No se pudo guardar la firma del técnico.', 'agrocampo-post-venta' ),
                 );
             }
+        }
+
+        if ( $firma_jefe_taller ) {
+            $result['firma_jefe_taller_id'] = $this->store_signature( $firma_jefe_taller, 'firma-jefe-taller' );
+            if ( ! $result['firma_jefe_taller_id'] ) {
+                return array(
+                    'success' => false,
+                    'message' => __( 'No se pudo guardar la firma del jefe de taller.', 'agrocampo-post-venta' ),
+                );
+            }
+        }
+
+        if ( 'two' === $tipo_servicio && ! $result['firma_jefe_taller_id'] ) {
+            return array(
+                'success' => false,
+                'message' => __( 'La firma del jefe de taller es obligatoria para Garantía.', 'agrocampo-post-venta' ),
+            );
         }
 
         return $result;
@@ -551,6 +581,7 @@ class AGP_PV_Ajax {
                 'cliente' => $data['cliente'],
                 'email_cliente' => $data['email_cliente'],
                 'faena_lugar' => $data['faena_lugar'],
+                'jefe_taller_nombre' => $data['jefe_taller_nombre'],
                 'maquina' => $data['maquina'],
                 'modelo' => $data['modelo'],
                 'serie' => $data['serie'],
@@ -573,6 +604,7 @@ class AGP_PV_Ajax {
                 'observaciones' => $data['observaciones'],
                 'firma_cliente_id' => $data['firma_cliente_id'],
                 'firma_tecnico_id' => $data['firma_tecnico_id'],
+                'firma_jefe_taller_id' => $data['firma_jefe_taller_id'],
                 'fotos_ids' => $data['fotos_ids'],
                 'pdf_attachment_id' => 0,
                 'pdf_status' => 'pending',
@@ -596,6 +628,7 @@ class AGP_PV_Ajax {
                 '%s', // cliente
                 '%s', // email_cliente
                 '%s', // faena_lugar
+                '%s', // jefe_taller_nombre
                 '%s', // maquina
                 '%s', // modelo
                 '%s', // serie
@@ -618,6 +651,7 @@ class AGP_PV_Ajax {
                 '%s', // observaciones
                 '%d', // firma_cliente_id
                 '%d', // firma_tecnico_id
+                '%d', // firma_jefe_taller_id
                 '%s', // fotos_ids
                 '%d', // pdf_attachment_id
                 '%s', // pdf_status
