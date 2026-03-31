@@ -1,3 +1,7 @@
+## [1.10.12] - 2026-03-31
+- se agrega encabezado compacto en el bloque "Estado de la máquina" con badge del estado seleccionado para lectura rápida.
+- el badge se actualiza dinámicamente en frontend según la selección (incluyendo estado vacío) sin alterar lógica de guardado.
+
 ## [1.10.11] - 2026-03-31
 - se agrega feedback visual por estado en el bloque "Estado de la máquina" (operativo/detenido/operativo con pendiente) mediante acentos de color.
 - el bloque usa clase por selección en frontend para mejorar lectura rápida sin alterar validación ni persistencia.

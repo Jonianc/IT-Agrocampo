@@ -236,11 +236,23 @@
         var $fechaContactoField = $('[data-condition="fecha-contacto"]');
         var $machineStatusHelp = $('[data-machine-status-help]');
         var $machineStatusBlock = $('[data-machine-status-block]');
+        var $machineStatusBadge = $('[data-machine-status-badge]');
 
         function updateConditions() {
             var tipoServicio = $tipoServicio.val();
             var tipoMantencion = $tipoMantencion.val();
             var machineStatus = $machineStatus.val();
+            var statusLabel = $.trim($machineStatus.find('option:selected').text() || '');
+            var defaultStatusLabel = String($machineStatusBadge.data('defaultLabel') || '');
+
+            if (!statusLabel) {
+                statusLabel = defaultStatusLabel;
+            }
+
+            $machineStatusBadge
+                .text(statusLabel)
+                .removeClass('is-operativo is-detenido is-operativo-con-pendiente is-status-empty')
+                .addClass(machineStatus ? 'is-' + machineStatus.replace(/_/g, '-') : 'is-status-empty');
 
             $machineStatusBlock.removeClass('is-operativo is-detenido is-operativo-con-pendiente is-status-empty');
             if (machineStatus === 'operativo') {

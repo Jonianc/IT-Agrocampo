@@ -659,6 +659,61 @@
     color: #7c2d12;
 }
 
+.agp-pv-machine-status-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.agp-pv-machine-status-summary__label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #7c2d12;
+}
+
+.agp-pv-machine-status-summary__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 4px 10px;
+    border: 1px solid #fed7aa;
+    background: #fff;
+    color: #9a3412;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+}
+
+.agp-pv-machine-status-summary__badge.is-operativo {
+    border-color: #86efac;
+    color: #14532d;
+    background: #f0fdf4;
+}
+
+.agp-pv-machine-status-summary__badge.is-detenido {
+    border-color: #fca5a5;
+    color: #7f1d1d;
+    background: #fef2f2;
+}
+
+.agp-pv-machine-status-summary__badge.is-operativo-con-pendiente {
+    border-color: #fdba74;
+    color: #9a3412;
+    background: #fff7ed;
+}
+
+.agp-pv-machine-status-summary__badge.is-status-empty {
+    border-color: #fed7aa;
+    color: #9a3412;
+    background: #fff;
+}
+
 .agp-pv-machine-status-block.is-status-empty {
     border-color: #fed7aa;
     border-left-color: #ea580c;
@@ -730,6 +785,12 @@
 }
 
 @media (max-width: 640px) {
+    .agp-pv-machine-status-summary {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+    }
+
     .agp-pv-machine-status-block {
         padding: 12px;
         border-left-width: 3px;

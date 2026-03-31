@@ -6,10 +6,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $machine_status_position = AGP_PV_Plugin::get_machine_status_field_position();
 $machine_status_options  = AGP_PV_Plugin::get_machine_status_options();
+$machine_status_empty_label = __( 'Sin seleccionar', 'agrocampo-post-venta' );
 
-$render_machine_status_block = static function () use ( $machine_status_options ) {
+$render_machine_status_block = static function () use ( $machine_status_options, $machine_status_empty_label ) {
     ?>
     <div class="agp-pv-machine-status-block" data-machine-status-block>
+        <div class="agp-pv-machine-status-summary" aria-live="polite">
+            <span class="agp-pv-machine-status-summary__label"><?php esc_html_e( 'Estado actual', 'agrocampo-post-venta' ); ?></span>
+            <span class="agp-pv-machine-status-summary__badge is-status-empty" data-machine-status-badge data-default-label="<?php echo esc_attr( $machine_status_empty_label ); ?>"><?php echo esc_html( $machine_status_empty_label ); ?></span>
+        </div>
         <div class="agp-pv-grid agp-pv-grid--machine-status">
             <div class="agp-pv-field">
                 <label for="agp-pv-estado-maquina"><?php esc_html_e( 'Estado de la máquina', 'agrocampo-post-venta' ); ?></label>
