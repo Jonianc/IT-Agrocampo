@@ -320,6 +320,8 @@ class AGP_PV_Plugin {
     public static function activate(): void {
         AGP_PV_DB::maybe_upgrade();
         self::schedule_notification_events();
+        add_rewrite_rule( '^post-venta/?$', 'index.php?agp_pv_standalone=1', 'top' );
+        add_rewrite_rule( '^post-venta-observaciones/?$', 'index.php?agp_pv_observations_standalone=1', 'top' );
         flush_rewrite_rules();
     }
 

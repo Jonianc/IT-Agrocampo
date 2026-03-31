@@ -1,3 +1,7 @@
+## [1.10.17] - 2026-03-31
+- en activación del plugin ahora se registran explícitamente las reglas `post-venta` y `post-venta-observaciones` antes de `flush_rewrite_rules()`.
+- evita tener que guardar manualmente los enlaces permanentes tras instalación para habilitar las rutas standalone.
+
 ## [1.10.16] - 2026-03-31
 - se corrige bloqueo de submit en desktop por validación de campos no enfocables en pasos ocultos (`trabajos_realizados`/`observaciones`).
 - `Trabajos realizados` ahora permite enviar correctamente con el límite exacto (`455/455`) sin invalidación artificial del contador.
