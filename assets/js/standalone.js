@@ -290,12 +290,14 @@
             // Fecha a contactar only for "Operativo con pendiente"
             var showFechaContacto = machineStatus === 'operativo_con_pendiente';
             setVisibility($fechaContactoField, showFechaContacto);
+            $machineStatus.attr('aria-expanded', showFechaContacto ? 'true' : 'false');
+            $fechaContactoField.attr('aria-hidden', showFechaContacto ? 'false' : 'true');
             if (showFechaContacto) {
                 $fechaContactoField.removeAttr('hidden');
-                $machineStatusHelp.removeAttr('hidden');
+                $machineStatusHelp.removeAttr('hidden').attr('aria-hidden', 'false');
             } else {
                 $fechaContactoField.attr('hidden', true);
-                $machineStatusHelp.attr('hidden', true);
+                $machineStatusHelp.attr('hidden', true).attr('aria-hidden', 'true');
             }
 
             $('#agp-pv-form').trigger('agpPvConditionsChanged');

@@ -18,7 +18,7 @@ $render_machine_status_block = static function () use ( $machine_status_options,
         <div class="agp-pv-grid agp-pv-grid--machine-status">
             <div class="agp-pv-field">
                 <label for="agp-pv-estado-maquina"><?php esc_html_e( 'Estado de la máquina', 'agrocampo-post-venta' ); ?></label>
-                <select id="agp-pv-estado-maquina" name="estado_maquina" autocomplete="off">
+                <select id="agp-pv-estado-maquina" name="estado_maquina" autocomplete="off" aria-controls="agp-pv-fecha-contacto-wrap" aria-expanded="false">
                     <option value=""><?php esc_html_e( 'Seleccionar', 'agrocampo-post-venta' ); ?></option>
                     <?php foreach ( $machine_status_options as $status_key => $status_label ) : ?>
                         <option value="<?php echo esc_attr( $status_key ); ?>"><?php echo esc_html( $status_label ); ?></option>
@@ -26,10 +26,10 @@ $render_machine_status_block = static function () use ( $machine_status_options,
                 </select>
                 <span class="agp-pv-error" data-error-for="estado_maquina"></span>
             </div>
-            <div class="agp-pv-field" data-condition="fecha-contacto" hidden>
+            <div id="agp-pv-fecha-contacto-wrap" class="agp-pv-field" data-condition="fecha-contacto" aria-hidden="true" hidden>
                 <label for="agp-pv-fecha-contacto"><?php esc_html_e( 'Fecha a contactar', 'agrocampo-post-venta' ); ?> *</label>
-                <input id="agp-pv-fecha-contacto" name="fecha_contacto" type="date" autocomplete="off" disabled>
-                <small class="agp-pv-help" data-machine-status-help hidden><?php esc_html_e( 'Este campo es obligatorio solo cuando el estado es “Operativo con pendiente”.', 'agrocampo-post-venta' ); ?></small>
+                <input id="agp-pv-fecha-contacto" name="fecha_contacto" type="date" autocomplete="off" aria-describedby="agp-pv-fecha-contacto-help" disabled>
+                <small id="agp-pv-fecha-contacto-help" class="agp-pv-help" data-machine-status-help aria-live="polite" aria-hidden="true" hidden><?php esc_html_e( 'Este campo es obligatorio solo cuando el estado es “Operativo con pendiente”.', 'agrocampo-post-venta' ); ?></small>
                 <span class="agp-pv-error" data-error-for="fecha_contacto"></span>
             </div>
         </div>

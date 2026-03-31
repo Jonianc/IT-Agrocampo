@@ -1,3 +1,7 @@
+## [1.10.13] - 2026-03-31
+- mejora de accesibilidad ARIA en el bloque "Estado de la máquina": el selector informa `aria-controls` y actualiza `aria-expanded` según visibilidad de "Fecha a contactar".
+- el campo condicional y su ayuda contextual ahora sincronizan `aria-hidden` para entregar contexto más claro a navegación asistiva.
+
 ## [1.10.12] - 2026-03-31
 - se agrega encabezado compacto en el bloque "Estado de la máquina" con badge del estado seleccionado para lectura rápida.
 - el badge se actualiza dinámicamente en frontend según la selección (incluyendo estado vacío) sin alterar lógica de guardado.
