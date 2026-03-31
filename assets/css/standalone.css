@@ -666,6 +666,10 @@
     align-items: start;
 }
 
+.agp-pv-grid--machine-status .agp-pv-field {
+    margin-bottom: 0;
+}
+
 .agp-pv-grid--machine-status .agp-pv-help {
     color: #9a3412;
     font-size: 12px;
@@ -691,4 +695,15 @@
 .agp-pv-grid--machine-status select:disabled,
 .agp-pv-grid--machine-status input[type="date"]:disabled {
     background: #fffaf5;
+}
+
+@media (max-width: 640px) {
+    .agp-pv-machine-status-block {
+        padding: 12px;
+        border-left-width: 3px;
+    }
+
+    .agp-pv-grid--machine-status {
+        gap: 10px;
+    }
 }

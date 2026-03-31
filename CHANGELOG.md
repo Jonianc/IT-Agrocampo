@@ -1,3 +1,7 @@
+## [1.10.8] - 2026-03-31
+- mejora UI mínima del bloque "Estado de la máquina" en mobile (espaciado interno y separación de campos) para lectura más limpia.
+- se elimina el texto de ayuda "Visible y obligatoria solo para “Operativo con pendiente”." del campo "Fecha a contactar".
+
 ## [1.10.7] - 2026-03-31
 - fix del campo condicional "Fecha a contactar": vuelve a mostrarse al seleccionar "Operativo con pendiente" y se oculta/deshabilita en los demás estados.
 - se mantiene el comportamiento de limpieza del valor al ocultarse, sin cambios en backend ni persistencia.
