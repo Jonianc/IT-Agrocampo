@@ -1,3 +1,7 @@
+## [1.10.9] - 2026-03-31
+- ajuste UI/UX del bloque "Estado de la máquina" en mobile: menor densidad vertical, labels más compactos y controles más proporcionados para mejorar lectura en pantallas chicas.
+- ajuste visual de mensajes de error del bloque en mobile para mantener legibilidad sin aumentar altura innecesaria.
+
 ## [1.10.8] - 2026-03-31
 - mejora UI mínima del bloque "Estado de la máquina" en mobile (espaciado interno y separación de campos) para lectura más limpia.
 - se elimina el texto de ayuda "Visible y obligatoria solo para “Operativo con pendiente”." del campo "Fecha a contactar".

@@ -706,4 +706,26 @@
     .agp-pv-grid--machine-status {
         gap: 10px;
     }
+
+    .agp-pv-grid--machine-status .agp-pv-field {
+        gap: 4px;
+    }
+
+    .agp-pv-grid--machine-status .agp-pv-field label {
+        font-size: 13px;
+        line-height: 1.25;
+    }
+
+    .agp-pv-grid--machine-status select,
+    .agp-pv-grid--machine-status input[type="date"] {
+        min-height: 40px;
+        padding: 8px 10px;
+        font-size: 15px;
+    }
+
+    .agp-pv-grid--machine-status .agp-pv-error {
+        font-size: 12px;
+        line-height: 1.2;
+        min-height: 14px;
+    }
 }
