@@ -1,3 +1,8 @@
+## [1.10.5] - 2026-03-31
+- ajuste visual del bloque "Estado de la máquina" en standalone para mejorar jerarquía y legibilidad (borde de acento, contraste de etiqueta y espaciado).
+- mejora de foco visual en selector de estado y campo de fecha a contactar, sin cambios de lógica ni persistencia.
+- estado deshabilitado de "Fecha a contactar" con estilo más claro para reducir ambigüedad operativa.
+
 ## [1.10.4] - 2026-03-31
 - agregado campo "Estado de la máquina" en el paso Detalle con opciones Operativo, Detenido y Operativo con pendiente.
 - si el estado es "Operativo con pendiente", ahora exige "Fecha a contactar" y la muestra/oculta dinámicamente.

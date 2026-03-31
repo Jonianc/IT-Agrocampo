@@ -646,4 +646,39 @@
     cursor: not-allowed;
 }
 
-.agp-pv-machine-status-block{padding:14px 16px;border:1px solid rgba(15,23,42,.08);border-radius:16px;background:#fff7ed;margin:12px 0 16px}.agp-pv-grid--machine-status{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;align-items:start}
+.agp-pv-machine-status-block {
+    margin: 12px 0 16px;
+    padding: 14px 16px;
+    border: 1px solid #fed7aa;
+    border-left: 4px solid #ea580c;
+    border-radius: 12px;
+    background: #fff7ed;
+}
+
+.agp-pv-machine-status-block label {
+    color: #7c2d12;
+}
+
+.agp-pv-grid--machine-status {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    align-items: start;
+}
+
+.agp-pv-grid--machine-status .agp-pv-help {
+    color: #9a3412;
+    font-size: 12px;
+}
+
+.agp-pv-grid--machine-status select:focus,
+.agp-pv-grid--machine-status input[type="date"]:focus {
+    border-color: #ea580c;
+    box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.15);
+    outline: none;
+}
+
+.agp-pv-grid--machine-status select:disabled,
+.agp-pv-grid--machine-status input[type="date"]:disabled {
+    background: #fffaf5;
+}
