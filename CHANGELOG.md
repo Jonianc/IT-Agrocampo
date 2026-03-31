@@ -1,3 +1,7 @@
+## [1.10.7] - 2026-03-31
+- fix del campo condicional "Fecha a contactar": vuelve a mostrarse al seleccionar "Operativo con pendiente" y se oculta/deshabilita en los demás estados.
+- se mantiene el comportamiento de limpieza del valor al ocultarse, sin cambios en backend ni persistencia.
+
 ## [1.10.6] - 2026-03-31
 - fix visual del bloque "Estado de la máquina": el campo condicional "Fecha a contactar" vuelve a respetar `hidden` cuando no corresponde.
 - ajuste de accesibilidad: se elimina la supresión de `outline` en foco y se mantiene foco visible compatible con `forced-colors/high-contrast`.

@@ -227,15 +227,18 @@
     function initConditionalFields() {
         var $tipoServicio = $('#agp-pv-tipo-servicio');
         var $tipoMantencion = $('#agp-pv-tipo-mantencion');
+        var $machineStatus = $('#agp-pv-estado-maquina');
 
         var $fechaField = $('[data-condition="fecha"]');
         var $mantencionField = $('[data-condition="tipo-mantencion"]');
         var $cantidadHorasField = $('[data-condition="cantidad-horas"]');
         var $garantiaFields = $('[data-condition="garantia"]');
+        var $fechaContactoField = $('[data-condition="fecha-contacto"]');
 
         function updateConditions() {
             var tipoServicio = $tipoServicio.val();
             var tipoMantencion = $tipoMantencion.val();
+            var machineStatus = $machineStatus.val();
 
             // Fecha: required unless Garantia
             setVisibility($fechaField, tipoServicio !== 'two');
@@ -259,6 +262,15 @@
                 $('#agp-pv-cantidad-horas').val('');
             }
 
+            // Fecha a contactar only for "Operativo con pendiente"
+            var showFechaContacto = machineStatus === 'operativo_con_pendiente';
+            setVisibility($fechaContactoField, showFechaContacto);
+            if (showFechaContacto) {
+                $fechaContactoField.removeAttr('hidden');
+            } else {
+                $fechaContactoField.attr('hidden', true);
+            }
+
             $('#agp-pv-form').trigger('agpPvConditionsChanged');
         }
 
@@ -267,6 +279,10 @@
             updateConditions();
         });
         $tipoMantencion.on('change', function () {
+            clearFieldErrors();
+            updateConditions();
+        });
+        $machineStatus.on('change', function () {
             clearFieldErrors();
             updateConditions();
         });
