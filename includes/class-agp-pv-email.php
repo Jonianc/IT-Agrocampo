@@ -92,7 +92,7 @@ class AGP_PV_Email {
             if ( $mail_error instanceof WP_Error ) {
                 $message = $mail_error->get_error_message();
             }
-            $message = wp_strip_all_tags( (string) $message );
+            $message = self::normalize_submission_mail_error_message( wp_strip_all_tags( (string) $message ) );
             AGP_PV_DB::update_mail_status( $submission_id, 'failed', $message );
             return array(
                 'mail_sent' => false,
@@ -111,6 +111,42 @@ class AGP_PV_Email {
         }
 
         return array( 'mail_sent' => true );
+    }
+
+    private static function normalize_submission_mail_error_message( string $message ): string {
+        $clean_message = trim( wp_strip_all_tags( $message ) );
+        if ( '' === $clean_message ) {
+            return __( 'Correo pendiente de envío por un error temporal del proveedor.', 'agrocampo-post-venta' );
+        }
+
+        $normalized = strtolower( $clean_message );
+        $is_rate_limited = false !== strpos( $normalized, 'ratelimit' )
+            || false !== strpos( $normalized, 'rate limit' )
+            || false !== strpos( $normalized, 'ratelimitexceeded' )
+            || false !== strpos( $normalized, 'resource_exhausted' )
+            || false !== strpos( $normalized, 'retry after' )
+            || false !== strpos( $normalized, '429' );
+
+        if ( ! $is_rate_limited ) {
+            return $clean_message;
+        }
+
+        $retry_text = '';
+        if ( 1 === preg_match( '/retry after\\s+([0-9]{4}-[0-9]{2}-[0-9]{2}t[0-9:\\.\\-]+z)/i', $clean_message, $matches ) ) {
+            $retry_at_utc = strtotime( $matches[1] );
+            if ( false !== $retry_at_utc ) {
+                $retry_text = wp_date( 'd/m/Y H:i', $retry_at_utc );
+            }
+        }
+
+        if ( '' !== $retry_text ) {
+            return sprintf(
+                __( 'Correo pendiente de envío por límite temporal del proveedor. Reintenta después de %s.', 'agrocampo-post-venta' ),
+                $retry_text
+            );
+        }
+
+        return __( 'Correo pendiente de envío por límite temporal del proveedor. Reintenta en unos minutos.', 'agrocampo-post-venta' );
     }
 
     public static function build_email_body( int $submission_id, array $submission ): string {

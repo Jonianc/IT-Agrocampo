@@ -1,3 +1,7 @@
+## [1.10.14] - 2026-03-31
+- cuando falla el correo por rate limit (429), el mensaje al usuario ahora indica explícitamente que el informe quedó guardado pero el correo está pendiente de envío.
+- se normaliza el error técnico del proveedor para mostrar un mensaje legible y, cuando existe, la hora sugerida de reintento.
+
 ## [1.10.13] - 2026-03-31
 - mejora de accesibilidad ARIA en el bloque "Estado de la máquina": el selector informa `aria-controls` y actualiza `aria-expanded` según visibilidad de "Fecha a contactar".
 - el campo condicional y su ayuda contextual ahora sincronizan `aria-hidden` para entregar contexto más claro a navegación asistiva.
