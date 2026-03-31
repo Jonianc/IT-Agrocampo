@@ -671,11 +671,21 @@
     font-size: 12px;
 }
 
-.agp-pv-grid--machine-status select:focus,
-.agp-pv-grid--machine-status input[type="date"]:focus {
+.agp-pv-grid--machine-status .agp-pv-field[hidden] {
+    display: none !important;
+}
+
+.agp-pv-grid--machine-status select:focus-visible,
+.agp-pv-grid--machine-status input[type="date"]:focus-visible {
     border-color: #ea580c;
     box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.15);
-    outline: none;
+}
+
+@media (forced-colors: active) {
+    .agp-pv-grid--machine-status select:focus-visible,
+    .agp-pv-grid--machine-status input[type="date"]:focus-visible {
+        box-shadow: none;
+    }
 }
 
 .agp-pv-grid--machine-status select:disabled,

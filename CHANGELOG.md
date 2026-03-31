@@ -1,3 +1,7 @@
+## [1.10.6] - 2026-03-31
+- fix visual del bloque "Estado de la máquina": el campo condicional "Fecha a contactar" vuelve a respetar `hidden` cuando no corresponde.
+- ajuste de accesibilidad: se elimina la supresión de `outline` en foco y se mantiene foco visible compatible con `forced-colors/high-contrast`.
+
 ## [1.10.5] - 2026-03-31
 - ajuste visual del bloque "Estado de la máquina" en standalone para mejorar jerarquía y legibilidad (borde de acento, contraste de etiqueta y espaciado).
 - mejora de foco visual en selector de estado y campo de fecha a contactar, sin cambios de lógica ni persistencia.
