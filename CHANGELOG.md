@@ -1,3 +1,7 @@
+## [1.10.10] - 2026-03-31
+- se agrega microcopy contextual en "Fecha a contactar", visible solo cuando el estado es "Operativo con pendiente".
+- la ayuda contextual se oculta automáticamente en los demás estados, manteniendo lógica y validación existentes.
+
 ## [1.10.9] - 2026-03-31
 - ajuste UI/UX del bloque "Estado de la máquina" en mobile: menor densidad vertical, labels más compactos y controles más proporcionados para mejorar lectura en pantallas chicas.
 - ajuste visual de mensajes de error del bloque en mobile para mantener legibilidad sin aumentar altura innecesaria.

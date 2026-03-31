@@ -24,6 +24,7 @@ $render_machine_status_block = static function () use ( $machine_status_options 
             <div class="agp-pv-field" data-condition="fecha-contacto" hidden>
                 <label for="agp-pv-fecha-contacto"><?php esc_html_e( 'Fecha a contactar', 'agrocampo-post-venta' ); ?> *</label>
                 <input id="agp-pv-fecha-contacto" name="fecha_contacto" type="date" autocomplete="off" disabled>
+                <small class="agp-pv-help" data-machine-status-help hidden><?php esc_html_e( 'Este campo es obligatorio solo cuando el estado es “Operativo con pendiente”.', 'agrocampo-post-venta' ); ?></small>
                 <span class="agp-pv-error" data-error-for="fecha_contacto"></span>
             </div>
         </div>

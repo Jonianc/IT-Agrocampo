@@ -234,6 +234,7 @@
         var $cantidadHorasField = $('[data-condition="cantidad-horas"]');
         var $garantiaFields = $('[data-condition="garantia"]');
         var $fechaContactoField = $('[data-condition="fecha-contacto"]');
+        var $machineStatusHelp = $('[data-machine-status-help]');
 
         function updateConditions() {
             var tipoServicio = $tipoServicio.val();
@@ -267,8 +268,10 @@
             setVisibility($fechaContactoField, showFechaContacto);
             if (showFechaContacto) {
                 $fechaContactoField.removeAttr('hidden');
+                $machineStatusHelp.removeAttr('hidden');
             } else {
                 $fechaContactoField.attr('hidden', true);
+                $machineStatusHelp.attr('hidden', true);
             }
 
             $('#agp-pv-form').trigger('agpPvConditionsChanged');
