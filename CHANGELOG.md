@@ -1,4 +1,55 @@
+## [1.10.4] - 2026-03-31
+- agregado campo "Estado de la máquina" en el paso Detalle con opciones Operativo, Detenido y Operativo con pendiente.
+- si el estado es "Operativo con pendiente", ahora exige "Fecha a contactar" y la muestra/oculta dinámicamente.
+- integrado el nuevo dato en base de datos, admin, exportación CSV compatible, PDF y correo.
+- agregado ajuste para definir la ubicación del bloque dentro del paso Detalle.
+
+## [1.10.3] - 2026-03-26
+- Standalone de observaciones: se corrige el layout de acciones del filtro para que `Descargar reporte` no quede recortado en desktop/intermedios y pueda envolver correctamente sin salirse del panel.
+- La columna final del formulario ahora reparte mejor el espacio disponible y baja las acciones a fila completa antes, evitando overflow visual en resoluciones como la de validación.
+
+## [1.10.2] - 2026-03-26
+- Standalone de observaciones: se agrega botón `Descargar reporte` junto a `Filtrar` y `Limpiar`.
+- La exportación XLSX desde standalone respeta la vista filtrada actual, incluyendo búsqueda, estado y período (`Últimos días` o rango `Desde/Hasta`).
+- En caso de error al exportar desde standalone, el aviso vuelve a la misma vista con mensaje visible.
+
+## [1.10.1] - 2026-03-26
+- Gestor admin de observaciones: la cabecera se vuelve más sobria y explícita, posicionando la vista interna como **panel de respaldo** y recomendando el uso diario del gestor visual/standalone.
+- Se agrega un bloque compacto de orientación (`Ruta recomendada` / `Este admin`) para separar mejor operación diaria versus soporte, sin quitar funciones ni rutas existentes.
+- `Descargar reporte` baja a CTA secundario sobrio dentro del toolbar y el acceso al frontend se renombra a `Abrir gestor visual principal`, reduciendo ruido en admin sin perder fallback técnico.
+
+## [1.10.0] - 2026-03-26
+- Gestor admin de observaciones: se agrega botón **Descargar reporte** junto a `Aplicar filtros / Limpiar`, respetando la vista filtrada actual y el orden activo del listado.
+- Nueva exportación **XLSX real** pensada para usuario final: encabezados legibles, observación completa, estados en texto humano, fechas `dd/mm/aaaa hh:mm` y metadatos de reporte (fecha, filtros aplicados, total exportado).
+- El generador XLSX funciona con `ZipArchive` o fallback `PclZip`, evitando depender de una librería externa pesada para esta primera fase.
+
+## [1.9.9] - 2026-03-26
+- Standalone observaciones: se corrige el contador de **Vencidas** cuando hay filtro por `Desde/Hasta`, eliminando un descalce en el orden de parámetros SQL del resumen.
+- Filtro de período: `Últimos días` queda visualmente atenuado cuando hay rango activo (`Desde/Hasta`) y muestra una nota explícita de que queda sin efecto mientras exista rango.
+- Se mantiene `days` en la URL para conservar contexto, pero ya no induce confusión sobre cuál filtro manda realmente.
+
+## [1.9.8] - 2026-03-26
+- Standalone observaciones: se agrega filtro flexible de período por URL con `Últimos días` y `Desde / Hasta`, priorizando rango personalizado cuando se completa alguna fecha.
+- La bandeja recalcula `Todas`, `Pendientes`, `Resueltas` y `Vencidas` con el período activo, usando fecha de creación para pendientes/vencidas y fecha de revisión para resueltas.
+- Se suman presets rápidos (`Hoy`, `7 días`, `15 días`, `30 días`, `Este mes`, `Mes pasado`) y las acciones de fila ahora conservan el filtro activo al volver desde marcar revisado o agregar observación.
+
+## [1.9.7] - 2026-03-26
+- Standalone observaciones: la columna `Observación` vuelve a mostrar el texto completo directamente en la tabla, eliminando `Ver más` y el diálogo asociado para esa lectura.
+- Standalone observaciones: se quita el fondo amarillo de `Pendientes` en tabs y filas, manteniendo el badge/acentos para conservar jerarquía sin teñir el bloque completo.
+
+## [1.9.6] - 2026-03-26
+- Standalone observaciones: `Gestor interno` pasa a CTA terciario compacto para reducir peso visual en el header.
+- Standalone observaciones: se elimina `Ver PDF` del bloque de acciones y se mantiene solo en la columna `PDF` para evitar redundancia.
+- Standalone observaciones: `Acción` usa botones visibles por fila (`Marcar revisado` / `Agregar observación`) sin menú desplegable inline.
+- Standalone observaciones: `Ver más` ahora abre un diálogo modal y deja de expandir/desordenar la altura de la fila en la tabla.
+- Standalone observaciones: las filas `Vencida` mantienen badge + borde rojo, pero se elimina el fondo rojo permanente para mejorar legibilidad.
+
 # Changelog
+
+## [1.9.5] - 2026-03-24
+- Se refuerza la UI/UX del gestor de observaciones en standalone: header más trabajado, métricas en tarjetas, tabs tipo segment control y corrección visual para que **Vencidas** destaque en rojo también cuando está activa.
+- La tabla frontend mejora lectura y priorización con filas tintadas por estado, badge adicional **Nueva observación**, observaciones truncadas a 2–3 líneas con `Ver más` y menú de acciones por fila.
+- El gestor admin moderniza cabecera, filtros, detalle del informe y tabla interna, agregando preview de observación, menú de acciones, filas con jerarquía visual por estado y mejor separación para pendientes, revisadas y vencidas.
 
 ## [1.9.4] - 2026-03-24
 - Se corrige la lógica de **Pendientes** para que la bandeja, contadores y filtros consideren como no revisado cualquier informe con observación real cuyo `review_status` no sea `reviewed`, manteniendo compatibilidad con históricos que quedaron sin estado útil.

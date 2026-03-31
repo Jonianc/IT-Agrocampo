@@ -4,6 +4,34 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+$machine_status_position = AGP_PV_Plugin::get_machine_status_field_position();
+$machine_status_options  = AGP_PV_Plugin::get_machine_status_options();
+
+$render_machine_status_block = static function () use ( $machine_status_options ) {
+    ?>
+    <div class="agp-pv-machine-status-block" data-machine-status-block>
+        <div class="agp-pv-grid agp-pv-grid--machine-status">
+            <div class="agp-pv-field">
+                <label for="agp-pv-estado-maquina"><?php esc_html_e( 'Estado de la máquina', 'agrocampo-post-venta' ); ?></label>
+                <select id="agp-pv-estado-maquina" name="estado_maquina" autocomplete="off">
+                    <option value=""><?php esc_html_e( 'Seleccionar', 'agrocampo-post-venta' ); ?></option>
+                    <?php foreach ( $machine_status_options as $status_key => $status_label ) : ?>
+                        <option value="<?php echo esc_attr( $status_key ); ?>"><?php echo esc_html( $status_label ); ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <span class="agp-pv-error" data-error-for="estado_maquina"></span>
+            </div>
+            <div class="agp-pv-field" data-condition="fecha-contacto" hidden>
+                <label for="agp-pv-fecha-contacto"><?php esc_html_e( 'Fecha a contactar', 'agrocampo-post-venta' ); ?> *</label>
+                <input id="agp-pv-fecha-contacto" name="fecha_contacto" type="date" autocomplete="off" disabled>
+                <small class="agp-pv-help"><?php esc_html_e( 'Visible y obligatoria solo para “Operativo con pendiente”.', 'agrocampo-post-venta' ); ?></small>
+                <span class="agp-pv-error" data-error-for="fecha_contacto"></span>
+            </div>
+        </div>
+    </div>
+    <?php
+};
+
 ?><!doctype html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -178,6 +206,8 @@ if ( ! defined( 'ABSPATH' ) ) {
         <div class="agp-pv-step" data-step="2" hidden>
             <h2 class="agp-pv-section-title"><?php esc_html_e( 'Detalle de trabajo', 'agrocampo-post-venta' ); ?></h2>
 
+            <?php if ( 'top' === $machine_status_position ) { $render_machine_status_block(); } ?>
+
             <div class="agp-pv-field">
                 <label for="agp-pv-lubricantes"><?php esc_html_e( 'Lubricantes', 'agrocampo-post-venta' ); ?></label>
                 <textarea id="agp-pv-lubricantes" name="lubricantes" rows="3"></textarea>
@@ -204,12 +234,16 @@ if ( ! defined( 'ABSPATH' ) ) {
                 <span class="agp-pv-error" data-error-for="trabajos_realizados"></span>
             </div>
 
+            <?php if ( 'before_observaciones' === $machine_status_position ) { $render_machine_status_block(); } ?>
+
             <div class="agp-pv-field">
                 <label for="agp-pv-observaciones"><?php esc_html_e( 'Observaciones', 'agrocampo-post-venta' ); ?></label>
                 <textarea id="agp-pv-observaciones" name="observaciones" rows="3"></textarea>
                 <small class="agp-pv-help"><?php esc_html_e( 'Agregue riesgos, recomendaciones o pendientes para seguimiento.', 'agrocampo-post-venta' ); ?></small>
                 <span class="agp-pv-error" data-error-for="observaciones"></span>
             </div>
+
+            <?php if ( 'bottom' === $machine_status_position ) { $render_machine_status_block(); } ?>
 
             <div class="agp-pv-step-actions">
                 <button type="button" class="agp-pv-prev" data-prev-step="1"><?php esc_html_e( 'Anterior', 'agrocampo-post-venta' ); ?></button>

@@ -118,6 +118,13 @@ class AGP_PV_Email {
         $body .= '<p><strong>Nuevo Informe Técnico</strong></p>';
         $body .= '<p>Tiene Observaciones para ' . esc_html( $submission['maquina'] ) . ' - ' . esc_html( $submission['modelo'] ) . ' - ' . esc_html( $submission['numero_interno'] ) . '<br>';
         $body .= esc_html( $submission['tecnico'] ) . ' - Cliente ' . esc_html( $submission['cliente'] ) . '</p>';
+        $machine_status_label = AGP_PV_Plugin::get_machine_status_label( (string) ( $submission['estado_maquina'] ?? '' ) );
+        if ( '' !== $machine_status_label ) {
+            $body .= '<p><strong>' . esc_html__( 'Estado de la máquina:', 'agrocampo-post-venta' ) . '</strong> ' . esc_html( $machine_status_label ) . '</p>';
+        }
+        if ( ! empty( $submission['fecha_contacto'] ) ) {
+            $body .= '<p><strong>' . esc_html__( 'Fecha a contactar:', 'agrocampo-post-venta' ) . '</strong> ' . esc_html( (string) $submission['fecha_contacto'] ) . '</p>';
+        }
         if ( ! empty( $submission['observaciones'] ) ) {
             $body .= '<p>' . nl2br( esc_html( $submission['observaciones'] ) ) . '</p>';
         }

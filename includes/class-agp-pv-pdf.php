@@ -1303,12 +1303,16 @@ class AGP_PV_PDF {
             $cantidad_horas = self::normalize_pdf_value( $submission['cantidad_horas'] ?? '', '' );
             $fecha_reparacion = self::normalize_pdf_date( $submission['fecha_reparacion'] ?? '', '' );
             $fecha_cierre = self::normalize_pdf_date( $submission['fecha_cierre'] ?? '', '' );
+            $estado_maquina = self::normalize_pdf_value( AGP_PV_Plugin::get_machine_status_label( (string) ( $submission['estado_maquina'] ?? '' ) ), '' );
+            $fecha_contacto = self::normalize_pdf_date( $submission['fecha_contacto'] ?? '', '' );
             $mantencion_val = self::normalize_pdf_value( $tipo_mantencion_label, '' );
 
             $service_pairs = array(
                 array( __( 'Tipo de Servicio', 'agrocampo-post-venta' ), (string) $tipo_servicio_label ),
                 array( __( 'Tipo de Mantención', 'agrocampo-post-venta' ), (string) $mantencion_val ),
                 array( __( 'Horas de servicio', 'agrocampo-post-venta' ), $cantidad_horas ),
+                array( __( 'Estado de la máquina', 'agrocampo-post-venta' ), $estado_maquina ),
+                array( __( 'Fecha a contactar', 'agrocampo-post-venta' ), $fecha_contacto ),
                 array( __( 'Fecha reparación', 'agrocampo-post-venta' ), $fecha_reparacion ),
                 array( __( 'Fecha cierre', 'agrocampo-post-venta' ), $fecha_cierre ),
             );

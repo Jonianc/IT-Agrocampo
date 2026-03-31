@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Agrocampo Post Venta
  * Description: Formulario Post Venta standalone con almacenamiento, PDF y correo.
- * Version: 1.9.4
+ * Version: 1.10.4
  * Author: Agrocampo
  * Text Domain: agrocampo-post-venta
  * Requires PHP: 8.0
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'AGP_PV_VERSION', '1.9.4' );
+define( 'AGP_PV_VERSION', '1.10.4' );
 
 define( 'AGP_PV_PLUGIN_FILE', __FILE__ );
 

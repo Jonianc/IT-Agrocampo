@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class AGP_PV_DB {
-    public const VERSION = '1.6.0';
+    public const VERSION = '1.7.0';
     public const OPTION_KEY = 'agp_pv_db_version';
 
     public static function table_name(): string {
@@ -50,6 +50,8 @@ class AGP_PV_DB {
             filtros_utilizados TEXT,
             componentes_utilizados TEXT,
             trabajos_realizados TEXT,
+            estado_maquina VARCHAR(40) DEFAULT '',
+            fecha_contacto VARCHAR(20) DEFAULT '',
             observaciones TEXT,
             firma_cliente_id BIGINT UNSIGNED DEFAULT 0,
             firma_tecnico_id BIGINT UNSIGNED DEFAULT 0,

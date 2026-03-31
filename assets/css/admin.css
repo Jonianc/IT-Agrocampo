@@ -135,3 +135,535 @@
     background: #ffd9d1;
     color: #b22f1d;
 }
+
+/* v1.9.5 observations manager UI refresh */
+.agp-pv-admin-observations .agp-pv-admin-hero {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin: 18px 0 14px;
+    padding: 18px 20px;
+    border: 1px solid #d6dde7;
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(249,250,252,0.98) 100%);
+    box-shadow: 0 6px 16px rgba(20, 44, 74, 0.04);
+}
+
+.agp-pv-admin-hero__content h1 {
+    margin: 0 0 6px;
+    font-size: 24px;
+    line-height: 1.15;
+}
+
+.agp-pv-admin-hero__eyebrow {
+    display: inline-block;
+    margin-bottom: 8px;
+    color: #59708a;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.agp-pv-admin-observations .agp-pv-toolbar {
+    padding: 16px;
+    border: 1px solid #d6dde7;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+    box-shadow: 0 6px 16px rgba(20, 44, 74, 0.04);
+}
+
+.agp-pv-admin-observations .agp-pv-filter-row {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 14px;
+    align-items: end;
+}
+
+.agp-pv-admin-observations .agp-pv-field {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+}
+
+.agp-pv-admin-observations .agp-pv-field--wide { grid-column: span 2; }
+.agp-pv-admin-observations .agp-pv-field--actions { min-width: 180px; }
+
+.agp-pv-admin-observations .agp-pv-field__label {
+    color: #4f667f;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.agp-pv-admin-observations .agp-pv-field__label--ghost {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.agp-pv-admin-observations .agp-pv-filter-row input,
+.agp-pv-admin-observations .agp-pv-filter-row select {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    border-color: #ccd6e3;
+    border-radius: 10px;
+}
+
+.agp-pv-admin-observations .agp-pv-filter-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.agp-pv-admin-observations .agp-pv-filter-actions .button {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 16px;
+    border-radius: 10px;
+}
+
+.agp-pv-admin-observations .agp-pv-filter-actions .agp-pv-button-report {
+    border-color: #bcc8d6;
+    color: #24364f;
+    background: #fff;
+    box-shadow: none;
+}
+
+.agp-pv-admin-observations .agp-pv-filter-actions .agp-pv-button-report:hover,
+.agp-pv-admin-observations .agp-pv-filter-actions .agp-pv-button-report:focus {
+    border-color: #93a5b8;
+    background: #f7f9fc;
+    color: #1f2d3d;
+}
+
+
+.agp-pv-admin-hero__actions {
+    display: grid;
+    gap: 8px;
+    justify-items: start;
+}
+
+.agp-pv-admin-observations .agp-pv-button-open-standalone {
+    min-height: 40px;
+    padding-inline: 14px;
+    border-radius: 10px;
+}
+
+.agp-pv-admin-hero__hint {
+    max-width: 300px;
+    margin: 0;
+}
+
+.agp-pv-admin-scope {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0 0 14px;
+}
+
+.agp-pv-admin-scope__item {
+    padding: 14px 16px;
+    border: 1px solid #d6dde7;
+    border-radius: 14px;
+    background: #fff;
+}
+
+.agp-pv-admin-scope__item.is-recommended {
+    background: linear-gradient(180deg, #fbfcfe 0%, #f4f8fb 100%);
+}
+
+.agp-pv-admin-scope__eyebrow {
+    display: inline-block;
+    margin-bottom: 6px;
+    color: #5b7088;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.agp-pv-admin-scope__item h2 {
+    margin: 0 0 6px;
+    font-size: 15px;
+    line-height: 1.35;
+}
+
+.agp-pv-admin-scope__item p {
+    margin: 0;
+    color: #43576d;
+}
+
+.agp-pv-admin .wp-list-table {
+    border: 1px solid #d6dde7;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 24px rgba(20, 44, 74, 0.05);
+}
+
+.agp-pv-admin .wp-list-table thead th,
+.agp-pv-admin .wp-list-table tfoot th {
+    background: linear-gradient(180deg, #f8fafc 0%, #eef3f8 100%);
+    color: #536982;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.agp-pv-admin .wp-list-table tbody td,
+.agp-pv-admin .wp-list-table tbody th {
+    padding-top: 14px;
+    padding-bottom: 14px;
+    border-bottom-color: #e2e8f0;
+}
+
+.agp-pv-admin-row.is-pending td,
+.agp-pv-admin-row.is-pending th {
+    background: linear-gradient(180deg, rgba(255,247,222,0.76) 0%, rgba(255,255,255,0.98) 90%);
+}
+
+.agp-pv-admin-row.is-reviewed td,
+.agp-pv-admin-row.is-reviewed th {
+    background: linear-gradient(180deg, rgba(238,248,238,0.86) 0%, rgba(255,255,255,0.98) 90%);
+}
+
+.agp-pv-admin-row.is-overdue td,
+.agp-pv-admin-row.is-overdue th {
+    background: linear-gradient(180deg, rgba(253,231,229,0.95) 0%, rgba(255,248,247,0.98) 90%);
+}
+
+.agp-pv-admin-row td:first-child,
+.agp-pv-admin-row th.check-column {
+    position: relative;
+}
+
+.agp-pv-admin-row td:first-child::before,
+.agp-pv-admin-row th.check-column::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 4px;
+    border-radius: 999px;
+    background: transparent;
+}
+
+.agp-pv-admin-row.is-pending td:first-child::before,
+.agp-pv-admin-row.is-pending th.check-column::before { background: #d89a00; }
+.agp-pv-admin-row.is-reviewed td:first-child::before,
+.agp-pv-admin-row.is-reviewed th.check-column::before { background: #2f9e25; }
+.agp-pv-admin-row.is-overdue td:first-child::before,
+.agp-pv-admin-row.is-overdue th.check-column::before { background: #d92d20; }
+
+.agp-pv-admin-id-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.agp-pv-admin-id-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 52px;
+    min-height: 34px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: #eef3f8;
+    color: #24364f;
+    font-weight: 800;
+}
+
+.agp-pv-row-menu {
+    position: relative;
+}
+
+.agp-pv-row-menu summary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 0 12px;
+    border: 1px solid #ccd6e3;
+    border-radius: 10px;
+    background: #fff;
+    color: #24364f;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none;
+}
+
+.agp-pv-row-menu summary::-webkit-details-marker { display: none; }
+
+.agp-pv-row-menu__panel {
+    position: absolute;
+    left: 0;
+    z-index: 20;
+    display: grid;
+    gap: 8px;
+    min-width: 220px;
+    margin-top: 8px;
+    padding: 12px;
+    border: 1px solid #ccd6e3;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 18px 34px rgba(20, 44, 74, 0.14);
+}
+
+.agp-pv-row-menu__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 0 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    text-decoration: none;
+    color: #24364f;
+    font-weight: 600;
+    background: #fff;
+}
+
+.agp-pv-row-menu__link.is-primary {
+    background: rgba(25,118,210,0.06);
+    border-color: rgba(25,118,210,0.18);
+    color: #1976d2;
+}
+
+.agp-pv-observation-stack {
+    display: grid;
+    gap: 8px;
+    max-width: 430px;
+}
+
+.agp-pv-observation-preview {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    line-height: 1.45;
+}
+
+.agp-pv-observation-more summary {
+    display: inline-flex;
+    align-items: center;
+    color: #1976d2;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.agp-pv-observation-full {
+    margin-top: 8px;
+    padding: 10px 12px;
+    border: 1px solid #d6dde7;
+    border-radius: 10px;
+    background: #f8fbff;
+}
+
+.agp-pv-status-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.agp-pv-status {
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    background: #f0f0f1;
+}
+
+.agp-pv-status-note_update {
+    background: rgba(25,118,210,0.10);
+    color: #1976d2;
+}
+
+.agp-pv-status-pending_review,
+.agp-pv-status-not_reviewed {
+    background: #fff0b3;
+    color: #8a5f00;
+}
+
+.agp-pv-status-reviewed {
+    background: #d9f2d6;
+    color: #1d6f18;
+}
+
+.agp-pv-status-overdue_pending {
+    background: #ffd9d1;
+    color: #b22f1d;
+}
+
+.agp-pv-detail td {
+    padding: 0;
+    background: #f8fafc;
+}
+
+.agp-pv-detail-card {
+    display: grid;
+    gap: 18px;
+    padding: 22px;
+}
+
+.agp-pv-detail-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.agp-pv-detail-card__eyebrow {
+    display: inline-block;
+    margin-bottom: 6px;
+    color: #5c728b;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.agp-pv-detail-card__header h3 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.agp-pv-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.agp-pv-detail-field {
+    padding: 14px;
+    border: 1px solid #dbe4ee;
+    border-radius: 14px;
+    background: #fff;
+}
+
+.agp-pv-detail-field__label {
+    display: block;
+    margin-bottom: 8px;
+    color: #5c728b;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.agp-pv-detail-field__value {
+    color: #24364f;
+    line-height: 1.5;
+}
+
+.agp-pv-detail-section {
+    padding: 16px 18px;
+    border: 1px solid #dbe4ee;
+    border-radius: 16px;
+    background: #fff;
+}
+
+.agp-pv-detail-section__body {
+    margin-top: 8px;
+    color: #24364f;
+}
+
+.agp-pv-detail-list {
+    margin: 10px 0 0 18px;
+}
+
+.agp-pv-detail-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.agp-pv-detail-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid #ccd6e3;
+    border-radius: 10px;
+    background: #fff;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.agp-pv-detail-section--note {
+    background: linear-gradient(180deg, #f8fbff 0%, #fff 100%);
+}
+
+.agp-pv-detail-note-form {
+    display: grid;
+    gap: 10px;
+    max-width: 760px;
+    margin-top: 10px;
+}
+
+.agp-pv-detail-note-form textarea {
+    min-height: 120px;
+    padding: 12px 14px;
+    border: 1px solid #ccd6e3;
+    border-radius: 12px;
+    resize: vertical;
+}
+
+.agp-pv-admin .agp-pv-settings-grid {
+    gap: 18px;
+}
+
+.agp-pv-admin .agp-pv-card {
+    border-radius: 18px;
+    border: 1px solid #d6dde7;
+    box-shadow: 0 10px 24px rgba(20, 44, 74, 0.05);
+}
+
+@media (max-width: 1280px) {
+    .agp-pv-admin-observations .agp-pv-filter-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .agp-pv-admin-observations .agp-pv-field--wide {
+        grid-column: span 3;
+    }
+}
+
+@media (max-width: 900px) {
+    .agp-pv-admin-observations .agp-pv-admin-hero,
+    .agp-pv-detail-card__header {
+        flex-direction: column;
+    }
+
+    .agp-pv-admin-observations .agp-pv-filter-row,
+    .agp-pv-detail-grid,
+    .agp-pv-admin-scope {
+        grid-template-columns: 1fr;
+    }
+
+    .agp-pv-admin-observations .agp-pv-field--wide {
+        grid-column: span 1;
+    }
+
+    .agp-pv-admin-hero__hint {
+        max-width: none;
+    }
+}
+.agp-pv-admin .wp-list-table {
+    overflow: visible;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.agp-pv-row-menu__panel {
+    position: static;
+    min-width: 0;
+}

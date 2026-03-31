@@ -215,6 +215,8 @@ class AGP_PV_Ajax {
             'filtros_utilizados' => sanitize_textarea_field( $raw['filtros_utilizados'] ?? '' ),
             'componentes_utilizados' => sanitize_textarea_field( $raw['componentes_utilizados'] ?? '' ),
             'trabajos_realizados' => sanitize_textarea_field( $raw['trabajos_realizados'] ?? '' ),
+            'estado_maquina' => sanitize_key( $raw['estado_maquina'] ?? '' ),
+            'fecha_contacto' => sanitize_text_field( $raw['fecha_contacto'] ?? '' ),
             'observaciones' => AGP_PV_Plugin::normalize_observation_text( sanitize_textarea_field( $raw['observaciones'] ?? '' ) ),
             'correo_copia' => sanitize_email( $raw['correo_copia'] ?? '' ),
         );
@@ -264,6 +266,14 @@ class AGP_PV_Ajax {
             $errors['fecha_reparacion'] = __( 'Fecha Reparación es obligatorio.', 'agrocampo-post-venta' );
         }
 
+        $allowed_machine_statuses = array_keys( AGP_PV_Plugin::get_machine_status_options() );
+        if ( '' !== $data['estado_maquina'] && ! in_array( $data['estado_maquina'], $allowed_machine_statuses, true ) ) {
+            $errors['estado_maquina'] = __( 'Selecciona un estado de la máquina válido.', 'agrocampo-post-venta' );
+        }
+
+        if ( 'operativo_con_pendiente' === $data['estado_maquina'] && '' === $data['fecha_contacto'] ) {
+            $errors['fecha_contacto'] = __( 'Fecha a contactar es obligatoria para un equipo operativo con pendiente.', 'agrocampo-post-venta' );
+        }
 
         $detalle_min_chars = 10;
         $trabajos_len = $this->text_length( trim( (string) ( $data['trabajos_realizados'] ?? '' ) ) );
@@ -552,6 +562,8 @@ class AGP_PV_Ajax {
                 'tipo_mantencion' => $data['tipo_mantencion'],
                 'tipo_mantencion_label' => $data['tipo_mantencion_label'],
                 'cantidad_horas' => $data['cantidad_horas'],
+                'estado_maquina' => $data['estado_maquina'],
+                'fecha_contacto' => $data['fecha_contacto'],
                 'fecha_reparacion' => $data['fecha_reparacion'],
                 'fecha_cierre' => $data['fecha_cierre'],
                 'lubricantes' => $data['lubricantes'],
@@ -595,6 +607,8 @@ class AGP_PV_Ajax {
                 '%s', // tipo_mantencion
                 '%s', // tipo_mantencion_label
                 '%s', // cantidad_horas
+                '%s', // estado_maquina
+                '%s', // fecha_contacto
                 '%s', // fecha_reparacion
                 '%s', // fecha_cierre
                 '%s', // lubricantes

@@ -192,9 +192,63 @@ class AGP_PV_Plugin {
 " . $line;
     }
 
+    public static function has_appended_observation_notes( string $text ): bool {
+        $text = trim( $text );
+        if ( '' === $text ) {
+            return false;
+        }
+
+        return 1 === preg_match( '/\[\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}\s+·\s+.+?\]/u', $text );
+    }
+
     /**
      * @return string[]
      */
+
+    public static function get_machine_status_options(): array {
+        return array(
+            'operativo' => __( 'Operativo', 'agrocampo-post-venta' ),
+            'detenido' => __( 'Detenido', 'agrocampo-post-venta' ),
+            'operativo_con_pendiente' => __( 'Operativo con pendiente', 'agrocampo-post-venta' ),
+        );
+    }
+
+    public static function get_machine_status_label( string $value ): string {
+        $options = self::get_machine_status_options();
+        $key     = self::parse_machine_status_value( $value );
+
+        return $options[ $key ] ?? sanitize_text_field( $value );
+    }
+
+    public static function parse_machine_status_value( string $value ): string {
+        $normalized = sanitize_key( $value );
+        $options    = self::get_machine_status_options();
+
+        if ( isset( $options[ $normalized ] ) ) {
+            return $normalized;
+        }
+
+        $normalized_text = strtolower( trim( remove_accents( $value ) ) );
+        foreach ( $options as $option_key => $option_label ) {
+            if ( strtolower( trim( remove_accents( (string) $option_label ) ) ) === $normalized_text ) {
+                return $option_key;
+            }
+        }
+
+        return '';
+    }
+
+    public static function get_machine_status_field_position(): string {
+        $position = (string) get_option( 'agp_pv_machine_status_position', 'before_observaciones' );
+        $allowed  = array( 'top', 'before_observaciones', 'bottom' );
+
+        if ( ! in_array( $position, $allowed, true ) ) {
+            return 'before_observaciones';
+        }
+
+        return $position;
+    }
+
     public static function default_technicians(): array {
         return array(
             'Enrique Rivas Diaz',
@@ -317,6 +371,20 @@ class AGP_PV_Plugin {
     public static function get_observations_report_cutoff_mysql(): string {
         $days = self::get_observations_report_window_days();
         return current_datetime()->modify( '-' . $days . ' days' )->format( 'Y-m-d H:i:s' );
+    }
+
+
+    public static function get_observations_front_redirect_url(): string {
+        $default = self::observations_standalone_url();
+        $raw     = isset( $_POST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_POST['redirect_to'] ) ) : '';
+
+        if ( '' === $raw ) {
+            return $default;
+        }
+
+        $validated = wp_validate_redirect( $raw, '' );
+
+        return '' !== $validated ? $validated : $default;
     }
 
     public static function schedule_notification_events(): void {
@@ -447,7 +515,7 @@ class AGP_PV_Plugin {
 
         $submission_id = isset( $_POST['submission_id'] ) ? absint( wp_unslash( $_POST['submission_id'] ) ) : 0;
         if ( $submission_id <= 0 ) {
-            wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'review_failed', self::observations_standalone_url() ) );
+            wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'review_failed', self::get_observations_front_redirect_url() ) );
             exit;
         }
 
@@ -472,11 +540,11 @@ class AGP_PV_Plugin {
             );
 
             if ( false === $updated ) {
-                wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'review_failed', self::observations_standalone_url() ) );
+                wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'review_failed', self::get_observations_front_redirect_url() ) );
                 exit;
             }
 
-            wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'review_marked', self::observations_standalone_url() ) );
+            wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'review_marked', self::get_observations_front_redirect_url() ) );
             exit;
         }
 
@@ -488,7 +556,7 @@ class AGP_PV_Plugin {
         $new_note   = self::normalize_observation_text( sanitize_textarea_field( wp_unslash( $_POST['observation_note'] ?? '' ) ) );
 
         if ( ! $submission || '' === $new_note ) {
-            wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'observation_append_failed', self::observations_standalone_url() ) );
+            wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'observation_append_failed', self::get_observations_front_redirect_url() ) );
             exit;
         }
 
@@ -510,11 +578,11 @@ class AGP_PV_Plugin {
         );
 
         if ( false === $updated ) {
-            wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'observation_append_failed', self::observations_standalone_url() ) );
+            wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'observation_append_failed', self::get_observations_front_redirect_url() ) );
             exit;
         }
 
-        wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'observation_appended', self::observations_standalone_url() ) );
+        wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'observation_appended', self::get_observations_front_redirect_url() ) );
         exit;
     }
 
@@ -597,6 +665,7 @@ class AGP_PV_Plugin {
                 'nonce'    => wp_create_nonce( 'agp_pv_submit' ),
                 'debugFrontend' => ( defined( 'WP_DEBUG' ) && WP_DEBUG ),
                 'detalleMinimumChars' => 10,
+                'machineStatusPendingValue' => 'operativo_con_pendiente',
                 'serviceWorker' => array(
                     'url' => AGP_PV_PLUGIN_URL . 'assets/js/standalone-sw.js',
                     'scope' => home_url( '/post-venta/' ),
