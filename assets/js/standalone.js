@@ -242,27 +242,34 @@
             var tipoServicio = $tipoServicio.val();
             var tipoMantencion = $tipoMantencion.val();
             var machineStatus = $machineStatus.val();
-            var statusLabel = $.trim($machineStatus.find('option:selected').text() || '');
-            var defaultStatusLabel = String($machineStatusBadge.data('defaultLabel') || '');
+            var statusLabel = '';
+            if ($machineStatus.length) {
+                statusLabel = String($machineStatus.find('option:selected').text() || '').trim();
+            }
+            var defaultStatusLabel = $machineStatusBadge.length ? String($machineStatusBadge.data('defaultLabel') || '') : '';
 
-            if (!statusLabel) {
+            if (!statusLabel && defaultStatusLabel) {
                 statusLabel = defaultStatusLabel;
             }
 
-            $machineStatusBadge
-                .text(statusLabel)
-                .removeClass('is-operativo is-detenido is-operativo-con-pendiente is-status-empty')
-                .addClass(machineStatus ? 'is-' + machineStatus.replace(/_/g, '-') : 'is-status-empty');
+            if ($machineStatusBadge.length) {
+                $machineStatusBadge
+                    .text(statusLabel)
+                    .removeClass('is-operativo is-detenido is-operativo-con-pendiente is-status-empty')
+                    .addClass(machineStatus ? 'is-' + machineStatus.replace(/_/g, '-') : 'is-status-empty');
+            }
 
-            $machineStatusBlock.removeClass('is-operativo is-detenido is-operativo-con-pendiente is-status-empty');
-            if (machineStatus === 'operativo') {
-                $machineStatusBlock.addClass('is-operativo');
-            } else if (machineStatus === 'detenido') {
-                $machineStatusBlock.addClass('is-detenido');
-            } else if (machineStatus === 'operativo_con_pendiente') {
-                $machineStatusBlock.addClass('is-operativo-con-pendiente');
-            } else {
-                $machineStatusBlock.addClass('is-status-empty');
+            if ($machineStatusBlock.length) {
+                $machineStatusBlock.removeClass('is-operativo is-detenido is-operativo-con-pendiente is-status-empty');
+                if (machineStatus === 'operativo') {
+                    $machineStatusBlock.addClass('is-operativo');
+                } else if (machineStatus === 'detenido') {
+                    $machineStatusBlock.addClass('is-detenido');
+                } else if (machineStatus === 'operativo_con_pendiente') {
+                    $machineStatusBlock.addClass('is-operativo-con-pendiente');
+                } else {
+                    $machineStatusBlock.addClass('is-status-empty');
+                }
             }
 
             // Fecha: required unless Garantia

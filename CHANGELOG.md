@@ -1,3 +1,7 @@
+## [1.10.15] - 2026-03-31
+- fix preventivo en frontend para desktop: se robustece la actualización visual del bloque "Estado de la máquina" para no bloquear el flujo de submit si faltan nodos UI esperados.
+- el botón Enviar mantiene comportamiento operativo aunque el bloque de badge/resumen no esté presente o llegue incompleto por caché.
+
 ## [1.10.14] - 2026-03-31
 - cuando falla el correo por rate limit (429), el mensaje al usuario ahora indica explícitamente que el informe quedó guardado pero el correo está pendiente de envío.
 - se normaliza el error técnico del proveedor para mostrar un mensaje legible y, cuando existe, la hora sugerida de reintento.
