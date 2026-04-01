@@ -20,6 +20,19 @@ $pdf_status  = sanitize_key( wp_unslash( $_GET['pdf_status'] ?? '' ) );
 $email       = sanitize_text_field( wp_unslash( $_GET['email'] ?? '' ) );
 $date_from   = preg_match( '/^\d{4}-\d{2}-\d{2}$/', (string) ( $_GET['date_from'] ?? '' ) ) ? (string) $_GET['date_from'] : '';
 $date_to     = preg_match( '/^\d{4}-\d{2}-\d{2}$/', (string) ( $_GET['date_to'] ?? '' ) ) ? (string) $_GET['date_to'] : '';
+$active_filters = array_filter(
+    array(
+        's'           => $search,
+        'mail_status' => $mail_status,
+        'pdf_status'  => $pdf_status,
+        'email'       => $email,
+        'date_from'   => $date_from,
+        'date_to'     => $date_to,
+    ),
+    static function ( $value ): bool {
+        return '' !== (string) $value;
+    }
+);
 
 $where_clauses = array();
 $where_values  = array();
@@ -152,6 +165,16 @@ $pdf_status_labels = array(
             </div>
         </form>
 
+        <div class="agp-pv-reports-kpi">
+            <div class="agp-pv-reports-kpi__item">
+                <span class="agp-pv-reports-kpi__label"><?php esc_html_e( 'Resultados', 'agrocampo-post-venta' ); ?></span>
+                <strong class="agp-pv-reports-kpi__value"><?php echo esc_html( number_format_i18n( $total_items ) ); ?></strong>
+            </div>
+            <div class="agp-pv-reports-kpi__item">
+                <span class="agp-pv-reports-kpi__label"><?php esc_html_e( 'Filtros activos', 'agrocampo-post-venta' ); ?></span>
+                <strong class="agp-pv-reports-kpi__value"><?php echo esc_html( number_format_i18n( count( $active_filters ) ) ); ?></strong>
+            </div>
+        </div>
         <p><strong><?php echo esc_html( sprintf( _n( '%d informe', '%d informes', $total_items, 'agrocampo-post-venta' ), $total_items ) ); ?></strong></p>
 
         <div class="agp-pv-reports-table-wrap">

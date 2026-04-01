@@ -1675,3 +1675,39 @@ body.agp-pv-observations-standalone {
         min-width: 980px;
     }
 }
+
+.agp-pv-reports-wrap .agp-pv-reports-kpi {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 14px 0 10px;
+}
+
+.agp-pv-reports-wrap .agp-pv-reports-kpi__item {
+    padding: 10px 12px;
+    border: 1px solid var(--agp-line);
+    border-radius: 10px;
+    background: #f8fafc;
+}
+
+.agp-pv-reports-wrap .agp-pv-reports-kpi__label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--agp-text-soft);
+}
+
+.agp-pv-reports-wrap .agp-pv-reports-kpi__value {
+    font-size: 20px;
+    line-height: 1;
+    color: var(--agp-text);
+}
+
+@media (max-width: 782px) {
+    .agp-pv-reports-wrap .agp-pv-reports-kpi {
+        grid-template-columns: 1fr;
+    }
+}

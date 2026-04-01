@@ -1,3 +1,7 @@
+## [1.15.0] - 2026-04-01
+- `/post-venta-informes/`: se agrega KPI compacto con `Resultados` y `Filtros activos` para contexto rápido de la vista filtrada.
+- mejora visual compatible: sin cambios en consultas SQL, permisos, nonces, persistencia ni flujo funcional.
+
 ## [1.14.0] - 2026-04-01
 - `/post-venta-informes/`: ajuste de legibilidad/densidad en tabla (headers más claros, celdas con mejor ritmo visual, truncado visual controlado en columnas largas).
 - en anchos intermedios ahora la tabla mantiene lectura con scroll horizontal del contenedor, sin alterar datos ni lógica de filtros.
