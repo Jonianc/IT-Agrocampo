@@ -195,7 +195,15 @@ $pdf_status_labels = array(
                 <tbody>
                 <?php if ( empty( $items ) ) : ?>
                     <tr>
-                        <td colspan="9"><?php esc_html_e( 'No hay informes para los filtros seleccionados.', 'agrocampo-post-venta' ); ?></td>
+                        <td colspan="9">
+                            <div class="agp-pv-reports-empty">
+                                <p class="agp-pv-reports-empty__title"><?php esc_html_e( 'No hay informes para los filtros seleccionados.', 'agrocampo-post-venta' ); ?></p>
+                                <p class="agp-pv-reports-empty__hint"><?php esc_html_e( 'Prueba ajustando el rango de fechas o limpiando filtros para ampliar los resultados.', 'agrocampo-post-venta' ); ?></p>
+                                <?php if ( ! empty( $active_filters ) ) : ?>
+                                    <p class="agp-pv-reports-empty__actions"><a class="button button-secondary" href="<?php echo esc_url( $base_url ); ?>"><?php esc_html_e( 'Limpiar filtros', 'agrocampo-post-venta' ); ?></a></p>
+                                <?php endif; ?>
+                            </div>
+                        </td>
                     </tr>
                 <?php else : ?>
                     <?php foreach ( $items as $item ) : ?>

@@ -1,3 +1,7 @@
+## [1.16.0] - 2026-04-01
+- `/post-venta-informes/`: mejora del estado vacío con ayuda contextual y CTA `Limpiar filtros` cuando hay filtros activos.
+- ajuste visual compatible: sin cambios en consultas, permisos, nonces, persistencia ni flujo funcional.
+
 ## [1.15.0] - 2026-04-01
 - `/post-venta-informes/`: se agrega KPI compacto con `Resultados` y `Filtros activos` para contexto rápido de la vista filtrada.
 - mejora visual compatible: sin cambios en consultas SQL, permisos, nonces, persistencia ni flujo funcional.

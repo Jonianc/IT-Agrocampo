@@ -1711,3 +1711,25 @@ body.agp-pv-observations-standalone {
         grid-template-columns: 1fr;
     }
 }
+
+.agp-pv-reports-wrap .agp-pv-reports-empty {
+    padding: 14px 12px;
+    text-align: center;
+}
+
+.agp-pv-reports-wrap .agp-pv-reports-empty__title {
+    margin: 0 0 6px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--agp-text);
+}
+
+.agp-pv-reports-wrap .agp-pv-reports-empty__hint {
+    margin: 0;
+    font-size: 13px;
+    color: var(--agp-text-soft);
+}
+
+.agp-pv-reports-wrap .agp-pv-reports-empty__actions {
+    margin: 10px 0 0;
+}
