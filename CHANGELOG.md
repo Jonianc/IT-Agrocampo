@@ -1,3 +1,7 @@
+## [1.14.0] - 2026-04-01
+- `/post-venta-informes/`: ajuste de legibilidad/densidad en tabla (headers más claros, celdas con mejor ritmo visual, truncado visual controlado en columnas largas).
+- en anchos intermedios ahora la tabla mantiene lectura con scroll horizontal del contenedor, sin alterar datos ni lógica de filtros.
+
 ## [1.13.0] - 2026-04-01
 - `/post-venta-informes/`: ajuste UI responsive del toolbar de filtros para mejorar distribución en desktop/intermedio/móvil y evitar desbordes de acciones.
 - se mantiene alcance visual: sin cambios en permisos, filtros, consultas SQL, nonces, persistencia ni flujo funcional.
