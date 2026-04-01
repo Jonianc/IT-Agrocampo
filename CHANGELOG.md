@@ -1,3 +1,8 @@
+## [1.18.2] - 2026-04-01
+- `/post-venta-informes/`: fix de ID visible en tabla standalone; la consulta ahora incluye `legacy_id` para alinear el render con admin (`AGP_PV_DB::get_visible_report_id`).
+- el notice de acciones (`agp_pv_notice`) ahora se limpia de la URL tras mostrarse una vez, evitando que mensajes como `PDF regenerado correctamente.` persistan al recargar.
+- ajuste compatible: sin cambios en permisos, nonces, consultas de negocio, persistencia ni handlers de correo/PDF.
+
 ## [1.18.1] - 2026-04-01
 - `/post-venta-informes/`: la columna `ID` ahora muestra el mismo identificador visible que admin (`AGP_PV_DB::get_visible_report_id`), manteniendo acciones por fila con `submission_id` interno para nonces/handlers.
 - ajuste compatible de presentación: sin cambios en permisos, consultas SQL, persistencia ni flujos de correo/PDF.

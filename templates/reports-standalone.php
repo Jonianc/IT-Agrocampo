@@ -77,7 +77,7 @@ $count_sql   = "SELECT COUNT(*) FROM {$table_name} {$where_sql}";
 $total_items = (int) ( empty( $where_values ) ? $wpdb->get_var( $count_sql ) : $wpdb->get_var( $wpdb->prepare( $count_sql, $where_values ) ) );
 $total_pages = max( 1, (int) ceil( $total_items / $per_page ) );
 
-$list_sql    = "SELECT id, tecnico, cliente, email_cliente, serie, tipo_servicio, mail_status, pdf_status, created_at FROM {$table_name} {$where_sql} ORDER BY created_at DESC LIMIT %d OFFSET %d";
+$list_sql    = "SELECT id, legacy_id, tecnico, cliente, email_cliente, serie, tipo_servicio, mail_status, pdf_status, created_at FROM {$table_name} {$where_sql} ORDER BY created_at DESC LIMIT %d OFFSET %d";
 $list_values = array_merge( $where_values, array( $per_page, $offset ) );
 $items       = $wpdb->get_results( $wpdb->prepare( $list_sql, $list_values ), ARRAY_A );
 
@@ -343,6 +343,24 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
         <?php endif; ?>
     </section>
 </main>
+<?php if ( is_array( $active_notice ) ) : ?>
+    <script>
+    (function () {
+        if (!window.history || !window.history.replaceState || !window.URL) {
+            return;
+        }
+
+        var url = new URL(window.location.href);
+        if (!url.searchParams.has('agp_pv_notice') && !url.searchParams.has('agp_pv_notice_message')) {
+            return;
+        }
+
+        url.searchParams.delete('agp_pv_notice');
+        url.searchParams.delete('agp_pv_notice_message');
+        window.history.replaceState({}, document.title, url.toString());
+    }());
+    </script>
+<?php endif; ?>
 <?php wp_footer(); ?>
 </body>
 </html>
