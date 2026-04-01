@@ -471,15 +471,16 @@
             $('#agp-pv-firma-cliente').val('');
         }
 
-        var tecnicoVisible = tecnicoCanvas && !$tecnicoWrap.closest('[data-condition="garantia"]').is(':hidden');
-        if (tecnicoVisible && $tecnicoWrap.hasClass('has-signature')) {
+        var isGarantia = $('#agp-pv-tipo-servicio').val() === 'two';
+        var tecnicoEligible = tecnicoCanvas && isGarantia;
+        if (tecnicoEligible && $tecnicoWrap.hasClass('has-signature')) {
             $('#agp-pv-firma-tecnico').val(tecnicoCanvas.toDataURL('image/png'));
         } else {
             $('#agp-pv-firma-tecnico').val('');
         }
 
-        var jefeTallerVisible = jefeTallerCanvas && !$jefeTallerWrap.closest('[data-condition="garantia"]').is(':hidden');
-        if (jefeTallerVisible && $jefeTallerWrap.hasClass('has-signature')) {
+        var jefeTallerEligible = jefeTallerCanvas && isGarantia;
+        if (jefeTallerEligible && $jefeTallerWrap.hasClass('has-signature')) {
             $('#agp-pv-firma-jefe-taller').val(jefeTallerCanvas.toDataURL('image/png'));
         } else {
             $('#agp-pv-firma-jefe-taller').val('');

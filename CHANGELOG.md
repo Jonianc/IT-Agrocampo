@@ -1,3 +1,6 @@
+## [1.10.19] - 2026-04-01
+- fix en serialización de firmas en frontend: para `Garantía`, la firma de jefe de taller ya no se limpia por estar en un paso oculto al enviar desde paso 4.
+
 ## [1.10.18] - 2026-03-31
 - para tipo de servicio Garantía ahora son obligatorios `Faena Lugar`, `Nombre Jefe de Taller` y `Firma Jefe de Taller`.
 - se agrega persistencia de `jefe_taller_nombre` y `firma_jefe_taller_id` en base de datos, junto con guardado de firma en frontend/backend.
