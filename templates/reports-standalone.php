@@ -69,6 +69,18 @@ $list_values = array_merge( $where_values, array( $per_page, $offset ) );
 $items       = $wpdb->get_results( $wpdb->prepare( $list_sql, $list_values ), ARRAY_A );
 
 $base_url = AGP_PV_Plugin::reports_standalone_url();
+
+$mail_status_labels = array(
+    'pending' => __( 'Pendiente', 'agrocampo-post-venta' ),
+    'sent'    => __( 'Enviado', 'agrocampo-post-venta' ),
+    'failed'  => __( 'Falló', 'agrocampo-post-venta' ),
+);
+
+$pdf_status_labels = array(
+    'pending' => __( 'Pendiente', 'agrocampo-post-venta' ),
+    'ready'   => __( 'Listo', 'agrocampo-post-venta' ),
+    'failed'  => __( 'Falló', 'agrocampo-post-venta' ),
+);
 ?><!doctype html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -171,8 +183,24 @@ $base_url = AGP_PV_Plugin::reports_standalone_url();
                             <td><?php echo esc_html( (string) $item['email_cliente'] ); ?></td>
                             <td><?php echo esc_html( (string) $item['serie'] ); ?></td>
                             <td><?php echo esc_html( (string) $item['tipo_servicio'] ); ?></td>
-                            <td><?php echo esc_html( (string) $item['mail_status'] ); ?></td>
-                            <td><?php echo esc_html( (string) $item['pdf_status'] ); ?></td>
+                            <td>
+                                <?php
+                                $mail_state       = (string) $item['mail_status'];
+                                $mail_state_label = $mail_status_labels[ $mail_state ] ?? $mail_state;
+                                ?>
+                                <span class="agp-pv-status-badge agp-pv-status-badge--mail agp-pv-status-badge--<?php echo esc_attr( sanitize_html_class( $mail_state ) ); ?>">
+                                    <?php echo esc_html( $mail_state_label ); ?>
+                                </span>
+                            </td>
+                            <td>
+                                <?php
+                                $pdf_state       = (string) $item['pdf_status'];
+                                $pdf_state_label = $pdf_status_labels[ $pdf_state ] ?? $pdf_state;
+                                ?>
+                                <span class="agp-pv-status-badge agp-pv-status-badge--pdf agp-pv-status-badge--<?php echo esc_attr( sanitize_html_class( $pdf_state ) ); ?>">
+                                    <?php echo esc_html( $pdf_state_label ); ?>
+                                </span>
+                            </td>
                             <td><?php echo esc_html( mysql2date( 'd/m/Y H:i', (string) $item['created_at'] ) ); ?></td>
                         </tr>
                     <?php endforeach; ?>

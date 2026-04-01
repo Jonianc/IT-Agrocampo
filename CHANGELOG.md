@@ -1,3 +1,7 @@
+## [1.12.0] - 2026-04-01
+- `/post-venta-informes/`: las columnas `Correo` y `PDF` ahora muestran badges con texto humano (`Pendiente`, `Enviado/Listo`, `Falló`) para lectura operativa más rápida.
+- el ajuste es solo visual en frontend standalone de informes; no cambia permisos, filtros, consultas SQL ni persistencia.
+
 ## [1.11.0] - 2026-04-01
 - se agrega gestor general de informes en frontend standalone bajo `/post-venta-informes/` para operación diaria fuera de wp-admin, manteniendo permisos de administrador.
 - el admin de informes conserva su función de respaldo e incorpora acceso directo al nuevo gestor frontend general.

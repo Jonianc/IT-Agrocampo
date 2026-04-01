@@ -1471,3 +1471,36 @@ body.agp-pv-observations-standalone {
     font-weight: 700;
     line-height: 1.35;
 }
+
+.agp-pv-reports-wrap .agp-pv-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 26px;
+    padding: 4px 10px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.agp-pv-reports-wrap .agp-pv-status-badge--pending {
+    color: #8a5f00;
+    background: #fff4cf;
+    border-color: #f0d38f;
+}
+
+.agp-pv-reports-wrap .agp-pv-status-badge--sent,
+.agp-pv-reports-wrap .agp-pv-status-badge--ready {
+    color: #206d1a;
+    background: #edf8ea;
+    border-color: #bfe1b9;
+}
+
+.agp-pv-reports-wrap .agp-pv-status-badge--failed {
+    color: #a82315;
+    background: #fde7e5;
+    border-color: #f3b8b2;
+}
