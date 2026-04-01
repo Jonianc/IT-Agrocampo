@@ -1504,3 +1504,114 @@ body.agp-pv-observations-standalone {
     background: #fde7e5;
     border-color: #f3b8b2;
 }
+
+.agp-pv-reports-wrap .agp-pv-toolbar {
+    width: 100%;
+}
+
+.agp-pv-reports-wrap .agp-pv-filter-row {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 12px;
+    align-items: end;
+}
+
+.agp-pv-reports-wrap .agp-pv-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+}
+
+.agp-pv-reports-wrap .agp-pv-field__label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--agp-text-soft);
+}
+
+.agp-pv-reports-wrap .agp-pv-field__label--ghost {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.agp-pv-reports-wrap .agp-pv-field select,
+.agp-pv-reports-wrap .agp-pv-field input {
+    width: 100%;
+    min-height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--agp-line-strong);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--agp-text);
+    font-size: 14px;
+}
+
+.agp-pv-reports-wrap .agp-pv-field:nth-child(1),
+.agp-pv-reports-wrap .agp-pv-field:nth-child(2) {
+    grid-column: span 2;
+}
+
+.agp-pv-reports-wrap .agp-pv-field:nth-child(3),
+.agp-pv-reports-wrap .agp-pv-field:nth-child(6) {
+    grid-column: span 3;
+}
+
+.agp-pv-reports-wrap .agp-pv-field:nth-child(4),
+.agp-pv-reports-wrap .agp-pv-field:nth-child(5) {
+    grid-column: span 2;
+}
+
+.agp-pv-reports-wrap .agp-pv-field--actions {
+    grid-column: span 4;
+}
+
+.agp-pv-reports-wrap .agp-pv-filter-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.agp-pv-reports-wrap .agp-pv-filter-actions .button {
+    min-height: 40px;
+    margin: 0;
+}
+
+@media (max-width: 1280px) {
+    .agp-pv-reports-wrap .agp-pv-field:nth-child(1),
+    .agp-pv-reports-wrap .agp-pv-field:nth-child(2),
+    .agp-pv-reports-wrap .agp-pv-field:nth-child(4),
+    .agp-pv-reports-wrap .agp-pv-field:nth-child(5) {
+        grid-column: span 3;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-field:nth-child(3),
+    .agp-pv-reports-wrap .agp-pv-field:nth-child(6) {
+        grid-column: span 6;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-field--actions {
+        grid-column: 1 / -1;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-field__label--ghost {
+        display: none;
+    }
+}
+
+@media (max-width: 782px) {
+    .agp-pv-reports-wrap .agp-pv-filter-row {
+        grid-template-columns: 1fr;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-field,
+    .agp-pv-reports-wrap .agp-pv-field:nth-child(1),
+    .agp-pv-reports-wrap .agp-pv-field:nth-child(2),
+    .agp-pv-reports-wrap .agp-pv-field:nth-child(3),
+    .agp-pv-reports-wrap .agp-pv-field:nth-child(4),
+    .agp-pv-reports-wrap .agp-pv-field:nth-child(5),
+    .agp-pv-reports-wrap .agp-pv-field:nth-child(6),
+    .agp-pv-reports-wrap .agp-pv-field--actions {
+        grid-column: 1 / -1;
+    }
+}

@@ -1,3 +1,7 @@
+## [1.13.0] - 2026-04-01
+- `/post-venta-informes/`: ajuste UI responsive del toolbar de filtros para mejorar distribución en desktop/intermedio/móvil y evitar desbordes de acciones.
+- se mantiene alcance visual: sin cambios en permisos, filtros, consultas SQL, nonces, persistencia ni flujo funcional.
+
 ## [1.12.0] - 2026-04-01
 - `/post-venta-informes/`: las columnas `Correo` y `PDF` ahora muestran badges con texto humano (`Pendiente`, `Enviado/Listo`, `Falló`) para lectura operativa más rápida.
 - el ajuste es solo visual en frontend standalone de informes; no cambia permisos, filtros, consultas SQL ni persistencia.
