@@ -3,6 +3,15 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+
+if ( ! function_exists( 'convert_to_screen' ) ) {
+    require_once ABSPATH . 'wp-admin/includes/screen.php';
+}
+
+if ( function_exists( 'set_current_screen' ) ) {
+    set_current_screen( 'agp-pv_page_agp-pv-submissions' );
+}
+
 $table = new AGP_PV_Submissions_Table(
     array(
         'manager_page' => 'agp-pv-submissions',

@@ -6,6 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class AGP_PV_Plugin {
     private static ?AGP_PV_Plugin $instance = null;
+    private const VERSION_OPTION_KEY = 'agp_pv_plugin_version';
 
     private function __construct() {
         add_action( 'init', array( $this, 'maybe_upgrade' ) );
@@ -324,6 +325,7 @@ class AGP_PV_Plugin {
         add_rewrite_rule( '^post-venta-informes/?$', 'index.php?agp_pv_reports_standalone=1', 'top' );
         add_rewrite_rule( '^post-venta-observaciones/?$', 'index.php?agp_pv_observations_standalone=1', 'top' );
         flush_rewrite_rules();
+        update_option( self::VERSION_OPTION_KEY, AGP_PV_VERSION );
     }
 
     public static function deactivate(): void {
@@ -333,6 +335,14 @@ class AGP_PV_Plugin {
 
     public function maybe_upgrade(): void {
         AGP_PV_DB::maybe_upgrade();
+
+        $installed_version = (string) get_option( self::VERSION_OPTION_KEY, '' );
+        if ( '' !== $installed_version && version_compare( $installed_version, AGP_PV_VERSION, '>=' ) ) {
+            return;
+        }
+
+        flush_rewrite_rules( false );
+        update_option( self::VERSION_OPTION_KEY, AGP_PV_VERSION );
     }
 
     public function register_rewrite(): void {
