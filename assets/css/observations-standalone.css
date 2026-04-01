@@ -1666,13 +1666,28 @@ body.agp-pv-observations-standalone {
     white-space: nowrap;
 }
 
+.agp-pv-reports-wrap .agp-pv-reports-table-wrap .wp-list-table td:nth-child(10) {
+    width: 230px;
+}
+
+.agp-pv-reports-wrap .agp-pv-reports-row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.agp-pv-reports-wrap .agp-pv-reports-row-actions .button {
+    min-height: 30px;
+    margin: 0;
+}
+
 @media (max-width: 1024px) {
     .agp-pv-reports-wrap .agp-pv-reports-table-wrap {
         overflow-x: auto;
     }
 
     .agp-pv-reports-wrap .agp-pv-reports-table-wrap .wp-list-table {
-        min-width: 980px;
+        min-width: 1240px;
     }
 }
 

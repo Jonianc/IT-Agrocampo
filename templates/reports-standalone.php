@@ -94,6 +94,30 @@ $pdf_status_labels = array(
     'ready'   => __( 'Listo', 'agrocampo-post-venta' ),
     'failed'  => __( 'Falló', 'agrocampo-post-venta' ),
 );
+
+$reports_notice = sanitize_key( wp_unslash( $_GET['agp_pv_notice'] ?? '' ) );
+$reports_notice_message = sanitize_text_field( wp_unslash( $_GET['agp_pv_notice_message'] ?? '' ) );
+
+$reports_notice_map = array(
+    'mail_sent'       => array(
+        'class'   => 'agp-pv-notice-success',
+        'message' => __( 'Correo reenviado correctamente.', 'agrocampo-post-venta' ),
+    ),
+    'mail_failed'     => array(
+        'class'   => 'agp-pv-notice-error',
+        'message' => '' !== $reports_notice_message ? $reports_notice_message : __( 'No se pudo reenviar el correo.', 'agrocampo-post-venta' ),
+    ),
+    'pdf_regenerated' => array(
+        'class'   => 'agp-pv-notice-success',
+        'message' => __( 'PDF regenerado correctamente.', 'agrocampo-post-venta' ),
+    ),
+    'pdf_failed'      => array(
+        'class'   => 'agp-pv-notice-error',
+        'message' => '' !== $reports_notice_message ? $reports_notice_message : __( 'No se pudo regenerar el PDF.', 'agrocampo-post-venta' ),
+    ),
+);
+
+$active_notice = $reports_notice_map[ $reports_notice ] ?? null;
 ?><!doctype html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -117,6 +141,9 @@ $pdf_status_labels = array(
     </header>
 
     <section class="agp-pv-observations-panel">
+        <?php if ( is_array( $active_notice ) ) : ?>
+            <div class="agp-pv-notice <?php echo esc_attr( $active_notice['class'] ); ?>"><?php echo esc_html( (string) $active_notice['message'] ); ?></div>
+        <?php endif; ?>
         <form method="get" action="<?php echo esc_url( $base_url ); ?>" class="agp-pv-filters">
             <div class="agp-pv-toolbar">
                 <div class="agp-pv-filter-row">
@@ -190,12 +217,13 @@ $pdf_status_labels = array(
                     <th><?php esc_html_e( 'Correo', 'agrocampo-post-venta' ); ?></th>
                     <th><?php esc_html_e( 'PDF', 'agrocampo-post-venta' ); ?></th>
                     <th><?php esc_html_e( 'Fecha', 'agrocampo-post-venta' ); ?></th>
+                    <th><?php esc_html_e( 'Acciones', 'agrocampo-post-venta' ); ?></th>
                 </tr>
                 </thead>
                 <tbody>
                 <?php if ( empty( $items ) ) : ?>
                     <tr>
-                        <td colspan="9">
+                        <td colspan="10">
                             <div class="agp-pv-reports-empty">
                                 <p class="agp-pv-reports-empty__title"><?php esc_html_e( 'No hay informes para los filtros seleccionados.', 'agrocampo-post-venta' ); ?></p>
                                 <p class="agp-pv-reports-empty__hint"><?php esc_html_e( 'Prueba ajustando el rango de fechas o limpiando filtros para ampliar los resultados.', 'agrocampo-post-venta' ); ?></p>
@@ -233,6 +261,49 @@ $pdf_status_labels = array(
                                 </span>
                             </td>
                             <td><?php echo esc_html( mysql2date( 'd/m/Y H:i', (string) $item['created_at'] ) ); ?></td>
+                            <td>
+                                <?php
+                                $submission_id = absint( $item['id'] );
+                                $redirect_to   = add_query_arg(
+                                    array_filter(
+                                        array(
+                                            's' => $search,
+                                            'mail_status' => $mail_status,
+                                            'pdf_status' => $pdf_status,
+                                            'email' => $email,
+                                            'date_from' => $date_from,
+                                            'date_to' => $date_to,
+                                            'paged' => $current_page > 1 ? $current_page : null,
+                                        ),
+                                        static function ( $value ) {
+                                            return null !== $value && '' !== (string) $value;
+                                        }
+                                    ),
+                                    $base_url
+                                );
+                                $view_pdf_url  = wp_nonce_url(
+                                    admin_url( 'admin.php?page=agp-pv-submissions&view=' . $submission_id ),
+                                    'agp_pv_view_pdf_' . $submission_id
+                                );
+                                $resend_url    = wp_nonce_url(
+                                    admin_url(
+                                        'admin-post.php?action=agp_pv_resend_email&submission_id=' . $submission_id . '&manager_page=agp-pv-submissions&redirect_to=' . rawurlencode( $redirect_to )
+                                    ),
+                                    'agp_pv_resend_email_' . $submission_id
+                                );
+                                $regenerate_url = wp_nonce_url(
+                                    admin_url(
+                                        'admin-post.php?action=agp_pv_regenerate_pdf&submission_id=' . $submission_id . '&manager_page=agp-pv-submissions&redirect_to=' . rawurlencode( $redirect_to )
+                                    ),
+                                    'agp_pv_regenerate_pdf_' . $submission_id
+                                );
+                                ?>
+                                <div class="agp-pv-reports-row-actions">
+                                    <a class="button button-small" href="<?php echo esc_url( $view_pdf_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Ver PDF', 'agrocampo-post-venta' ); ?></a>
+                                    <a class="button button-small" href="<?php echo esc_url( $resend_url ); ?>"><?php esc_html_e( 'Reenviar correo', 'agrocampo-post-venta' ); ?></a>
+                                    <a class="button button-small" href="<?php echo esc_url( $regenerate_url ); ?>"><?php esc_html_e( 'Regenerar PDF', 'agrocampo-post-venta' ); ?></a>
+                                </div>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>

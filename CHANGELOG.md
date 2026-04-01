@@ -1,3 +1,8 @@
+## [1.17.0] - 2026-04-01
+- `/post-venta-informes/`: se agrega columna `Acciones` por fila con botones `Ver PDF`, `Reenviar correo` y `Regenerar PDF` usando nonces por informe.
+- los handlers existentes de admin (`resend/regenerate`) ahora aceptan `redirect_to` interno validado para volver al gestor standalone con notice de resultado, manteniendo fallback backward-compatible a admin.
+- ajuste visual mínimo en la tabla de informes para soportar la nueva columna de acciones sin alterar filtros, consultas SQL ni persistencia.
+
 ## [1.16.0] - 2026-04-01
 - `/post-venta-informes/`: mejora del estado vacío con ayuda contextual y CTA `Limpiar filtros` cuando hay filtros activos.
 - ajuste visual compatible: sin cambios en consultas, permisos, nonces, persistencia ni flujo funcional.

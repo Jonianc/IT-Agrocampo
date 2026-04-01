@@ -81,6 +81,37 @@ class AGP_PV_Admin {
         return 'agp-pv-submissions';
     }
 
+    private function get_safe_redirect_url( string $fallback_url ): string {
+        $redirect_to = isset( $_REQUEST['redirect_to'] ) ? wp_unslash( (string) $_REQUEST['redirect_to'] ) : '';
+        if ( '' === $redirect_to ) {
+            return $fallback_url;
+        }
+
+        $redirect_to = esc_url_raw( $redirect_to );
+        if ( '' === $redirect_to ) {
+            return $fallback_url;
+        }
+
+        $validated = wp_validate_redirect( $redirect_to, '' );
+
+        return '' !== $validated ? $validated : $fallback_url;
+    }
+
+    private function action_redirect_url( string $manager_page, string $notice, string $notice_message = '' ): string {
+        $fallback_url = admin_url( 'admin.php?page=' . $manager_page );
+        $base_url     = $this->get_safe_redirect_url( $fallback_url );
+
+        $args = array(
+            'agp_pv_notice' => $notice,
+        );
+
+        if ( '' !== $notice_message ) {
+            $args['agp_pv_notice_message'] = $notice_message;
+        }
+
+        return add_query_arg( $args, $base_url );
+    }
+
     public function render_list_page(): void {
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ) );
@@ -1287,7 +1318,7 @@ class AGP_PV_Admin {
         $submission_id = isset( $_GET['submission_id'] ) ? absint( $_GET['submission_id'] ) : 0;
         $manager_page = $this->get_manager_page_from_request();
         if ( ! $submission_id ) {
-            wp_safe_redirect( admin_url( 'admin.php?page=' . $manager_page ) );
+            wp_safe_redirect( $this->action_redirect_url( $manager_page, 'mail_failed', __( 'Informe inválido.', 'agrocampo-post-venta' ) ) );
             exit;
         }
 
@@ -1298,14 +1329,12 @@ class AGP_PV_Admin {
             $result = AGP_PV_Email::send_submission_email( $submission_id );
             if ( empty( $result['mail_sent'] ) ) {
                 $message = $result['mail_error'] ?? __( 'No se pudo enviar el correo.', 'agrocampo-post-venta' );
-                wp_safe_redirect(
-                    admin_url( 'admin.php?page=' . $manager_page . '&agp_pv_notice=mail_failed&agp_pv_notice_message=' . rawurlencode( $message ) )
-                );
+                wp_safe_redirect( $this->action_redirect_url( $manager_page, 'mail_failed', $message ) );
                 exit;
             }
         }
 
-        wp_safe_redirect( admin_url( 'admin.php?page=' . $manager_page . '&agp_pv_notice=mail_sent' ) );
+        wp_safe_redirect( $this->action_redirect_url( $manager_page, 'mail_sent' ) );
         exit;
     }
 
@@ -1318,7 +1347,7 @@ class AGP_PV_Admin {
         $manager_page = $this->get_manager_page_from_request();
 
         if ( ! $submission_id ) {
-            wp_safe_redirect( admin_url( 'admin.php?page=' . $manager_page ) );
+            wp_safe_redirect( $this->action_redirect_url( $manager_page, 'pdf_failed', __( 'Informe inválido.', 'agrocampo-post-venta' ) ) );
             exit;
         }
 
@@ -1328,13 +1357,11 @@ class AGP_PV_Admin {
 
         $result = AGP_PV_PDF::regenerate_pdf_attachment( $submission_id );
         if ( empty( $result['ok'] ) ) {
-            wp_safe_redirect(
-                admin_url( 'admin.php?page=' . $manager_page . '&agp_pv_notice=pdf_failed&agp_pv_notice_message=' . rawurlencode( $result['message'] ?? '' ) )
-            );
+            wp_safe_redirect( $this->action_redirect_url( $manager_page, 'pdf_failed', (string) ( $result['message'] ?? '' ) ) );
             exit;
         }
 
-        wp_safe_redirect( admin_url( 'admin.php?page=' . $manager_page . '&agp_pv_notice=pdf_regenerated' ) );
+        wp_safe_redirect( $this->action_redirect_url( $manager_page, 'pdf_regenerated' ) );
         exit;
     }
 
