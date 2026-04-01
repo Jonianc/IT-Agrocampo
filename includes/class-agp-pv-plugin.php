@@ -11,8 +11,8 @@ class AGP_PV_Plugin {
     private const REWRITE_VERSION = '2';
 
     private function __construct() {
-        add_action( 'init', array( $this, 'maybe_upgrade' ) );
-        add_action( 'init', array( $this, 'register_rewrite' ) );
+        add_action( 'init', array( $this, 'register_rewrite' ), 5 );
+        add_action( 'init', array( $this, 'maybe_upgrade' ), 20 );
         add_action( 'init', array( $this, 'maybe_schedule_notification_events' ) );
         add_filter( 'query_vars', array( $this, 'register_query_var' ) );
         add_filter( 'cron_schedules', array( $this, 'register_cron_schedules' ) );
