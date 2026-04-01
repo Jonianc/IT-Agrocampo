@@ -1,3 +1,7 @@
+## [1.11.0] - 2026-04-01
+- se agrega gestor general de informes en frontend standalone bajo `/post-venta-informes/` para operación diaria fuera de wp-admin, manteniendo permisos de administrador.
+- el admin de informes conserva su función de respaldo e incorpora acceso directo al nuevo gestor frontend general.
+
 ## [1.10.21] - 2026-04-01
 - PDF: en sección Firmas para Garantía ahora se renderizan `Firma Cliente`, `Firma Técnico` y `Firma Jefe de Taller` en una sola fila de 3 columnas para optimizar espacio sin agregar celdas vacías.
 

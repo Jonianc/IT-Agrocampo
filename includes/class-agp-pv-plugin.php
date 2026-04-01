@@ -321,6 +321,7 @@ class AGP_PV_Plugin {
         AGP_PV_DB::maybe_upgrade();
         self::schedule_notification_events();
         add_rewrite_rule( '^post-venta/?$', 'index.php?agp_pv_standalone=1', 'top' );
+        add_rewrite_rule( '^post-venta-informes/?$', 'index.php?agp_pv_reports_standalone=1', 'top' );
         add_rewrite_rule( '^post-venta-observaciones/?$', 'index.php?agp_pv_observations_standalone=1', 'top' );
         flush_rewrite_rules();
     }
@@ -336,14 +337,20 @@ class AGP_PV_Plugin {
 
     public function register_rewrite(): void {
         add_rewrite_rule( '^post-venta/?$', 'index.php?agp_pv_standalone=1', 'top' );
+        add_rewrite_rule( '^post-venta-informes/?$', 'index.php?agp_pv_reports_standalone=1', 'top' );
         add_rewrite_rule( '^post-venta-observaciones/?$', 'index.php?agp_pv_observations_standalone=1', 'top' );
     }
 
     public function register_query_var( array $vars ): array {
         $vars[] = 'agp_pv_standalone';
         $vars[] = 'agp_pv_manifest';
+        $vars[] = 'agp_pv_reports_standalone';
         $vars[] = 'agp_pv_observations_standalone';
         return $vars;
+    }
+
+    public static function reports_standalone_url(): string {
+        return home_url( '/post-venta-informes/' );
     }
 
     public function register_cron_schedules( array $schedules ): array {
@@ -505,6 +512,10 @@ class AGP_PV_Plugin {
         return '1' === get_query_var( 'agp_pv_observations_standalone' );
     }
 
+    public function is_reports_standalone(): bool {
+        return '1' === get_query_var( 'agp_pv_reports_standalone' );
+    }
+
     private function process_observations_review_action(): void {
         if ( ! isset( $_POST['agp_pv_front_action'] ) ) {
             return;
@@ -594,7 +605,7 @@ class AGP_PV_Plugin {
         }
 
         if ( ! $this->is_standalone() ) {
-            if ( ! $this->is_observations_standalone() ) {
+            if ( ! $this->is_observations_standalone() && ! $this->is_reports_standalone() ) {
                 return;
             }
 
@@ -602,12 +613,22 @@ class AGP_PV_Plugin {
                 wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ), esc_html__( 'Acceso denegado', 'agrocampo-post-venta' ), array( 'response' => 403 ) );
             }
 
-            if ( 'POST' === strtoupper( sanitize_text_field( wp_unslash( (string) ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) ) ) ) {
+            if ( $this->is_observations_standalone() && 'POST' === strtoupper( sanitize_text_field( wp_unslash( (string) ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) ) ) ) {
                 $this->process_observations_review_action();
             }
 
             status_header( 200 );
             nocache_headers();
+
+            if ( $this->is_reports_standalone() ) {
+                $template = AGP_PV_PLUGIN_DIR . 'templates/reports-standalone.php';
+                if ( file_exists( $template ) ) {
+                    include $template;
+                    exit;
+                }
+
+                return;
+            }
 
             $template = AGP_PV_PLUGIN_DIR . 'templates/observations-standalone.php';
             if ( file_exists( $template ) ) {
@@ -629,7 +650,7 @@ class AGP_PV_Plugin {
     }
 
     public function enqueue_assets(): void {
-        if ( $this->is_observations_standalone() ) {
+        if ( $this->is_observations_standalone() || $this->is_reports_standalone() ) {
             wp_enqueue_style(
                 'agp-pv-observations-standalone',
                 AGP_PV_PLUGIN_URL . 'assets/css/observations-standalone.css',
