@@ -7,6 +7,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 class AGP_PV_Plugin {
     private static ?AGP_PV_Plugin $instance = null;
     private const VERSION_OPTION_KEY = 'agp_pv_plugin_version';
+    private const REWRITE_VERSION_OPTION_KEY = 'agp_pv_rewrite_version';
+    private const REWRITE_VERSION = '2';
 
     private function __construct() {
         add_action( 'init', array( $this, 'maybe_upgrade' ) );
@@ -321,11 +323,10 @@ class AGP_PV_Plugin {
     public static function activate(): void {
         AGP_PV_DB::maybe_upgrade();
         self::schedule_notification_events();
-        add_rewrite_rule( '^post-venta/?$', 'index.php?agp_pv_standalone=1', 'top' );
-        add_rewrite_rule( '^post-venta-informes/?$', 'index.php?agp_pv_reports_standalone=1', 'top' );
-        add_rewrite_rule( '^post-venta-observaciones/?$', 'index.php?agp_pv_observations_standalone=1', 'top' );
+        self::register_rewrite_rules();
         flush_rewrite_rules();
         update_option( self::VERSION_OPTION_KEY, AGP_PV_VERSION );
+        update_option( self::REWRITE_VERSION_OPTION_KEY, self::REWRITE_VERSION );
     }
 
     public static function deactivate(): void {
@@ -337,15 +338,23 @@ class AGP_PV_Plugin {
         AGP_PV_DB::maybe_upgrade();
 
         $installed_version = (string) get_option( self::VERSION_OPTION_KEY, '' );
-        if ( '' !== $installed_version && version_compare( $installed_version, AGP_PV_VERSION, '>=' ) ) {
-            return;
+        if ( '' === $installed_version || version_compare( $installed_version, AGP_PV_VERSION, '<' ) ) {
+            flush_rewrite_rules( false );
+            update_option( self::VERSION_OPTION_KEY, AGP_PV_VERSION );
         }
 
-        flush_rewrite_rules( false );
-        update_option( self::VERSION_OPTION_KEY, AGP_PV_VERSION );
+        $rewrite_version = (string) get_option( self::REWRITE_VERSION_OPTION_KEY, '' );
+        if ( self::REWRITE_VERSION !== $rewrite_version ) {
+            flush_rewrite_rules( false );
+            update_option( self::REWRITE_VERSION_OPTION_KEY, self::REWRITE_VERSION );
+        }
     }
 
     public function register_rewrite(): void {
+        self::register_rewrite_rules();
+    }
+
+    private static function register_rewrite_rules(): void {
         add_rewrite_rule( '^post-venta/?$', 'index.php?agp_pv_standalone=1', 'top' );
         add_rewrite_rule( '^post-venta-informes/?$', 'index.php?agp_pv_reports_standalone=1', 'top' );
         add_rewrite_rule( '^post-venta-observaciones/?$', 'index.php?agp_pv_observations_standalone=1', 'top' );

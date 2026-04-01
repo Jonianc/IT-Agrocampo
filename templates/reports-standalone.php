@@ -3,21 +3,72 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-
-if ( ! function_exists( 'convert_to_screen' ) ) {
-    require_once ABSPATH . 'wp-admin/includes/screen.php';
+if ( ! current_user_can( 'manage_options' ) ) {
+    wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ) );
 }
 
-if ( function_exists( 'set_current_screen' ) ) {
-    set_current_screen( 'agp-pv_page_agp-pv-submissions' );
+global $wpdb;
+
+$table_name   = AGP_PV_DB::table_name();
+$per_page     = 20;
+$current_page = max( 1, absint( $_GET['paged'] ?? 1 ) );
+$offset       = ( $current_page - 1 ) * $per_page;
+
+$search      = sanitize_text_field( wp_unslash( $_GET['s'] ?? '' ) );
+$mail_status = sanitize_key( wp_unslash( $_GET['mail_status'] ?? '' ) );
+$pdf_status  = sanitize_key( wp_unslash( $_GET['pdf_status'] ?? '' ) );
+$email       = sanitize_text_field( wp_unslash( $_GET['email'] ?? '' ) );
+$date_from   = preg_match( '/^\d{4}-\d{2}-\d{2}$/', (string) ( $_GET['date_from'] ?? '' ) ) ? (string) $_GET['date_from'] : '';
+$date_to     = preg_match( '/^\d{4}-\d{2}-\d{2}$/', (string) ( $_GET['date_to'] ?? '' ) ) ? (string) $_GET['date_to'] : '';
+
+$where_clauses = array();
+$where_values  = array();
+
+if ( '' !== $search ) {
+    $like            = '%' . $wpdb->esc_like( $search ) . '%';
+    $where_clauses[] = '(tecnico LIKE %s OR cliente LIKE %s OR email_cliente LIKE %s OR serie LIKE %s OR CAST(id AS CHAR) LIKE %s)';
+    array_push( $where_values, $like, $like, $like, $like, $like );
 }
 
-$table = new AGP_PV_Submissions_Table(
-    array(
-        'manager_page' => 'agp-pv-submissions',
-    )
-);
-$table->prepare_items();
+if ( in_array( $mail_status, array( 'pending', 'sent', 'failed' ), true ) ) {
+    $where_clauses[] = 'mail_status = %s';
+    $where_values[]  = $mail_status;
+}
+
+if ( in_array( $pdf_status, array( 'pending', 'ready', 'failed' ), true ) ) {
+    $where_clauses[] = 'pdf_status = %s';
+    $where_values[]  = $pdf_status;
+}
+
+if ( '' !== $email ) {
+    $where_clauses[] = 'email_cliente LIKE %s';
+    $where_values[]  = '%' . $wpdb->esc_like( $email ) . '%';
+}
+
+if ( '' !== $date_from ) {
+    $where_clauses[] = 'DATE(created_at) >= %s';
+    $where_values[]  = $date_from;
+}
+
+if ( '' !== $date_to ) {
+    $where_clauses[] = 'DATE(created_at) <= %s';
+    $where_values[]  = $date_to;
+}
+
+$where_sql = '';
+if ( ! empty( $where_clauses ) ) {
+    $where_sql = 'WHERE ' . implode( ' AND ', $where_clauses );
+}
+
+$count_sql   = "SELECT COUNT(*) FROM {$table_name} {$where_sql}";
+$total_items = (int) ( empty( $where_values ) ? $wpdb->get_var( $count_sql ) : $wpdb->get_var( $wpdb->prepare( $count_sql, $where_values ) ) );
+$total_pages = max( 1, (int) ceil( $total_items / $per_page ) );
+
+$list_sql    = "SELECT id, tecnico, cliente, email_cliente, serie, tipo_servicio, mail_status, pdf_status, created_at FROM {$table_name} {$where_sql} ORDER BY created_at DESC LIMIT %d OFFSET %d";
+$list_values = array_merge( $where_values, array( $per_page, $offset ) );
+$items       = $wpdb->get_results( $wpdb->prepare( $list_sql, $list_values ), ARRAY_A );
+
+$base_url = AGP_PV_Plugin::reports_standalone_url();
 ?><!doctype html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -32,7 +83,7 @@ $table->prepare_items();
         <div class="agp-pv-observations-header__main">
             <p class="agp-pv-observations-kicker"><?php esc_html_e( 'Gestor visual principal', 'agrocampo-post-venta' ); ?></p>
             <h1><?php esc_html_e( 'Informes técnicos', 'agrocampo-post-venta' ); ?></h1>
-            <p><?php esc_html_e( 'Busca, filtra y ejecuta acciones sobre informes enviados.', 'agrocampo-post-venta' ); ?></p>
+            <p><?php esc_html_e( 'Busca y filtra informes enviados sin depender de componentes de wp-admin.', 'agrocampo-post-venta' ); ?></p>
         </div>
         <div class="agp-pv-observations-header__actions">
             <a class="button button-secondary" href="<?php echo esc_url( AGP_PV_Plugin::observations_standalone_url() ); ?>"><?php esc_html_e( 'Ir a observaciones', 'agrocampo-post-venta' ); ?></a>
@@ -41,11 +92,125 @@ $table->prepare_items();
     </header>
 
     <section class="agp-pv-observations-panel">
-        <form method="get" action="<?php echo esc_url( AGP_PV_Plugin::reports_standalone_url() ); ?>" class="agp-pv-filters">
-            <?php $table->render_filters(); ?>
-            <?php $table->search_box( __( 'Buscar en informes', 'agrocampo-post-venta' ), 'agp-pv-reports-search' ); ?>
-            <?php $table->display(); ?>
+        <form method="get" action="<?php echo esc_url( $base_url ); ?>" class="agp-pv-filters">
+            <div class="agp-pv-toolbar">
+                <div class="agp-pv-filter-row">
+                    <label class="agp-pv-field" for="agp-pv-filter-mail"><span class="agp-pv-field__label"><?php esc_html_e( 'Estado correo', 'agrocampo-post-venta' ); ?></span>
+                        <select id="agp-pv-filter-mail" name="mail_status">
+                            <option value=""><?php esc_html_e( 'Todos', 'agrocampo-post-venta' ); ?></option>
+                            <option value="pending" <?php selected( $mail_status, 'pending' ); ?>><?php esc_html_e( 'Pendiente', 'agrocampo-post-venta' ); ?></option>
+                            <option value="sent" <?php selected( $mail_status, 'sent' ); ?>><?php esc_html_e( 'Enviado', 'agrocampo-post-venta' ); ?></option>
+                            <option value="failed" <?php selected( $mail_status, 'failed' ); ?>><?php esc_html_e( 'Falló', 'agrocampo-post-venta' ); ?></option>
+                        </select>
+                    </label>
+
+                    <label class="agp-pv-field" for="agp-pv-filter-pdf"><span class="agp-pv-field__label"><?php esc_html_e( 'Estado PDF', 'agrocampo-post-venta' ); ?></span>
+                        <select id="agp-pv-filter-pdf" name="pdf_status">
+                            <option value=""><?php esc_html_e( 'Todos', 'agrocampo-post-venta' ); ?></option>
+                            <option value="pending" <?php selected( $pdf_status, 'pending' ); ?>><?php esc_html_e( 'Pendiente', 'agrocampo-post-venta' ); ?></option>
+                            <option value="ready" <?php selected( $pdf_status, 'ready' ); ?>><?php esc_html_e( 'Listo', 'agrocampo-post-venta' ); ?></option>
+                            <option value="failed" <?php selected( $pdf_status, 'failed' ); ?>><?php esc_html_e( 'Falló', 'agrocampo-post-venta' ); ?></option>
+                        </select>
+                    </label>
+
+                    <label class="agp-pv-field agp-pv-field--wide" for="agp-pv-filter-email"><span class="agp-pv-field__label"><?php esc_html_e( 'Correo', 'agrocampo-post-venta' ); ?></span>
+                        <input type="text" id="agp-pv-filter-email" name="email" value="<?php echo esc_attr( $email ); ?>" placeholder="cliente@correo.cl">
+                    </label>
+
+                    <label class="agp-pv-field agp-pv-field--date" for="agp-pv-filter-date-from"><span class="agp-pv-field__label"><?php esc_html_e( 'Desde', 'agrocampo-post-venta' ); ?></span>
+                        <input type="date" id="agp-pv-filter-date-from" name="date_from" value="<?php echo esc_attr( $date_from ); ?>">
+                    </label>
+
+                    <label class="agp-pv-field agp-pv-field--date" for="agp-pv-filter-date-to"><span class="agp-pv-field__label"><?php esc_html_e( 'Hasta', 'agrocampo-post-venta' ); ?></span>
+                        <input type="date" id="agp-pv-filter-date-to" name="date_to" value="<?php echo esc_attr( $date_to ); ?>">
+                    </label>
+
+                    <label class="agp-pv-field agp-pv-field--wide" for="agp-pv-search"><span class="agp-pv-field__label"><?php esc_html_e( 'Buscar', 'agrocampo-post-venta' ); ?></span>
+                        <input type="search" id="agp-pv-search" name="s" value="<?php echo esc_attr( $search ); ?>" placeholder="<?php esc_attr_e( 'Técnico, cliente, correo, serie o ID', 'agrocampo-post-venta' ); ?>">
+                    </label>
+
+                    <div class="agp-pv-field agp-pv-field--actions">
+                        <span class="agp-pv-field__label agp-pv-field__label--ghost"><?php esc_html_e( 'Acciones', 'agrocampo-post-venta' ); ?></span>
+                        <div class="agp-pv-filter-actions">
+                            <button type="submit" class="button button-primary"><?php esc_html_e( 'Aplicar filtros', 'agrocampo-post-venta' ); ?></button>
+                            <a class="button button-secondary" href="<?php echo esc_url( $base_url ); ?>"><?php esc_html_e( 'Limpiar', 'agrocampo-post-venta' ); ?></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </form>
+
+        <p><strong><?php echo esc_html( sprintf( _n( '%d informe', '%d informes', $total_items, 'agrocampo-post-venta' ), $total_items ) ); ?></strong></p>
+
+        <div class="agp-pv-reports-table-wrap">
+            <table class="wp-list-table widefat striped table-view-list">
+                <thead>
+                <tr>
+                    <th><?php esc_html_e( 'ID', 'agrocampo-post-venta' ); ?></th>
+                    <th><?php esc_html_e( 'Técnico', 'agrocampo-post-venta' ); ?></th>
+                    <th><?php esc_html_e( 'Cliente', 'agrocampo-post-venta' ); ?></th>
+                    <th><?php esc_html_e( 'Correo cliente', 'agrocampo-post-venta' ); ?></th>
+                    <th><?php esc_html_e( 'Serie', 'agrocampo-post-venta' ); ?></th>
+                    <th><?php esc_html_e( 'Tipo de servicio', 'agrocampo-post-venta' ); ?></th>
+                    <th><?php esc_html_e( 'Correo', 'agrocampo-post-venta' ); ?></th>
+                    <th><?php esc_html_e( 'PDF', 'agrocampo-post-venta' ); ?></th>
+                    <th><?php esc_html_e( 'Fecha', 'agrocampo-post-venta' ); ?></th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php if ( empty( $items ) ) : ?>
+                    <tr>
+                        <td colspan="9"><?php esc_html_e( 'No hay informes para los filtros seleccionados.', 'agrocampo-post-venta' ); ?></td>
+                    </tr>
+                <?php else : ?>
+                    <?php foreach ( $items as $item ) : ?>
+                        <tr>
+                            <td><?php echo esc_html( (string) $item['id'] ); ?></td>
+                            <td><?php echo esc_html( (string) $item['tecnico'] ); ?></td>
+                            <td><?php echo esc_html( (string) $item['cliente'] ); ?></td>
+                            <td><?php echo esc_html( (string) $item['email_cliente'] ); ?></td>
+                            <td><?php echo esc_html( (string) $item['serie'] ); ?></td>
+                            <td><?php echo esc_html( (string) $item['tipo_servicio'] ); ?></td>
+                            <td><?php echo esc_html( (string) $item['mail_status'] ); ?></td>
+                            <td><?php echo esc_html( (string) $item['pdf_status'] ); ?></td>
+                            <td><?php echo esc_html( mysql2date( 'd/m/Y H:i', (string) $item['created_at'] ) ); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <?php if ( $total_pages > 1 ) : ?>
+            <div class="tablenav bottom">
+                <div class="tablenav-pages">
+                    <?php
+                    echo wp_kses_post(
+                        paginate_links(
+                            array(
+                                'base' => add_query_arg( 'paged', '%#%', $base_url ),
+                                'format' => '',
+                                'current' => $current_page,
+                                'total' => $total_pages,
+                                'add_args' => array_filter(
+                                    array(
+                                        's' => $search,
+                                        'mail_status' => $mail_status,
+                                        'pdf_status' => $pdf_status,
+                                        'email' => $email,
+                                        'date_from' => $date_from,
+                                        'date_to' => $date_to,
+                                    )
+                                ),
+                                'prev_text' => __( '«', 'agrocampo-post-venta' ),
+                                'next_text' => __( '»', 'agrocampo-post-venta' ),
+                            )
+                        )
+                    );
+                    ?>
+                </div>
+            </div>
+        <?php endif; ?>
     </section>
 </main>
 <?php wp_footer(); ?>
