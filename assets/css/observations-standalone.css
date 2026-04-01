@@ -1667,18 +1667,45 @@ body.agp-pv-observations-standalone {
 }
 
 .agp-pv-reports-wrap .agp-pv-reports-table-wrap .wp-list-table td:nth-child(10) {
-    width: 230px;
+    width: 320px;
 }
 
 .agp-pv-reports-wrap .agp-pv-reports-row-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 8px;
+    align-items: center;
 }
 
-.agp-pv-reports-wrap .agp-pv-reports-row-actions .button {
+.agp-pv-reports-wrap .agp-pv-report-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-height: 30px;
-    margin: 0;
+    padding: 0 10px;
+    border: 1px solid var(--agp-line-strong);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--agp-text);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.agp-pv-reports-wrap .agp-pv-report-action:hover,
+.agp-pv-reports-wrap .agp-pv-report-action:focus {
+    background: #f4f8ff;
+    border-color: #b8cbe3;
+    color: #1f4e88;
+}
+
+.agp-pv-reports-wrap .agp-pv-report-action--primary {
+    background: #eaf3ff;
+    border-color: #bfd7f3;
+    color: #1f4e88;
 }
 
 @media (max-width: 1024px) {
@@ -1687,7 +1714,7 @@ body.agp-pv-observations-standalone {
     }
 
     .agp-pv-reports-wrap .agp-pv-reports-table-wrap .wp-list-table {
-        min-width: 1240px;
+        min-width: 1320px;
     }
 }
 

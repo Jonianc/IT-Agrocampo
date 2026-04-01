@@ -299,9 +299,9 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                                 );
                                 ?>
                                 <div class="agp-pv-reports-row-actions">
-                                    <a class="button button-small" href="<?php echo esc_url( $view_pdf_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Ver PDF', 'agrocampo-post-venta' ); ?></a>
-                                    <a class="button button-small" href="<?php echo esc_url( $resend_url ); ?>"><?php esc_html_e( 'Reenviar correo', 'agrocampo-post-venta' ); ?></a>
-                                    <a class="button button-small" href="<?php echo esc_url( $regenerate_url ); ?>"><?php esc_html_e( 'Regenerar PDF', 'agrocampo-post-venta' ); ?></a>
+                                    <a class="agp-pv-report-action agp-pv-report-action--primary" href="<?php echo esc_url( $view_pdf_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Ver PDF', 'agrocampo-post-venta' ); ?></a>
+                                    <a class="agp-pv-report-action" href="<?php echo esc_url( $resend_url ); ?>"><?php esc_html_e( 'Reenviar correo', 'agrocampo-post-venta' ); ?></a>
+                                    <a class="agp-pv-report-action" href="<?php echo esc_url( $regenerate_url ); ?>"><?php esc_html_e( 'Regenerar PDF', 'agrocampo-post-venta' ); ?></a>
                                 </div>
                             </td>
                         </tr>

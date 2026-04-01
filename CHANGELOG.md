@@ -1,3 +1,8 @@
+## [1.18.0] - 2026-04-01
+- `/post-venta-informes/`: mejora UI/UX de la columna `Acciones` con botones compactos consistentes, jerarquía visual (`Ver PDF` destacado) y distribución horizontal con wrap controlado.
+- ajuste visual de anchos en tabla para equilibrar legibilidad de columnas tras la incorporación de acciones, manteniendo el comportamiento funcional existente.
+- alcance visual compatible: sin cambios en permisos, nonces, handlers, consultas SQL ni persistencia.
+
 ## [1.17.0] - 2026-04-01
 - `/post-venta-informes/`: se agrega columna `Acciones` por fila con botones `Ver PDF`, `Reenviar correo` y `Regenerar PDF` usando nonces por informe.
 - los handlers existentes de admin (`resend/regenerate`) ahora aceptan `redirect_to` interno validado para volver al gestor standalone con notice de resultado, manteniendo fallback backward-compatible a admin.
