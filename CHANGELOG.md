@@ -1,3 +1,7 @@
+## [1.18.1] - 2026-04-01
+- `/post-venta-informes/`: la columna `ID` ahora muestra el mismo identificador visible que admin (`AGP_PV_DB::get_visible_report_id`), manteniendo acciones por fila con `submission_id` interno para nonces/handlers.
+- ajuste compatible de presentación: sin cambios en permisos, consultas SQL, persistencia ni flujos de correo/PDF.
+
 ## [1.18.0] - 2026-04-01
 - `/post-venta-informes/`: mejora UI/UX de la columna `Acciones` con botones compactos consistentes, jerarquía visual (`Ver PDF` destacado) y distribución horizontal con wrap controlado.
 - ajuste visual de anchos en tabla para equilibrar legibilidad de columnas tras la incorporación de acciones, manteniendo el comportamiento funcional existente.

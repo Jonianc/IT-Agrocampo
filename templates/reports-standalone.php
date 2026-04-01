@@ -236,7 +236,7 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                 <?php else : ?>
                     <?php foreach ( $items as $item ) : ?>
                         <tr>
-                            <td><?php echo esc_html( (string) $item['id'] ); ?></td>
+                            <td><?php echo esc_html( (string) AGP_PV_DB::get_visible_report_id( $item ) ); ?></td>
                             <td><?php echo esc_html( (string) $item['tecnico'] ); ?></td>
                             <td><?php echo esc_html( (string) $item['cliente'] ); ?></td>
                             <td><?php echo esc_html( (string) $item['email_cliente'] ); ?></td>
