@@ -705,7 +705,7 @@ class AGP_PV_PDF_Document extends FPDF {
         return $bottom + $after;
     }
 
-    public function estimate_signature_section_height( bool $force_compact, bool $no_images ): float {
+    public function estimate_signature_section_height( bool $force_compact, bool $no_images, int $row_count = 1 ): float {
         $header_h = $this->compact_density ? 10.2 : 11.5;
         $body_top = $this->compact_density ? 1.3 : 2.1;
         $box_h = 27.0;
@@ -726,7 +726,8 @@ class AGP_PV_PDF_Document extends FPDF {
 
         // signature_row places label + 6mm top before box.
         $row_h = 6.0 + $box_h + $tail_gap;
-        return $header_h + $body_top + $row_h + $this->estimate_card_end_height();
+        $rows = max( 1, $row_count );
+        return $header_h + $body_top + ( $row_h * $rows ) + $this->estimate_card_end_height();
     }
 
     /**
@@ -1363,10 +1364,14 @@ class AGP_PV_PDF {
             $thresholds = self::get_layout_thresholds();
             $firma_cliente_path = self::resolve_attachment_path( (int) ( $submission['firma_cliente_id'] ?? 0 ) );
             $firma_tecnico_path = self::resolve_attachment_path( (int) ( $submission['firma_tecnico_id'] ?? 0 ) );
-            $signatures_no_images = ! $firma_cliente_path && ! $firma_tecnico_path;
+            $firma_jefe_taller_path = self::resolve_attachment_path( (int) ( $submission['firma_jefe_taller_id'] ?? 0 ) );
+            $is_garantia = 'two' === (string) ( $submission['tipo_servicio'] ?? '' );
+            $show_jefe_signature = $is_garantia || ( '' !== $firma_jefe_taller_path );
+            $signatures_no_images = ! $firma_cliente_path && ! $firma_tecnico_path && ! $firma_jefe_taller_path;
+            $signature_row_count = $show_jefe_signature ? 2 : 1;
 
             if ( ! empty( $visible_detail_rows ) ) {
-                $needed_for_signatures = $document->estimate_card_end_height() + $document->estimate_signature_section_height( false, $signatures_no_images ) + (float) $thresholds['preflight_extra_padding_mm'];
+                $needed_for_signatures = $document->estimate_card_end_height() + $document->estimate_signature_section_height( false, $signatures_no_images, $signature_row_count ) + (float) $thresholds['preflight_extra_padding_mm'];
                 if ( $document->get_space_left() < $needed_for_signatures ) {
                     $document->set_compact_density( true );
                     $document->set_signature_compact( true );
@@ -1387,6 +1392,18 @@ class AGP_PV_PDF {
                     'path'  => $firma_tecnico_path,
                 )
             );
+            if ( $show_jefe_signature ) {
+                $document->signature_row(
+                    array(
+                        'label' => __( 'Firma Jefe de Taller', 'agrocampo-post-venta' ),
+                        'path'  => $firma_jefe_taller_path,
+                    ),
+                    array(
+                        'label' => ' ',
+                        'path'  => '',
+                    )
+                );
+            }
             $document->card_end();
 
             $document->Output( 'F', $path );

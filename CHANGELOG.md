@@ -1,3 +1,6 @@
+## [1.10.20] - 2026-04-01
+- PDF: se agrega render de `Firma Jefe de Taller` en la sección Firmas (segunda fila) para casos de Garantía y cuando exista adjunto.
+
 ## [1.10.19] - 2026-04-01
 - fix en serialización de firmas en frontend: para `Garantía`, la firma de jefe de taller ya no se limpia por estar en un paso oculto al enviar desde paso 4.
 
