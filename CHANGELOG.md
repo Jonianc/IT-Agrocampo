@@ -1,3 +1,6 @@
+## [1.10.21] - 2026-04-01
+- PDF: en sección Firmas para Garantía ahora se renderizan `Firma Cliente`, `Firma Técnico` y `Firma Jefe de Taller` en una sola fila de 3 columnas para optimizar espacio sin agregar celdas vacías.
+
 ## [1.10.20] - 2026-04-01
 - PDF: se agrega render de `Firma Jefe de Taller` en la sección Firmas (segunda fila) para casos de Garantía y cuando exista adjunto.
 

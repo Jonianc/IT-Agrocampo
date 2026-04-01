@@ -585,6 +585,45 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->force_signature_compact = false;
     }
 
+    public function signature_row_three( array $left, array $center, array $right ): void {
+        $gap       = 4.0;
+        $box_h     = 27.0;
+        $tail_gap  = 5.2;
+        $box_w     = ( $this->w - $this->lMargin - $this->rMargin - ( 2 * $gap ) ) / 3;
+        $left_has_image = ! empty( $left['path'] ) && file_exists( (string) $left['path'] );
+        $center_has_image = ! empty( $center['path'] ) && file_exists( (string) $center['path'] );
+        $right_has_image = ! empty( $right['path'] ) && file_exists( (string) $right['path'] );
+        $no_images = ! $left_has_image && ! $center_has_image && ! $right_has_image;
+
+        $space_left = $this->space_left();
+        if ( $this->force_signature_compact || ( $space_left < 36.0 && $space_left >= 30.0 ) ) {
+            $box_h    = 22.0;
+            $tail_gap = 3.8;
+        }
+
+        if ( $this->compact_density ) {
+            $box_h = min( $box_h, 19.0 );
+            $tail_gap = min( $tail_gap, 2.8 );
+        }
+
+        if ( $no_images ) {
+            $box_h = min( $box_h, $this->compact_density ? 12.5 : 15.0 );
+            $tail_gap = min( $tail_gap, $this->compact_density ? 1.6 : 2.2 );
+        }
+
+        $this->ensure_space( $box_h + 7.0 );
+
+        $y = $this->GetY();
+        $x = $this->lMargin;
+
+        $this->signature_box( (string) $left['label'], (string) $left['path'], $x, $y, $box_w, $box_h );
+        $this->signature_box( (string) $center['label'], (string) $center['path'], $x + $box_w + $gap, $y, $box_w, $box_h );
+        $this->signature_box( (string) $right['label'], (string) $right['path'], $x + ( 2 * ( $box_w + $gap ) ), $y, $box_w, $box_h );
+
+        $this->SetXY( $this->lMargin, $y + $box_h + $tail_gap );
+        $this->force_signature_compact = false;
+    }
+
     private function signature_box( string $label, string $path, float $x, float $y, float $w, float $h ): void {
         $label = self::enc( $label );
 
@@ -1368,7 +1407,7 @@ class AGP_PV_PDF {
             $is_garantia = 'two' === (string) ( $submission['tipo_servicio'] ?? '' );
             $show_jefe_signature = $is_garantia || ( '' !== $firma_jefe_taller_path );
             $signatures_no_images = ! $firma_cliente_path && ! $firma_tecnico_path && ! $firma_jefe_taller_path;
-            $signature_row_count = $show_jefe_signature ? 2 : 1;
+            $signature_row_count = 1;
 
             if ( ! empty( $visible_detail_rows ) ) {
                 $needed_for_signatures = $document->estimate_card_end_height() + $document->estimate_signature_section_height( false, $signatures_no_images, $signature_row_count ) + (float) $thresholds['preflight_extra_padding_mm'];
@@ -1382,25 +1421,30 @@ class AGP_PV_PDF {
 
             $signature_card_min_height = $signatures_no_images ? max( 18.0, (float) $thresholds['signatures_card_min_height'] - 10.0 ) : (float) $thresholds['signatures_card_min_height'];
             $document->card_start( __( 'Firmas', 'agrocampo-post-venta' ), $signature_card_min_height );
-            $document->signature_row(
-                array(
-                    'label' => __( 'Firma Cliente', 'agrocampo-post-venta' ),
-                    'path'  => $firma_cliente_path,
-                ),
-                array(
-                    'label' => __( 'Firma Técnico', 'agrocampo-post-venta' ),
-                    'path'  => $firma_tecnico_path,
-                )
-            );
             if ( $show_jefe_signature ) {
-                $document->signature_row(
+                $document->signature_row_three(
+                    array(
+                        'label' => __( 'Firma Cliente', 'agrocampo-post-venta' ),
+                        'path'  => $firma_cliente_path,
+                    ),
+                    array(
+                        'label' => __( 'Firma Técnico', 'agrocampo-post-venta' ),
+                        'path'  => $firma_tecnico_path,
+                    ),
                     array(
                         'label' => __( 'Firma Jefe de Taller', 'agrocampo-post-venta' ),
                         'path'  => $firma_jefe_taller_path,
+                    )
+                );
+            } else {
+                $document->signature_row(
+                    array(
+                        'label' => __( 'Firma Cliente', 'agrocampo-post-venta' ),
+                        'path'  => $firma_cliente_path,
                     ),
                     array(
-                        'label' => ' ',
-                        'path'  => '',
+                        'label' => __( 'Firma Técnico', 'agrocampo-post-venta' ),
+                        'path'  => $firma_tecnico_path,
                     )
                 );
             }
