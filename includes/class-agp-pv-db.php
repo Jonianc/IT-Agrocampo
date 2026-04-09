@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class AGP_PV_DB {
-    public const VERSION = '1.8.0';
+    public const VERSION = '1.9.0';
     public const OPTION_KEY = 'agp_pv_db_version';
 
     public static function table_name(): string {
@@ -48,6 +48,7 @@ class AGP_PV_DB {
             fecha_reparacion VARCHAR(20) DEFAULT '',
             fecha_cierre VARCHAR(20) DEFAULT '',
             lubricantes TEXT,
+            lubricantes_json LONGTEXT NULL,
             filtros_utilizados TEXT,
             componentes_utilizados TEXT,
             trabajos_realizados TEXT,

@@ -1377,7 +1377,7 @@ class AGP_PV_PDF {
                 $document->card_end();
             }
 
-            $lub = self::format_supply_lines( self::limit_pdf_block_text( self::normalize_pdf_value( $submission['lubricantes'] ?? '', '', true ) ) );
+            $lub = self::format_supply_lines( self::limit_pdf_block_text( self::normalize_pdf_value( AGP_PV_Plugin::resolve_lubricants_text_from_submission( $submission ), '', true ) ) );
             $fil = self::format_supply_lines( self::limit_pdf_block_text( self::normalize_pdf_value( $submission['filtros_utilizados'] ?? '', '', true ) ) );
             $com = self::format_supply_lines( self::limit_pdf_block_text( self::normalize_pdf_value( $submission['componentes_utilizados'] ?? '', '', true ) ) );
             $trabajos = self::limit_pdf_block_text( self::normalize_pdf_value( $submission['trabajos_realizados'] ?? '', '', true ) );

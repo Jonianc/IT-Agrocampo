@@ -214,10 +214,16 @@ $render_machine_status_block = static function () use ( $machine_status_options,
 
             <?php if ( 'top' === $machine_status_position ) { $render_machine_status_block(); } ?>
 
-            <div class="agp-pv-field">
-                <label for="agp-pv-lubricantes"><?php esc_html_e( 'Lubricantes', 'agrocampo-post-venta' ); ?></label>
-                <textarea id="agp-pv-lubricantes" name="lubricantes" rows="3"></textarea>
+            <div class="agp-pv-field" id="agp-pv-lubricantes-repeater" data-max-rows="10">
+                <label><?php esc_html_e( 'Lubricantes', 'agrocampo-post-venta' ); ?></label>
+                <div class="agp-pv-grid agp-pv-grid--lubricants" data-lubricants-rows></div>
+                <div class="agp-pv-step-actions">
+                    <button type="button" class="button button-secondary" data-lubricants-add><?php esc_html_e( 'Agregar fila', 'agrocampo-post-venta' ); ?></button>
+                </div>
+                <input type="hidden" id="agp-pv-lubricantes" name="lubricantes" value="">
+                <input type="hidden" id="agp-pv-lubricantes-json" name="lubricantes_json" value="">
                 <small class="agp-pv-help"><?php esc_html_e( 'Indique aceites/grasas aplicados y cantidades aproximadas.', 'agrocampo-post-venta' ); ?></small>
+                <span class="agp-pv-error" data-error-for="lubricantes_json"></span>
             </div>
 
             <div class="agp-pv-field">

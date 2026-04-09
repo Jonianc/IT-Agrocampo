@@ -2041,7 +2041,7 @@ class AGP_PV_Admin {
             'Fecha a contactar' => sanitize_text_field( (string) ( $row['fecha_contacto'] ?? '' ) ),
             'Fecha reparación' => sanitize_text_field( (string) ( $row['fecha_reparacion'] ?? '' ) ),
             'Fecha cierre' => sanitize_text_field( (string) ( $row['fecha_cierre'] ?? '' ) ),
-            'Lubricantes' => sanitize_textarea_field( (string) ( $row['lubricantes'] ?? '' ) ),
+            'Lubricantes' => AGP_PV_Plugin::resolve_lubricants_text_from_submission( $row ),
             'Filtros utilizados' => sanitize_textarea_field( (string) ( $row['filtros_utilizados'] ?? '' ) ),
             'Componentes utilizados' => sanitize_textarea_field( (string) ( $row['componentes_utilizados'] ?? '' ) ),
             'Trabajos realizados' => sanitize_textarea_field( (string) ( $row['trabajos_realizados'] ?? '' ) ),
@@ -2242,6 +2242,7 @@ class AGP_PV_Admin {
             'fecha_reparacion' => sanitize_text_field( $this->legacy_value( $row, 'fecha reparacion' ) ),
             'fecha_cierre' => sanitize_text_field( $this->legacy_value( $row, 'fecha cierre' ) ),
             'lubricantes' => sanitize_textarea_field( $this->legacy_value( $row, 'lubricantes' ) ),
+            'lubricantes_json' => null,
             'filtros_utilizados' => sanitize_textarea_field( $this->legacy_value( $row, 'filtros utilizados' ) ),
             'componentes_utilizados' => sanitize_textarea_field( $this->legacy_value( $row, 'componentes utilizados' ) ),
             'trabajos_realizados' => sanitize_textarea_field( $this->legacy_value( $row, 'trabajos realizados' ) ),
@@ -2290,6 +2291,7 @@ class AGP_PV_Admin {
             '%s', // fecha_reparacion
             '%s', // fecha_cierre
             '%s', // lubricantes
+            '%s', // lubricantes_json
             '%s', // filtros_utilizados
             '%s', // componentes_utilizados
             '%s', // trabajos_realizados
@@ -2966,7 +2968,7 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
             'Fecha a contactar' => sanitize_text_field( (string) ( $row['fecha_contacto'] ?? '' ) ),
             'Fecha reparación' => sanitize_text_field( (string) ( $row['fecha_reparacion'] ?? '' ) ),
             'Fecha cierre' => sanitize_text_field( (string) ( $row['fecha_cierre'] ?? '' ) ),
-            'Lubricantes' => sanitize_textarea_field( (string) ( $row['lubricantes'] ?? '' ) ),
+            'Lubricantes' => AGP_PV_Plugin::resolve_lubricants_text_from_submission( $row ),
             'Filtros utilizados' => sanitize_textarea_field( (string) ( $row['filtros_utilizados'] ?? '' ) ),
             'Componentes utilizados' => sanitize_textarea_field( (string) ( $row['componentes_utilizados'] ?? '' ) ),
             'Trabajos realizados' => sanitize_textarea_field( (string) ( $row['trabajos_realizados'] ?? '' ) ),
@@ -3247,6 +3249,8 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
         if ( '' !== $machine_status_label ) {
             $submission['estado_maquina'] = $machine_status_label;
         }
+
+        $submission['lubricantes'] = AGP_PV_Plugin::resolve_lubricants_text_from_submission( $submission );
 
         foreach ( $submission as $key => $value ) {
             if ( 'fotos_ids' === $key ) {

@@ -1,3 +1,9 @@
+## [1.18.3] - 2026-04-09
+- formulario standalone: `Lubricantes` migra a captura estructurada en repeater (máximo 10 filas), manteniendo compatibilidad legacy con hidden `lubricantes` y nuevo `lubricantes_json`.
+- frontend: se expone catálogo estático en `agpPvData.lubricantsCatalog`, se filtra producto por tipo y se autocompletan `código/presentación/descripción`; antes de enviar se generan `lubricantes_json` y resumen texto legacy.
+- backend: se agrega columna `lubricantes_json` (LONGTEXT NULL), validación/sanitización/normalización de JSON y regeneración server-side del resumen `lubricantes`, con fallback backward-compatible cuando no llega JSON.
+- salida admin/PDF: prioriza `lubricantes_json` cuando existe y conserva fallback a `lubricantes` legacy.
+
 ## [1.18.2] - 2026-04-01
 - `/post-venta-informes/`: fix de ID visible en tabla standalone; la consulta ahora incluye `legacy_id` para alinear el render con admin (`AGP_PV_DB::get_visible_report_id`).
 - el notice de acciones (`agp_pv_notice`) ahora se limpia de la URL tras mostrarse una vez, evitando que mensajes como `PDF regenerado correctamente.` persistan al recargar.

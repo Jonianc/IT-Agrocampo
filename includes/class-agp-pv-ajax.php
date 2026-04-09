@@ -196,7 +196,7 @@ class AGP_PV_Ajax {
     }
 
     private function sanitize_submission( array $raw ): array {
-        return array(
+        $data = array(
             'tecnico' => sanitize_text_field( $raw['tecnico'] ?? '' ),
             'cliente' => sanitize_text_field( $raw['cliente'] ?? '' ),
             'email_cliente' => sanitize_email( $raw['email_cliente'] ?? '' ),
@@ -214,6 +214,7 @@ class AGP_PV_Ajax {
             'fecha_reparacion' => sanitize_text_field( $raw['fecha_reparacion'] ?? '' ),
             'fecha_cierre' => sanitize_text_field( $raw['fecha_cierre'] ?? '' ),
             'lubricantes' => sanitize_textarea_field( $raw['lubricantes'] ?? '' ),
+            'lubricantes_json' => wp_unslash( (string) ( $raw['lubricantes_json'] ?? '' ) ),
             'filtros_utilizados' => sanitize_textarea_field( $raw['filtros_utilizados'] ?? '' ),
             'componentes_utilizados' => sanitize_textarea_field( $raw['componentes_utilizados'] ?? '' ),
             'trabajos_realizados' => sanitize_textarea_field( $raw['trabajos_realizados'] ?? '' ),
@@ -222,6 +223,23 @@ class AGP_PV_Ajax {
             'observaciones' => AGP_PV_Plugin::normalize_observation_text( sanitize_textarea_field( $raw['observaciones'] ?? '' ) ),
             'correo_copia' => sanitize_email( $raw['correo_copia'] ?? '' ),
         );
+
+        $normalized_lubricants = AGP_PV_Plugin::normalize_lubricants_json( (string) $data['lubricantes_json'] );
+        if ( '' !== trim( (string) $data['lubricantes_json'] ) ) {
+            if ( '' !== $normalized_lubricants['error'] ) {
+                $data['lubricantes_json_error'] = $normalized_lubricants['error'];
+            } else {
+                $data['lubricantes_json'] = wp_json_encode( $normalized_lubricants['items'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+                if ( false === $data['lubricantes_json'] ) {
+                    $data['lubricantes_json'] = '';
+                    $data['lubricantes_json_error'] = __( 'Formato de lubricantes inválido.', 'agrocampo-post-venta' );
+                } else {
+                    $data['lubricantes'] = AGP_PV_Plugin::build_lubricants_legacy_summary( $normalized_lubricants['items'] );
+                }
+            }
+        }
+
+        return $data;
     }
 
     private function validate_submission( array $data ): array {
@@ -250,6 +268,10 @@ class AGP_PV_Ajax {
         }
         if ( '' === $data['tipo_servicio'] ) {
             $errors['tipo_servicio'] = __( 'Tipo de Servicio es obligatorio.', 'agrocampo-post-venta' );
+        }
+
+        if ( ! empty( $data['lubricantes_json_error'] ) ) {
+            $errors['lubricantes_json'] = sanitize_text_field( (string) $data['lubricantes_json_error'] );
         }
 
         if ( 'Interno' === $data['tipo_servicio'] && '' === $data['tipo_mantencion'] ) {
@@ -598,6 +620,7 @@ class AGP_PV_Ajax {
                 'fecha_reparacion' => $data['fecha_reparacion'],
                 'fecha_cierre' => $data['fecha_cierre'],
                 'lubricantes' => $data['lubricantes'],
+                'lubricantes_json' => $data['lubricantes_json'],
                 'filtros_utilizados' => $data['filtros_utilizados'],
                 'componentes_utilizados' => $data['componentes_utilizados'],
                 'trabajos_realizados' => $data['trabajos_realizados'],
@@ -645,6 +668,7 @@ class AGP_PV_Ajax {
                 '%s', // fecha_reparacion
                 '%s', // fecha_cierre
                 '%s', // lubricantes
+                '%s', // lubricantes_json
                 '%s', // filtros_utilizados
                 '%s', // componentes_utilizados
                 '%s', // trabajos_realizados

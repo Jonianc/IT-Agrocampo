@@ -6,6 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class AGP_PV_Plugin {
     private static ?AGP_PV_Plugin $instance = null;
+    /** @var array<int,array<string,string>>|null */
+    private static ?array $lubricants_catalog = null;
     private const VERSION_OPTION_KEY = 'agp_pv_plugin_version';
     private const REWRITE_VERSION_OPTION_KEY = 'agp_pv_rewrite_version';
     private const REWRITE_VERSION = '2';
@@ -141,6 +143,217 @@ class AGP_PV_Plugin {
             "COALESCE(TRIM({$column}), '') <> ''",
             "UPPER(TRIM(COALESCE({$column}, ''))) NOT IN ('NULL', 'N/A', 'NA', '-', 'SIN OBSERVACIONES')",
         );
+    }
+
+
+    /**
+     * @return array<int,array<string,string>>
+     */
+    public static function get_lubricants_catalog(): array {
+        if ( null !== self::$lubricants_catalog ) {
+            return self::$lubricants_catalog;
+        }
+
+        $path = AGP_PV_PLUGIN_DIR . 'data/aceites-catalog.json';
+        if ( ! file_exists( $path ) ) {
+            self::$lubricants_catalog = array();
+            return self::$lubricants_catalog;
+        }
+
+        $contents = file_get_contents( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+        if ( false === $contents || '' === trim( $contents ) ) {
+            self::$lubricants_catalog = array();
+            return self::$lubricants_catalog;
+        }
+
+        $decoded = json_decode( $contents, true );
+        if ( ! is_array( $decoded ) ) {
+            self::$lubricants_catalog = array();
+            return self::$lubricants_catalog;
+        }
+
+        $catalog = array();
+        foreach ( $decoded as $row ) {
+            if ( ! is_array( $row ) ) {
+                continue;
+            }
+
+            $type = sanitize_text_field( (string) ( $row['type'] ?? '' ) );
+            $product = sanitize_text_field( (string) ( $row['product'] ?? '' ) );
+            if ( '' === $type || '' === $product ) {
+                continue;
+            }
+
+            $catalog[] = array(
+                'type' => $type,
+                'product' => $product,
+                'code' => sanitize_text_field( (string) ( $row['code'] ?? '' ) ),
+                'presentation' => sanitize_text_field( (string) ( $row['presentation'] ?? '' ) ),
+                'description' => sanitize_text_field( (string) ( $row['description'] ?? '' ) ),
+                'unit' => sanitize_text_field( (string) ( $row['unit'] ?? '' ) ),
+            );
+        }
+
+        self::$lubricants_catalog = $catalog;
+        return self::$lubricants_catalog;
+    }
+
+    /**
+     * @param array<int,array<string,mixed>> $items
+     */
+    public static function build_lubricants_legacy_summary( array $items ): string {
+        $lines = array();
+
+        foreach ( $items as $item ) {
+            $product = sanitize_text_field( (string) ( $item['product'] ?? '' ) );
+            if ( '' === $product ) {
+                continue;
+            }
+
+            $type = sanitize_text_field( (string) ( $item['type'] ?? '' ) );
+            $code = sanitize_text_field( (string) ( $item['code'] ?? '' ) );
+            $presentation = sanitize_text_field( (string) ( $item['presentation'] ?? '' ) );
+            $description = sanitize_text_field( (string) ( $item['description'] ?? '' ) );
+            $quantity = sanitize_text_field( (string) ( $item['quantity'] ?? '' ) );
+            $unit = sanitize_text_field( (string) ( $item['unit'] ?? '' ) );
+            $observation = sanitize_textarea_field( (string) ( $item['observation'] ?? '' ) );
+
+            $line_parts = array();
+            if ( '' !== $type ) {
+                $line_parts[] = $type;
+            }
+
+            $line_parts[] = $product;
+
+            $meta = array();
+            if ( '' !== $code ) {
+                $meta[] = 'Código: ' . $code;
+            }
+            if ( '' !== $presentation ) {
+                $meta[] = 'Presentación: ' . $presentation;
+            }
+            if ( '' !== $description ) {
+                $meta[] = $description;
+            }
+            if ( '' !== $quantity ) {
+                $meta[] = 'Cantidad: ' . $quantity . ( '' !== $unit ? ' ' . $unit : '' );
+            }
+            if ( '' !== $observation ) {
+                $meta[] = 'Obs: ' . $observation;
+            }
+
+            if ( ! empty( $meta ) ) {
+                $line_parts[] = '(' . implode( '; ', $meta ) . ')';
+            }
+
+            $lines[] = implode( ' - ', $line_parts );
+        }
+
+        return implode( "\n", $lines );
+    }
+
+    /**
+     * @return array{items:array<int,array<string,string>>,error:string}
+     */
+    public static function normalize_lubricants_json( string $raw_json ): array {
+        $raw_json = trim( $raw_json );
+        if ( '' === $raw_json ) {
+            return array(
+                'items' => array(),
+                'error' => '',
+            );
+        }
+
+        $decoded = json_decode( $raw_json, true );
+        if ( ! is_array( $decoded ) ) {
+            return array(
+                'items' => array(),
+                'error' => __( 'Formato de lubricantes inválido.', 'agrocampo-post-venta' ),
+            );
+        }
+
+        $catalog = self::get_lubricants_catalog();
+        $catalog_map = array();
+        foreach ( $catalog as $catalog_item ) {
+            $catalog_key = strtolower( trim( (string) $catalog_item['type'] ) . '|' . trim( (string) $catalog_item['product'] ) );
+            $catalog_map[ $catalog_key ] = $catalog_item;
+        }
+
+        $normalized = array();
+        foreach ( $decoded as $row ) {
+            if ( ! is_array( $row ) ) {
+                continue;
+            }
+
+            $type = sanitize_text_field( (string) ( $row['type'] ?? '' ) );
+            $product = sanitize_text_field( (string) ( $row['product'] ?? '' ) );
+            $quantity = sanitize_text_field( (string) ( $row['quantity'] ?? '' ) );
+            $unit = sanitize_text_field( (string) ( $row['unit'] ?? '' ) );
+            $observation = sanitize_textarea_field( (string) ( $row['observation'] ?? '' ) );
+
+            if ( '' === $type && '' === $product && '' === $quantity && '' === $unit && '' === $observation ) {
+                continue;
+            }
+
+            if ( '' === $product ) {
+                continue;
+            }
+
+            if ( '' === $quantity ) {
+                return array(
+                    'items' => array(),
+                    'error' => __( 'Cantidad obligatoria para lubricantes con producto seleccionado.', 'agrocampo-post-venta' ),
+                );
+            }
+
+            $catalog_key = strtolower( trim( $type ) . '|' . trim( $product ) );
+            if ( ! isset( $catalog_map[ $catalog_key ] ) ) {
+                return array(
+                    'items' => array(),
+                    'error' => __( 'Producto de lubricantes inválido.', 'agrocampo-post-venta' ),
+                );
+            }
+
+            $catalog_item = $catalog_map[ $catalog_key ];
+            if ( '' === $unit ) {
+                $unit = (string) ( $catalog_item['unit'] ?? '' );
+            }
+
+            $normalized[] = array(
+                'type' => $type,
+                'product' => $product,
+                'code' => sanitize_text_field( (string) ( $catalog_item['code'] ?? '' ) ),
+                'presentation' => sanitize_text_field( (string) ( $catalog_item['presentation'] ?? '' ) ),
+                'description' => sanitize_text_field( (string) ( $catalog_item['description'] ?? '' ) ),
+                'quantity' => $quantity,
+                'unit' => $unit,
+                'observation' => $observation,
+            );
+
+            if ( count( $normalized ) > 10 ) {
+                return array(
+                    'items' => array(),
+                    'error' => __( 'Máximo 10 filas de lubricantes.', 'agrocampo-post-venta' ),
+                );
+            }
+        }
+
+        return array(
+            'items' => $normalized,
+            'error' => '',
+        );
+    }
+
+    public static function resolve_lubricants_text_from_submission( array $submission ): string {
+        $raw_json = isset( $submission['lubricantes_json'] ) ? (string) $submission['lubricantes_json'] : '';
+        if ( '' !== trim( $raw_json ) ) {
+            $normalized = self::normalize_lubricants_json( $raw_json );
+            if ( '' === $normalized['error'] && ! empty( $normalized['items'] ) ) {
+                return self::build_lubricants_legacy_summary( $normalized['items'] );
+            }
+        }
+
+        return sanitize_textarea_field( (string) ( $submission['lubricantes'] ?? '' ) );
     }
 
     public static function get_observations_overdue_days(): int {
@@ -708,6 +921,7 @@ class AGP_PV_Plugin {
                 'debugFrontend' => ( defined( 'WP_DEBUG' ) && WP_DEBUG ),
                 'detalleMinimumChars' => 10,
                 'machineStatusPendingValue' => 'operativo_con_pendiente',
+                'lubricantsCatalog' => self::get_lubricants_catalog(),
                 'serviceWorker' => array(
                     'url' => AGP_PV_PLUGIN_URL . 'assets/js/standalone-sw.js',
                     'scope' => home_url( '/post-venta/' ),
