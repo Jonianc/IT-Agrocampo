@@ -1,3 +1,8 @@
+## [1.18.5] - 2026-04-09
+- fix adicional en modo fallback sin catálogo: si existe `lubricantes_json` restaurado y `lubricantes` legacy vacío, el textarea fallback se hidrata con resumen reconstruido para evitar pérdida silenciosa de borrador.
+- en fallback, `lubricantes_json` ya no se borra en submit si el usuario no editó el textarea; solo se limpia cuando hay edición explícita del texto.
+- alcance compatible y acotado: sin cambios de schema/permisos/nonces.
+
 ## [1.18.4] - 2026-04-09
 - fix repeater de lubricantes: ahora hidrata filas desde `lubricantes_json` restaurado y evita sobrescribir hidden fields con vacío cuando no hubo interacción del usuario.
 - fix de regresión con catálogo vacío: frontend degrada a captura compatible de texto legacy y backend deja de rechazar payload no vacío por validación de catálogo inexistente.

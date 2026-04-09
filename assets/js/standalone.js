@@ -1982,6 +1982,7 @@ function initPhotos() {
         var $rows = $wrapper.find('[data-lubricants-rows]');
         var $hiddenLegacy = $('#agp-pv-lubricantes');
         var $hiddenJson = $('#agp-pv-lubricantes-json');
+        var initialHiddenJsonRaw = $.trim(String($hiddenJson.val() || ''));
         var allowOverwriteEmpty = false;
         var catalogEnabled = typeOptions.length > 0;
 
@@ -2153,10 +2154,19 @@ function initPhotos() {
         }
 
         if (!catalogEnabled) {
+            var restoredItems = getHiddenJsonItems();
+            var fallbackInitialText = String($hiddenLegacy.val() || '');
+            var fallbackEdited = false;
+
+            if (!fallbackInitialText && restoredItems.length) {
+                fallbackInitialText = buildLegacySummary(restoredItems);
+                $hiddenLegacy.val(fallbackInitialText);
+            }
+
             var $fallback = $('<textarea />', {
                 id: 'agp-pv-lubricantes-fallback',
                 rows: 3
-            }).val(String($hiddenLegacy.val() || ''));
+            }).val(fallbackInitialText);
 
             $rows.empty();
             $rows.append(
@@ -2171,11 +2181,14 @@ function initPhotos() {
                 $hiddenJson.val('');
                 clearLubricantsError();
                 allowOverwriteEmpty = true;
+                fallbackEdited = true;
             });
 
             $('#agp-pv-form').on('submit', function () {
                 $hiddenLegacy.val(String($fallback.val() || ''));
-                $hiddenJson.val('');
+                if (fallbackEdited || !initialHiddenJsonRaw) {
+                    $hiddenJson.val('');
+                }
             });
 
             $('#agp-pv-form').on('click', '.agp-pv-new-report', function () {
