@@ -1,3 +1,8 @@
+## [1.18.4] - 2026-04-09
+- fix repeater de lubricantes: ahora hidrata filas desde `lubricantes_json` restaurado y evita sobrescribir hidden fields con vacío cuando no hubo interacción del usuario.
+- fix de regresión con catálogo vacío: frontend degrada a captura compatible de texto legacy y backend deja de rechazar payload no vacío por validación de catálogo inexistente.
+- alcance acotado: sin cambios de schema, permisos, nonces ni flujos fuera de lubricantes.
+
 ## [1.18.3] - 2026-04-09
 - formulario standalone: `Lubricantes` migra a captura estructurada en repeater (máximo 10 filas), manteniendo compatibilidad legacy con hidden `lubricantes` y nuevo `lubricantes_json`.
 - frontend: se expone catálogo estático en `agpPvData.lubricantsCatalog`, se filtra producto por tipo y se autocompletan `código/presentación/descripción`; antes de enviar se generan `lubricantes_json` y resumen texto legacy.

@@ -273,10 +273,13 @@ class AGP_PV_Plugin {
         }
 
         $catalog = self::get_lubricants_catalog();
+        $has_catalog = ! empty( $catalog );
         $catalog_map = array();
-        foreach ( $catalog as $catalog_item ) {
-            $catalog_key = strtolower( trim( (string) $catalog_item['type'] ) . '|' . trim( (string) $catalog_item['product'] ) );
-            $catalog_map[ $catalog_key ] = $catalog_item;
+        if ( $has_catalog ) {
+            foreach ( $catalog as $catalog_item ) {
+                $catalog_key = strtolower( trim( (string) $catalog_item['type'] ) . '|' . trim( (string) $catalog_item['product'] ) );
+                $catalog_map[ $catalog_key ] = $catalog_item;
+            }
         }
 
         $normalized = array();
@@ -306,29 +309,42 @@ class AGP_PV_Plugin {
                 );
             }
 
-            $catalog_key = strtolower( trim( $type ) . '|' . trim( $product ) );
-            if ( ! isset( $catalog_map[ $catalog_key ] ) ) {
-                return array(
-                    'items' => array(),
-                    'error' => __( 'Producto de lubricantes inválido.', 'agrocampo-post-venta' ),
+            if ( $has_catalog ) {
+                $catalog_key = strtolower( trim( $type ) . '|' . trim( $product ) );
+                if ( ! isset( $catalog_map[ $catalog_key ] ) ) {
+                    return array(
+                        'items' => array(),
+                        'error' => __( 'Producto de lubricantes inválido.', 'agrocampo-post-venta' ),
+                    );
+                }
+
+                $catalog_item = $catalog_map[ $catalog_key ];
+                if ( '' === $unit ) {
+                    $unit = (string) ( $catalog_item['unit'] ?? '' );
+                }
+
+                $normalized[] = array(
+                    'type' => $type,
+                    'product' => $product,
+                    'code' => sanitize_text_field( (string) ( $catalog_item['code'] ?? '' ) ),
+                    'presentation' => sanitize_text_field( (string) ( $catalog_item['presentation'] ?? '' ) ),
+                    'description' => sanitize_text_field( (string) ( $catalog_item['description'] ?? '' ) ),
+                    'quantity' => $quantity,
+                    'unit' => $unit,
+                    'observation' => $observation,
+                );
+            } else {
+                $normalized[] = array(
+                    'type' => $type,
+                    'product' => $product,
+                    'code' => sanitize_text_field( (string) ( $row['code'] ?? '' ) ),
+                    'presentation' => sanitize_text_field( (string) ( $row['presentation'] ?? '' ) ),
+                    'description' => sanitize_text_field( (string) ( $row['description'] ?? '' ) ),
+                    'quantity' => $quantity,
+                    'unit' => $unit,
+                    'observation' => $observation,
                 );
             }
-
-            $catalog_item = $catalog_map[ $catalog_key ];
-            if ( '' === $unit ) {
-                $unit = (string) ( $catalog_item['unit'] ?? '' );
-            }
-
-            $normalized[] = array(
-                'type' => $type,
-                'product' => $product,
-                'code' => sanitize_text_field( (string) ( $catalog_item['code'] ?? '' ) ),
-                'presentation' => sanitize_text_field( (string) ( $catalog_item['presentation'] ?? '' ) ),
-                'description' => sanitize_text_field( (string) ( $catalog_item['description'] ?? '' ) ),
-                'quantity' => $quantity,
-                'unit' => $unit,
-                'observation' => $observation,
-            );
 
             if ( count( $normalized ) > 10 ) {
                 return array(
