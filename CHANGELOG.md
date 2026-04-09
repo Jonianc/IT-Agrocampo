@@ -1,3 +1,8 @@
+## [1.18.6] - 2026-04-09
+- admin: se agrega importador de `aceites-catalog.json` en Ajustes del plugin (formulario con capability `manage_options`, nonce y upload `.json`).
+- backend admin: validación/sanitización del catálogo importado (`type` y `product` obligatorios), conteo de omitidos y reemplazo seguro del archivo `data/aceites-catalog.json`.
+- se agregan notices de éxito/error para importación de catálogo en la pantalla de ajustes.
+
 ## [1.18.5] - 2026-04-09
 - fix adicional en modo fallback sin catálogo: si existe `lubricantes_json` restaurado y `lubricantes` legacy vacío, el textarea fallback se hidrata con resumen reconstruido para evitar pérdida silenciosa de borrador.
 - en fallback, `lubricantes_json` ya no se borra en submit si el usuario no editó el textarea; solo se limpia cuando hay edición explícita del texto.
