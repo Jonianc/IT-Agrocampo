@@ -1990,6 +1990,23 @@ function initPhotos() {
         var activeRowId = '';
         var rowSeq = 0;
         var manualTypeOptions = typeOptions.slice(0);
+        var allowedVisibleFields = ['type', 'product', 'quantity', 'code', 'presentation', 'description', 'unit', 'observation'];
+        var configuredVisibleFields = (window.agpPvData && $.isArray(agpPvData.lubricantsVisibleFields)) ? agpPvData.lubricantsVisibleFields : [];
+        var visibleFields = {};
+
+        configuredVisibleFields.forEach(function (field) {
+            var key = String(field || '');
+            if (allowedVisibleFields.indexOf(key) !== -1) {
+                visibleFields[key] = true;
+            }
+        });
+        visibleFields.type = true;
+        visibleFields.product = true;
+        visibleFields.quantity = true;
+
+        function isFieldVisible(field) {
+            return visibleFields[field] === true;
+        }
 
         function nextRowId() {
             rowSeq += 1;
@@ -2104,6 +2121,10 @@ function initPhotos() {
                 return false;
             }
             return !!(payload.code || payload.presentation || payload.description || payload.unit || payload.observation);
+        }
+
+        function hasVisibleSecondaryFields() {
+            return isFieldVisible('code') || isFieldVisible('presentation') || isFieldVisible('description') || isFieldVisible('unit') || isFieldVisible('observation');
         }
 
         function buildLegacySummary(items) {
@@ -2247,7 +2268,6 @@ function initPhotos() {
 
             var data = initialData || {};
             var rowId = nextRowId();
-            var secondaryExpandedByData = rowHasSecondaryData(data);
             var typeControl = catalogEnabled
                 ? ('<select data-lubricant-type>' + buildTypeSelectHtml(data.type || '') + '</select>')
                 : ('<input type="text" data-lubricant-type value="' + $('<div>').text(data.type || '').html() + '" placeholder="Tipo">');
@@ -2261,6 +2281,23 @@ function initPhotos() {
             var unitValue = $('<div>').text(data.unit || '').html();
             var observationValue = $('<div>').text(data.observation || '').html();
             var quantityValue = $('<div>').text(data.quantity || '').html();
+            var showSecondary = hasVisibleSecondaryFields();
+            var secondaryExpandedByData = showSecondary && rowHasSecondaryData(data);
+            var codeFieldHtml = isFieldVisible('code')
+                ? ('<div class="agp-pv-field"><label>Código</label><input type="text" data-lubricant-code value="' + codeValue + '"' + readonlyAttr + '></div>')
+                : ('<input type="hidden" data-lubricant-code value="' + codeValue + '">');
+            var presentationFieldHtml = isFieldVisible('presentation')
+                ? ('<div class="agp-pv-field"><label>Presentación</label><input type="text" data-lubricant-presentation value="' + presentationValue + '"' + readonlyAttr + '></div>')
+                : ('<input type="hidden" data-lubricant-presentation value="' + presentationValue + '">');
+            var descriptionFieldHtml = isFieldVisible('description')
+                ? ('<div class="agp-pv-field agp-pv-field--full"><label>Descripción</label><input type="text" data-lubricant-description value="' + descriptionValue + '"' + readonlyAttr + '></div>')
+                : ('<input type="hidden" data-lubricant-description value="' + descriptionValue + '">');
+            var unitFieldHtml = isFieldVisible('unit')
+                ? ('<div class="agp-pv-field"><label>Unidad</label><input type="text" data-lubricant-unit value="' + unitValue + '"></div>')
+                : ('<input type="hidden" data-lubricant-unit value="' + unitValue + '">');
+            var observationFieldHtml = isFieldVisible('observation')
+                ? ('<div class="agp-pv-field agp-pv-field--full"><label>Observación</label><input type="text" data-lubricant-observation value="' + observationValue + '"></div>')
+                : ('<input type="hidden" data-lubricant-observation value="' + observationValue + '">');
 
             var rowHtml = '' +
                 '<article class="agp-pv-grid agp-pv-lubricants-row" data-lubricants-row data-row-id="' + rowId + '">' +
@@ -2269,18 +2306,18 @@ function initPhotos() {
                 '<div class="agp-pv-lubricants-row__actions">' +
                 '<button type="button" class="button button-secondary" data-lubricants-duplicate>Duplicar</button>' +
                 '<button type="button" class="button button-link-delete" data-lubricants-remove>Eliminar</button>' +
-                '<button type="button" class="button button-secondary" data-lubricants-expand aria-expanded="' + (secondaryExpandedByData ? 'true' : 'false') + '">Expandir</button>' +
+                (showSecondary ? ('<button type="button" class="button button-secondary" data-lubricants-expand aria-expanded="' + (secondaryExpandedByData ? 'true' : 'false') + '">Expandir</button>') : '') +
                 '</div>' +
                 '</div>' +
                 '<div class="agp-pv-field"><label>Tipo</label>' + typeControl + '</div>' +
                 '<div class="agp-pv-field"><label>Producto</label>' + productControl + '</div>' +
                 '<div class="agp-pv-field"><label>Cantidad</label><input type="number" min="0" step="any" data-lubricant-quantity value="' + quantityValue + '"></div>' +
-                '<div class="agp-pv-grid agp-pv-lubricants-row__meta" data-lubricants-meta hidden>' +
-                '<div class="agp-pv-field"><label>Código</label><input type="text" data-lubricant-code value="' + codeValue + '"' + readonlyAttr + '></div>' +
-                '<div class="agp-pv-field"><label>Presentación</label><input type="text" data-lubricant-presentation value="' + presentationValue + '"' + readonlyAttr + '></div>' +
-                '<div class="agp-pv-field agp-pv-field--full"><label>Descripción</label><input type="text" data-lubricant-description value="' + descriptionValue + '"' + readonlyAttr + '></div>' +
-                '<div class="agp-pv-field"><label>Unidad</label><input type="text" data-lubricant-unit value="' + unitValue + '"></div>' +
-                '<div class="agp-pv-field agp-pv-field--full"><label>Observación</label><input type="text" data-lubricant-observation value="' + observationValue + '"></div>' +
+                '<div class="agp-pv-grid agp-pv-lubricants-row__meta" data-lubricants-meta' + (showSecondary ? ' hidden' : ' data-meta-empty="1" hidden') + '>' +
+                codeFieldHtml +
+                presentationFieldHtml +
+                descriptionFieldHtml +
+                unitFieldHtml +
+                observationFieldHtml +
                 '</div>' +
                 '</article>';
 
@@ -2288,7 +2325,9 @@ function initPhotos() {
             $rows.append($row);
             setProductOptions($row, data.type || '', data.product || '');
             syncRowReadonlyFields($row);
-            toggleExpanded($row, secondaryExpandedByData);
+            if (showSecondary) {
+                toggleExpanded($row, secondaryExpandedByData);
+            }
             setActiveRow($row);
 
             if (shouldSync !== false) {

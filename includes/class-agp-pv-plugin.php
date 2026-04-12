@@ -472,6 +472,10 @@ class AGP_PV_Plugin {
 
     public static function get_machine_status_field_position(): string {
         $position = (string) get_option( 'agp_pv_machine_status_position', 'before_observaciones' );
+        return self::parse_machine_status_position( $position );
+    }
+
+    public static function parse_machine_status_position( string $position ): string {
         $allowed  = array( 'top', 'before_observaciones', 'bottom' );
 
         if ( ! in_array( $position, $allowed, true ) ) {
@@ -479,6 +483,66 @@ class AGP_PV_Plugin {
         }
 
         return $position;
+    }
+
+    /**
+     * @return string[]
+     */
+    public static function get_lubricants_allowed_fields(): array {
+        return array(
+            'type',
+            'product',
+            'quantity',
+            'code',
+            'presentation',
+            'description',
+            'unit',
+            'observation',
+        );
+    }
+
+    /**
+     * @param mixed $raw
+     * @return string[]
+     */
+    public static function normalize_lubricants_visible_fields( $raw ): array {
+        if ( is_string( $raw ) ) {
+            $raw = array_filter( array_map( 'trim', explode( ',', $raw ) ) );
+        }
+
+        if ( ! is_array( $raw ) ) {
+            $raw = array();
+        }
+
+        $allowed = self::get_lubricants_allowed_fields();
+        $result  = array();
+        foreach ( $raw as $field ) {
+            $key = sanitize_key( (string) $field );
+            if ( in_array( $key, $allowed, true ) ) {
+                $result[ $key ] = $key;
+            }
+        }
+
+        $result['type']     = 'type';
+        $result['product']  = 'product';
+        $result['quantity'] = 'quantity';
+
+        $ordered = array();
+        foreach ( $allowed as $field ) {
+            if ( isset( $result[ $field ] ) ) {
+                $ordered[] = $field;
+            }
+        }
+
+        return $ordered;
+    }
+
+    /**
+     * @return string[]
+     */
+    public static function get_lubricants_visible_fields(): array {
+        $stored = get_option( 'agp_pv_lubricants_visible_fields', array( 'type', 'product', 'quantity' ) );
+        return self::normalize_lubricants_visible_fields( $stored );
     }
 
     public static function default_technicians(): array {
@@ -938,6 +1002,7 @@ class AGP_PV_Plugin {
                 'detalleMinimumChars' => 10,
                 'machineStatusPendingValue' => 'operativo_con_pendiente',
                 'lubricantsCatalog' => self::get_lubricants_catalog(),
+                'lubricantsVisibleFields' => self::get_lubricants_visible_fields(),
                 'serviceWorker' => array(
                     'url' => AGP_PV_PLUGIN_URL . 'assets/js/standalone-sw.js',
                     'scope' => home_url( '/post-venta/' ),

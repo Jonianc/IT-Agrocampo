@@ -219,6 +219,7 @@ class AGP_PV_Admin {
         $pdf_footer_text = (string) get_option( 'agp_pv_pdf_footer_text', __( 'Talca • Linares • Parral   |   +56 9 9748 5650', 'agrocampo-post-venta' ) );
         $pdf_it_label_template = (string) get_option( 'agp_pv_pdf_it_label_template', __( 'IT: %d', 'agrocampo-post-venta' ) );
         $machine_status_position = AGP_PV_Plugin::get_machine_status_field_position();
+        $lubricants_visible_fields = AGP_PV_Plugin::get_lubricants_visible_fields();
         $recipients = AGP_PV_Email::get_configured_recipients();
         $recipients_value = implode( ', ', $recipients );
         $technicians_value = implode( "\n", AGP_PV_Plugin::get_technicians() );
@@ -270,6 +271,28 @@ class AGP_PV_Admin {
         echo '<option value="before_observaciones" ' . selected( $machine_status_position, 'before_observaciones', false ) . '>' . esc_html__( 'Antes de Observaciones', 'agrocampo-post-venta' ) . '</option>';
         echo '<option value="bottom" ' . selected( $machine_status_position, 'bottom', false ) . '>' . esc_html__( 'Al final del paso Detalle', 'agrocampo-post-venta' ) . '</option>';
         echo '</select></p>';
+
+        echo '<p><strong>' . esc_html__( 'Campos visibles en Lubricantes (formulario)', 'agrocampo-post-venta' ) . '</strong><br>';
+        echo '<span class="description">' . esc_html__( 'Tipo, Producto y Cantidad siempre estarán visibles por compatibilidad operativa.', 'agrocampo-post-venta' ) . '</span></p>';
+
+        $lubricants_field_labels = array(
+            'type' => __( 'Tipo', 'agrocampo-post-venta' ),
+            'product' => __( 'Producto', 'agrocampo-post-venta' ),
+            'quantity' => __( 'Cantidad', 'agrocampo-post-venta' ),
+            'code' => __( 'Código', 'agrocampo-post-venta' ),
+            'presentation' => __( 'Presentación', 'agrocampo-post-venta' ),
+            'description' => __( 'Descripción', 'agrocampo-post-venta' ),
+            'unit' => __( 'Unidad', 'agrocampo-post-venta' ),
+            'observation' => __( 'Observación', 'agrocampo-post-venta' ),
+        );
+
+        echo '<div class="agp-pv-settings-stack">';
+        foreach ( $lubricants_field_labels as $field_key => $field_label ) {
+            $is_checked = in_array( $field_key, $lubricants_visible_fields, true );
+            $is_required = in_array( $field_key, array( 'type', 'product', 'quantity' ), true );
+            echo '<label><input type="checkbox" name="agp_pv_lubricants_visible_fields[]" value="' . esc_attr( $field_key ) . '" ' . checked( $is_checked, true, false ) . ( $is_required ? ' disabled' : '' ) . '> ' . esc_html( $field_label ) . ( $is_required ? ' (' . esc_html__( 'fijo', 'agrocampo-post-venta' ) . ')' : '' ) . '</label>';
+        }
+        echo '</div>';
 
         echo '<h3>' . esc_html__( 'Iconos app (PWA)', 'agrocampo-post-venta' ) . '</h3>';
         echo '<p class="description">' . esc_html__( 'Configura iconos desde la biblioteca de medios para el manifiesto de instalación.', 'agrocampo-post-venta' ) . '</p>';
@@ -1840,6 +1863,8 @@ class AGP_PV_Admin {
         $header_title = isset( $_POST['agp_pv_pdf_header_title'] ) ? sanitize_text_field( wp_unslash( $_POST['agp_pv_pdf_header_title'] ) ) : __( 'INFORME TÉCNICO', 'agrocampo-post-venta' );
         $footer_text = isset( $_POST['agp_pv_pdf_footer_text'] ) ? sanitize_text_field( wp_unslash( $_POST['agp_pv_pdf_footer_text'] ) ) : __( 'Talca • Linares • Parral   |   +56 9 9748 5650', 'agrocampo-post-venta' );
         $it_label_template = isset( $_POST['agp_pv_pdf_it_label_template'] ) ? sanitize_text_field( wp_unslash( $_POST['agp_pv_pdf_it_label_template'] ) ) : __( 'IT: %d', 'agrocampo-post-venta' );
+        $machine_status_position = AGP_PV_Plugin::parse_machine_status_position( (string) ( wp_unslash( $_POST['agp_pv_machine_status_position'] ?? '' ) ) );
+        $lubricants_visible_fields = AGP_PV_Plugin::normalize_lubricants_visible_fields( wp_unslash( $_POST['agp_pv_lubricants_visible_fields'] ?? array() ) );
         $app_icon_192_id = isset( $_POST['agp_pv_app_icon_192_attachment_id'] ) ? absint( $_POST['agp_pv_app_icon_192_attachment_id'] ) : 0;
         $app_icon_512_id = isset( $_POST['agp_pv_app_icon_512_attachment_id'] ) ? absint( $_POST['agp_pv_app_icon_512_attachment_id'] ) : 0;
 
@@ -1863,6 +1888,7 @@ class AGP_PV_Admin {
         update_option( 'agp_pv_pdf_footer_text', $footer_text );
         update_option( 'agp_pv_pdf_it_label_template', $it_label_template );
         update_option( 'agp_pv_machine_status_position', $machine_status_position );
+        update_option( 'agp_pv_lubricants_visible_fields', $lubricants_visible_fields );
         update_option( 'agp_pv_app_icon_192_attachment_id', $app_icon_192_id );
         update_option( 'agp_pv_app_icon_512_attachment_id', $app_icon_512_id );
 

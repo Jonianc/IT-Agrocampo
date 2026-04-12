@@ -1,3 +1,8 @@
+## [1.21.0] - 2026-04-12
+- ajustes (wp-admin): se agrega configuración de campos visibles del bloque `Lubricantes` en formulario standalone.
+- el formulario respeta la configuración y por defecto mantiene visible solo `Tipo`, `Producto` y `Cantidad`; los demás campos quedan opcionales desde Ajustes.
+- compatibilidad mantenida: sin cambios en backend de persistencia, esquema DB, PDF, emails ni endpoints.
+
 ## [1.20.0] - 2026-04-12
 - standalone `/post-venta/` (bloque `Lubricantes`): cada ítem pasa a tarjeta compacta con vista principal de `tipo`, `producto` y `cantidad`, además de acciones por card (`Duplicar`, `Eliminar`, `Expandir`).
 - los campos `código/presentación/descripción/unidad` se muestran como meta secundaria colapsable dentro de cada tarjeta, con resumen superior de `ítems` y `total cantidad`.
