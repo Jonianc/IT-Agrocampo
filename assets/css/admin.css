@@ -85,6 +85,30 @@
     gap: 14px;
 }
 
+.agp-pv-admin .agp-pv-lubricants-field-table th,
+.agp-pv-admin .agp-pv-lubricants-field-table td {
+    vertical-align: middle;
+}
+
+.agp-pv-admin .agp-pv-lubricants-field-table th {
+    width: 45%;
+}
+
+.agp-pv-admin .agp-pv-lubricants-preview-box {
+    padding: 12px;
+    border: 1px solid #dcdcde;
+    background: #fff;
+}
+
+.agp-pv-admin .agp-pv-lubricants-preview-box h4 {
+    margin: 0 0 8px;
+}
+
+.agp-pv-admin .agp-pv-lubricants-preview-list {
+    margin: 0;
+    padding-left: 18px;
+}
+
 .agp-pv-admin .agp-pv-checkbox-grid {
     display: grid;
     gap: 8px;

@@ -1,3 +1,10 @@
+## [1.22.0] - 2026-04-12
+- ajustes > lubricantes: reemplazo de checkboxes simples por configuración por secciones con `modo de uso` (`solo catálogo`, `mixto`, `solo manual`) y `fallback` configurable cuando el catálogo está vacío.
+- ajustes > lubricantes: estado por campo configurable (`visible`, `colapsado`, `oculto`) con compatibilidad backward para la opción legacy `agp_pv_lubricants_visible_fields`.
+- ajustes > lubricantes: tipos rápidos configurables con unidad por defecto (`Tipo|Unidad`) y preview simple de configuración en admin.
+- catálogo lubricantes: se mantiene importación y se agregan acciones de `validar JSON (sin guardar)`, `exportar catálogo actual` y `descargar plantilla JSON`.
+- frontend standalone (`Lubricantes`): respeta el nuevo modo de uso, fallback y estado por campo sin cambiar payload (`lubricantes` / `lubricantes_json`), guardado, PDF ni email.
+
 ## [1.21.0] - 2026-04-12
 - ajustes (wp-admin): se agrega configuración de campos visibles del bloque `Lubricantes` en formulario standalone.
 - el formulario respeta la configuración y por defecto mantiene visible solo `Tipo`, `Producto` y `Cantidad`; los demás campos quedan opcionales desde Ajustes.

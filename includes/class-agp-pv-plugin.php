@@ -545,6 +545,133 @@ class AGP_PV_Plugin {
         return self::normalize_lubricants_visible_fields( $stored );
     }
 
+    /**
+     * @param mixed $raw
+     * @return array<string, string>
+     */
+    public static function normalize_lubricants_field_states( $raw ): array {
+        $allowed_fields = self::get_lubricants_allowed_fields();
+        $allowed_states = array( 'visible', 'collapsed', 'hidden' );
+        $states         = array();
+
+        if ( ! is_array( $raw ) ) {
+            $raw = array();
+        }
+
+        foreach ( $allowed_fields as $field ) {
+            $value = isset( $raw[ $field ] ) ? sanitize_key( (string) $raw[ $field ] ) : '';
+            if ( ! in_array( $value, $allowed_states, true ) ) {
+                $value = in_array( $field, array( 'type', 'product', 'quantity' ), true ) ? 'visible' : 'hidden';
+            }
+            $states[ $field ] = $value;
+        }
+
+        $states['type']     = 'visible';
+        $states['product']  = 'visible';
+        $states['quantity'] = 'visible';
+
+        return $states;
+    }
+
+    /**
+     * @param mixed $raw
+     * @return array<string, mixed>
+     */
+    public static function normalize_lubricants_settings( $raw ): array {
+        $defaults = array(
+            'usage_mode' => 'catalog_only',
+            'field_states' => self::normalize_lubricants_field_states( array() ),
+            'quick_types' => array(),
+            'fallback_mode' => 'manual_only',
+        );
+
+        $usage_mode = isset( $raw['usage_mode'] ) ? sanitize_key( (string) $raw['usage_mode'] ) : '';
+        if ( ! in_array( $usage_mode, array( 'catalog_only', 'mixed', 'manual_only' ), true ) ) {
+            $usage_mode = $defaults['usage_mode'];
+        }
+
+        $fallback_mode = isset( $raw['fallback_mode'] ) ? sanitize_key( (string) $raw['fallback_mode'] ) : '';
+        if ( ! in_array( $fallback_mode, array( 'manual_only', 'mixed', 'catalog_only' ), true ) ) {
+            $fallback_mode = $defaults['fallback_mode'];
+        }
+
+        $field_states = self::normalize_lubricants_field_states( $raw['field_states'] ?? array() );
+
+        $quick_types_raw = $raw['quick_types'] ?? array();
+        if ( is_string( $quick_types_raw ) ) {
+            $quick_types_raw = preg_split( '/\r\n|\r|\n/', $quick_types_raw ) ?: array();
+        }
+        if ( ! is_array( $quick_types_raw ) ) {
+            $quick_types_raw = array();
+        }
+
+        $quick_types = array();
+        foreach ( $quick_types_raw as $item ) {
+            $type = '';
+            $unit = '';
+
+            if ( is_array( $item ) ) {
+                $type = sanitize_text_field( (string) ( $item['type'] ?? '' ) );
+                $unit = sanitize_text_field( (string) ( $item['unit'] ?? '' ) );
+            } else {
+                $line = sanitize_text_field( (string) $item );
+                if ( false !== strpos( $line, '|' ) ) {
+                    $parts = explode( '|', $line, 2 );
+                    $type  = sanitize_text_field( trim( (string) $parts[0] ) );
+                    $unit  = sanitize_text_field( trim( (string) $parts[1] ) );
+                } else {
+                    $type = $line;
+                }
+            }
+
+            if ( '' === $type ) {
+                continue;
+            }
+
+            $key = strtolower( $type );
+            if ( isset( $quick_types[ $key ] ) ) {
+                continue;
+            }
+
+            $quick_types[ $key ] = array(
+                'type' => $type,
+                'unit' => $unit,
+            );
+        }
+
+        return array(
+            'usage_mode' => $usage_mode,
+            'field_states' => $field_states,
+            'quick_types' => array_values( $quick_types ),
+            'fallback_mode' => $fallback_mode,
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function get_lubricants_settings(): array {
+        $stored = get_option( 'agp_pv_lubricants_settings', array() );
+        if ( is_array( $stored ) && ! empty( $stored ) ) {
+            return self::normalize_lubricants_settings( $stored );
+        }
+
+        $legacy_visible = self::get_lubricants_visible_fields();
+        $legacy_states  = array();
+        foreach ( self::get_lubricants_allowed_fields() as $field ) {
+            $legacy_states[ $field ] = in_array( $field, $legacy_visible, true ) ? 'visible' : 'hidden';
+        }
+
+        return self::normalize_lubricants_settings(
+            array(
+                'usage_mode' => 'catalog_only',
+                'field_states' => $legacy_states,
+                'quick_types' => array(),
+                'fallback_mode' => 'manual_only',
+            )
+        );
+    }
+
     public static function default_technicians(): array {
         return array(
             'Enrique Rivas Diaz',
@@ -1002,6 +1129,7 @@ class AGP_PV_Plugin {
                 'detalleMinimumChars' => 10,
                 'machineStatusPendingValue' => 'operativo_con_pendiente',
                 'lubricantsCatalog' => self::get_lubricants_catalog(),
+                'lubricantsSettings' => self::get_lubricants_settings(),
                 'lubricantsVisibleFields' => self::get_lubricants_visible_fields(),
                 'serviceWorker' => array(
                     'url' => AGP_PV_PLUGIN_URL . 'assets/js/standalone-sw.js',
