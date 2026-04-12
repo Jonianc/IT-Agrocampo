@@ -1980,11 +1980,21 @@ function initPhotos() {
 
         var typeOptions = Object.keys(catalogByType).sort();
         var $rows = $wrapper.find('[data-lubricants-rows]');
+        var $summaryCount = $wrapper.find('[data-lubricants-summary-count]');
+        var $summaryTotal = $wrapper.find('[data-lubricants-summary-total]');
+        var $chips = $wrapper.find('[data-lubricants-type-chips]');
         var $hiddenLegacy = $('#agp-pv-lubricantes');
         var $hiddenJson = $('#agp-pv-lubricantes-json');
-        var initialHiddenJsonRaw = $.trim(String($hiddenJson.val() || ''));
         var allowOverwriteEmpty = false;
         var catalogEnabled = typeOptions.length > 0;
+        var activeRowId = '';
+        var rowSeq = 0;
+        var manualTypeOptions = typeOptions.slice(0);
+
+        function nextRowId() {
+            rowSeq += 1;
+            return 'agp-pv-lub-row-' + rowSeq;
+        }
 
         function clearLubricantsError() {
             $('.agp-pv-error[data-error-for="lubricantes_json"]').text('');
@@ -2006,7 +2016,7 @@ function initPhotos() {
 
         function buildTypeSelectHtml(selected) {
             var html = '<option value="">' + 'Seleccionar' + '</option>';
-            typeOptions.forEach(function (type) {
+            manualTypeOptions.forEach(function (type) {
                 var isSelected = selected === type ? ' selected' : '';
                 html += '<option value="' + $('<div>').text(type).html() + '"' + isSelected + '>' + $('<div>').text(type).html() + '</option>';
             });
@@ -2015,6 +2025,13 @@ function initPhotos() {
 
         function setProductOptions($row, type, selectedProduct) {
             var $product = $row.find('[data-lubricant-product]');
+            if (!catalogEnabled || !$product.is('select')) {
+                if (selectedProduct) {
+                    $product.val(selectedProduct);
+                }
+                return;
+            }
+
             var list = type && catalogByType[type] ? catalogByType[type] : [];
             var html = '<option value="">' + 'Seleccionar' + '</option>';
 
@@ -2037,6 +2054,10 @@ function initPhotos() {
         }
 
         function syncRowReadonlyFields($row) {
+            if (!catalogEnabled) {
+                return;
+            }
+
             var type = String($row.find('[data-lubricant-type]').val() || '');
             var product = String($row.find('[data-lubricant-product]').val() || '');
             var item = findCatalogItem(type, product);
@@ -2078,6 +2099,13 @@ function initPhotos() {
             return payload;
         }
 
+        function rowHasSecondaryData(payload) {
+            if (!payload) {
+                return false;
+            }
+            return !!(payload.code || payload.presentation || payload.description || payload.unit || payload.observation);
+        }
+
         function buildLegacySummary(items) {
             return items.map(function (item) {
                 var line = item.type ? (item.type + ' - ' + item.product) : item.product;
@@ -2104,6 +2132,95 @@ function initPhotos() {
             }).join('\n');
         }
 
+        function recalculateSummary(items) {
+            var count = items.length;
+            var total = 0;
+
+            items.forEach(function (item) {
+                var quantity = parseFloat(String(item.quantity || '').replace(',', '.'));
+                if (!isNaN(quantity)) {
+                    total += quantity;
+                }
+            });
+
+            if ($summaryCount.length) {
+                $summaryCount.text(String(count));
+            }
+
+            if ($summaryTotal.length) {
+                $summaryTotal.text(String(total));
+            }
+        }
+
+        function collectTypeOptionsFromRows() {
+            var bucket = {};
+
+            typeOptions.forEach(function (type) {
+                bucket[type] = true;
+            });
+
+            $rows.find('[data-lubricants-row]').each(function () {
+                var type = $.trim(String($(this).find('[data-lubricant-type]').val() || ''));
+                if (type) {
+                    bucket[type] = true;
+                }
+            });
+
+            manualTypeOptions = Object.keys(bucket).sort();
+        }
+
+        function updateTypeChips() {
+            if (!$chips.length) {
+                return;
+            }
+
+            collectTypeOptionsFromRows();
+            $chips.empty();
+
+            if (!manualTypeOptions.length) {
+                return;
+            }
+
+            manualTypeOptions.forEach(function (type) {
+                $('<button type="button" class="agp-pv-chip" data-lubricants-type-chip />')
+                    .attr('data-type', type)
+                    .text(type)
+                    .appendTo($chips);
+            });
+        }
+
+        function setActiveRow($row) {
+            if (!$row || !$row.length) {
+                return;
+            }
+
+            activeRowId = String($row.attr('data-row-id') || '');
+            $rows.find('[data-lubricants-row]').removeClass('is-active');
+            $row.addClass('is-active');
+        }
+
+        function toggleExpanded($row, forceState) {
+            if (!$row || !$row.length) {
+                return;
+            }
+
+            var expanded = typeof forceState === 'boolean' ? forceState : !$row.hasClass('is-expanded');
+            var $toggle = $row.find('[data-lubricants-expand]');
+            var $meta = $row.find('[data-lubricants-meta]');
+
+            $row.toggleClass('is-expanded', expanded);
+            $meta.attr('hidden', !expanded);
+            $toggle.attr('aria-expanded', expanded ? 'true' : 'false');
+            $toggle.text(expanded ? 'Contraer' : 'Expandir');
+        }
+
+        function getRowById(rowId) {
+            if (!rowId) {
+                return $();
+            }
+            return $rows.find('[data-lubricants-row][data-row-id="' + rowId + '"]');
+        }
+
         function syncHiddenFields() {
             var items = [];
             $rows.find('[data-lubricants-row]').each(function () {
@@ -2119,6 +2236,8 @@ function initPhotos() {
 
             $hiddenJson.val(items.length ? JSON.stringify(items) : '');
             $hiddenLegacy.val(items.length ? buildLegacySummary(items) : '');
+            recalculateSummary(items);
+            updateTypeChips();
         }
 
         function addRow(initialData, shouldSync) {
@@ -2127,77 +2246,54 @@ function initPhotos() {
             }
 
             var data = initialData || {};
+            var rowId = nextRowId();
+            var secondaryExpandedByData = rowHasSecondaryData(data);
+            var typeControl = catalogEnabled
+                ? ('<select data-lubricant-type>' + buildTypeSelectHtml(data.type || '') + '</select>')
+                : ('<input type="text" data-lubricant-type value="' + $('<div>').text(data.type || '').html() + '" placeholder="Tipo">');
+            var productControl = catalogEnabled
+                ? '<select data-lubricant-product></select>'
+                : ('<input type="text" data-lubricant-product value="' + $('<div>').text(data.product || '').html() + '" placeholder="Producto">');
+            var readonlyAttr = catalogEnabled ? ' readonly' : '';
+            var codeValue = $('<div>').text(data.code || '').html();
+            var presentationValue = $('<div>').text(data.presentation || '').html();
+            var descriptionValue = $('<div>').text(data.description || '').html();
+            var unitValue = $('<div>').text(data.unit || '').html();
+            var observationValue = $('<div>').text(data.observation || '').html();
+            var quantityValue = $('<div>').text(data.quantity || '').html();
+
             var rowHtml = '' +
-                '<div class="agp-pv-grid agp-pv-lubricants-row" data-lubricants-row>' +
-                '<div class="agp-pv-field"><label>Tipo</label><select data-lubricant-type>' + buildTypeSelectHtml(data.type || '') + '</select></div>' +
-                '<div class="agp-pv-field"><label>Producto</label><select data-lubricant-product></select></div>' +
-                '<div class="agp-pv-field"><label>Código</label><input type="text" data-lubricant-code readonly></div>' +
-                '<div class="agp-pv-field"><label>Presentación</label><input type="text" data-lubricant-presentation readonly></div>' +
-                '<div class="agp-pv-field agp-pv-field--full"><label>Descripción</label><input type="text" data-lubricant-description readonly></div>' +
-                '<div class="agp-pv-field"><label>Cantidad</label><input type="number" min="0" step="any" data-lubricant-quantity></div>' +
-                '<div class="agp-pv-field"><label>Unidad</label><input type="text" data-lubricant-unit></div>' +
-                '<div class="agp-pv-field agp-pv-field--full"><label>Observación</label><input type="text" data-lubricant-observation></div>' +
-                '<div class="agp-pv-field agp-pv-lubricants-row__actions"><label>&nbsp;</label><button type="button" class="button button-link-delete" data-lubricants-remove>Quitar fila</button></div>' +
-                '</div>';
+                '<article class="agp-pv-grid agp-pv-lubricants-row" data-lubricants-row data-row-id="' + rowId + '">' +
+                '<div class="agp-pv-lubricants-row__header">' +
+                '<strong class="agp-pv-lubricants-row__title">Lubricante</strong>' +
+                '<div class="agp-pv-lubricants-row__actions">' +
+                '<button type="button" class="button button-secondary" data-lubricants-duplicate>Duplicar</button>' +
+                '<button type="button" class="button button-link-delete" data-lubricants-remove>Eliminar</button>' +
+                '<button type="button" class="button button-secondary" data-lubricants-expand aria-expanded="' + (secondaryExpandedByData ? 'true' : 'false') + '">Expandir</button>' +
+                '</div>' +
+                '</div>' +
+                '<div class="agp-pv-field"><label>Tipo</label>' + typeControl + '</div>' +
+                '<div class="agp-pv-field"><label>Producto</label>' + productControl + '</div>' +
+                '<div class="agp-pv-field"><label>Cantidad</label><input type="number" min="0" step="any" data-lubricant-quantity value="' + quantityValue + '"></div>' +
+                '<div class="agp-pv-grid agp-pv-lubricants-row__meta" data-lubricants-meta hidden>' +
+                '<div class="agp-pv-field"><label>Código</label><input type="text" data-lubricant-code value="' + codeValue + '"' + readonlyAttr + '></div>' +
+                '<div class="agp-pv-field"><label>Presentación</label><input type="text" data-lubricant-presentation value="' + presentationValue + '"' + readonlyAttr + '></div>' +
+                '<div class="agp-pv-field agp-pv-field--full"><label>Descripción</label><input type="text" data-lubricant-description value="' + descriptionValue + '"' + readonlyAttr + '></div>' +
+                '<div class="agp-pv-field"><label>Unidad</label><input type="text" data-lubricant-unit value="' + unitValue + '"></div>' +
+                '<div class="agp-pv-field agp-pv-field--full"><label>Observación</label><input type="text" data-lubricant-observation value="' + observationValue + '"></div>' +
+                '</div>' +
+                '</article>';
 
             var $row = $(rowHtml);
             $rows.append($row);
             setProductOptions($row, data.type || '', data.product || '');
-            $row.find('[data-lubricant-quantity]').val(data.quantity || '');
-            $row.find('[data-lubricant-unit]').val(data.unit || '');
-            $row.find('[data-lubricant-observation]').val(data.observation || '');
             syncRowReadonlyFields($row);
+            toggleExpanded($row, secondaryExpandedByData);
+            setActiveRow($row);
 
             if (shouldSync !== false) {
                 syncHiddenFields();
             }
-        }
-
-        if (!catalogEnabled) {
-            var restoredItems = getHiddenJsonItems();
-            var fallbackInitialText = String($hiddenLegacy.val() || '');
-            var fallbackEdited = false;
-
-            if (!fallbackInitialText && restoredItems.length) {
-                fallbackInitialText = buildLegacySummary(restoredItems);
-                $hiddenLegacy.val(fallbackInitialText);
-            }
-
-            var $fallback = $('<textarea />', {
-                id: 'agp-pv-lubricantes-fallback',
-                rows: 3
-            }).val(fallbackInitialText);
-
-            $rows.empty();
-            $rows.append(
-                $('<div class="agp-pv-field" />')
-                    .append('<label for="agp-pv-lubricantes-fallback">Detalle</label>')
-                    .append($fallback)
-            );
-
-            $fallback.on('input change', function () {
-                var value = String($(this).val() || '');
-                $hiddenLegacy.val(value);
-                $hiddenJson.val('');
-                clearLubricantsError();
-                allowOverwriteEmpty = true;
-                fallbackEdited = true;
-            });
-
-            $('#agp-pv-form').on('submit', function () {
-                $hiddenLegacy.val(String($fallback.val() || ''));
-                if (fallbackEdited || !initialHiddenJsonRaw) {
-                    $hiddenJson.val('');
-                }
-            });
-
-            $('#agp-pv-form').on('click', '.agp-pv-new-report', function () {
-                $fallback.val('');
-                $hiddenLegacy.val('');
-                $hiddenJson.val('');
-            });
-
-            return;
         }
 
         $wrapper.on('click', '[data-lubricants-add]', function () {
@@ -2216,20 +2312,60 @@ function initPhotos() {
             clearLubricantsError();
         });
 
-        $wrapper.on('change', '[data-lubricant-type]', function () {
+        $wrapper.on('click', '[data-lubricants-duplicate]', function () {
             allowOverwriteEmpty = true;
             var $row = $(this).closest('[data-lubricants-row]');
-            setProductOptions($row, $(this).val(), '');
-            syncRowReadonlyFields($row);
+            var payload = rowToPayload($row) || {};
+            addRow(payload);
             syncHiddenFields();
             clearLubricantsError();
         });
 
-        $wrapper.on('change input', '[data-lubricant-product],[data-lubricant-quantity],[data-lubricant-unit],[data-lubricant-observation]', function () {
+        $wrapper.on('click', '[data-lubricants-expand]', function () {
+            allowOverwriteEmpty = true;
+            var $row = $(this).closest('[data-lubricants-row]');
+            toggleExpanded($row);
+            setActiveRow($row);
+        });
+
+        $wrapper.on('click', '[data-lubricants-row]', function () {
+            setActiveRow($(this));
+        });
+
+        $wrapper.on('change input', '[data-lubricant-type]', function () {
+            allowOverwriteEmpty = true;
+            var $row = $(this).closest('[data-lubricants-row]');
+            if (catalogEnabled) {
+                setProductOptions($row, $(this).val(), '');
+            }
+            syncRowReadonlyFields($row);
+            setActiveRow($row);
+            syncHiddenFields();
+            clearLubricantsError();
+        });
+
+        $wrapper.on('change input', '[data-lubricant-product],[data-lubricant-quantity],[data-lubricant-unit],[data-lubricant-observation],[data-lubricant-code],[data-lubricant-presentation],[data-lubricant-description]', function () {
             allowOverwriteEmpty = true;
             var $row = $(this).closest('[data-lubricants-row]');
             syncRowReadonlyFields($row);
+            setActiveRow($row);
             syncHiddenFields();
+            clearLubricantsError();
+        });
+
+        $wrapper.on('click', '[data-lubricants-type-chip]', function () {
+            allowOverwriteEmpty = true;
+            var chipType = $.trim(String($(this).attr('data-type') || ''));
+            var $targetRow = getRowById(activeRowId);
+            if (!$targetRow.length) {
+                $targetRow = $rows.find('[data-lubricants-row]').first();
+            }
+            if (!$targetRow.length || !chipType) {
+                return;
+            }
+
+            $targetRow.find('[data-lubricant-type]').val(chipType).trigger('change');
+            setActiveRow($targetRow);
             clearLubricantsError();
         });
 
@@ -2241,7 +2377,13 @@ function initPhotos() {
             });
             syncHiddenFields();
         } else {
-            addRow();
+            var legacyText = $.trim(String($hiddenLegacy.val() || ''));
+            if (!catalogEnabled && legacyText) {
+                addRow({ product: legacyText }, false);
+                syncHiddenFields();
+            } else {
+                addRow();
+            }
         }
 
         $('#agp-pv-form').on('submit', function () {
@@ -2253,6 +2395,9 @@ function initPhotos() {
             addRow();
             syncHiddenFields();
         });
+
+        updateTypeChips();
+        syncHiddenFields();
     }
 
     function initForm() {

@@ -216,9 +216,14 @@ $render_machine_status_block = static function () use ( $machine_status_options,
 
             <div class="agp-pv-field" id="agp-pv-lubricantes-repeater" data-max-rows="10">
                 <label><?php esc_html_e( 'Lubricantes', 'agrocampo-post-venta' ); ?></label>
+                <div class="agp-pv-lubricants-summary">
+                    <span><?php esc_html_e( 'Ítems', 'agrocampo-post-venta' ); ?>: <strong data-lubricants-summary-count>0</strong></span>
+                    <span><?php esc_html_e( 'Total cantidad', 'agrocampo-post-venta' ); ?>: <strong data-lubricants-summary-total>0</strong></span>
+                </div>
+                <div class="agp-pv-lubricants-chips" data-lubricants-type-chips></div>
                 <div class="agp-pv-grid agp-pv-grid--lubricants" data-lubricants-rows></div>
                 <div class="agp-pv-step-actions">
-                    <button type="button" class="button button-secondary" data-lubricants-add><?php esc_html_e( 'Agregar fila', 'agrocampo-post-venta' ); ?></button>
+                    <button type="button" class="button button-secondary" data-lubricants-add><?php esc_html_e( '+ Agregar lubricante', 'agrocampo-post-venta' ); ?></button>
                 </div>
                 <input type="hidden" id="agp-pv-lubricantes" name="lubricantes" value="">
                 <input type="hidden" id="agp-pv-lubricantes-json" name="lubricantes_json" value="">

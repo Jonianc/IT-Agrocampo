@@ -1,3 +1,9 @@
+## [1.20.0] - 2026-04-12
+- standalone `/post-venta/` (bloque `Lubricantes`): cada ítem pasa a tarjeta compacta con vista principal de `tipo`, `producto` y `cantidad`, además de acciones por card (`Duplicar`, `Eliminar`, `Expandir`).
+- los campos `código/presentación/descripción/unidad` se muestran como meta secundaria colapsable dentro de cada tarjeta, con resumen superior de `ítems` y `total cantidad`.
+- se agregan chips rápidos por tipo y CTA `+ Agregar lubricante`; se mantiene la misma UI del bloque incluso cuando el catálogo está vacío.
+- alcance acotado y compatible: sin cambios en backend, payload, DB, PDF, emails, permisos/capabilities o nonces.
+
 ## [1.19.0] - 2026-04-12
 - formulario standalone (paso "Detalle de trabajo"): ajuste visual del bloque `Lubricantes` para mejorar lectura operativa en terreno (filas tipo tarjeta, mejor separación de campos y acción de quitar fila más clara).
 - mejora responsive en mobile para el repeater de lubricantes (controles más compactos y jerarquía visual consistente), manteniendo el comportamiento funcional existente.
