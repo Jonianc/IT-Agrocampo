@@ -1,3 +1,7 @@
+## [1.22.2] - 2026-04-12
+- ajustes (wp-admin): `Lubricantes · Catálogo` vuelve a card independiente para separar visualmente configuración de lubricantes vs gestión de catálogo.
+- alcance acotado: sin cambios en handlers, nonces, capabilities, payload, guardado, PDF ni email.
+
 ## [1.22.1] - 2026-04-12
 - ajustes (wp-admin): se agrupan en un único card todos los controles de `Lubricantes` (modo/fallback/estado por campo/tipos rápidos/preview + gestión de catálogo).
 - alcance acotado: sin cambios en payload, guardado, PDF, email, handlers, nonces ni capabilities.
