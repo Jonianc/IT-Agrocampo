@@ -766,6 +766,33 @@
     display: none !important;
 }
 
+.agp-pv-grid--lubricants {
+    gap: 12px;
+}
+
+.agp-pv-lubricants-row {
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid #e3e7eb;
+    border-radius: 10px;
+    background: #fafbfc;
+    margin-bottom: 2px;
+}
+
+.agp-pv-lubricants-row .agp-pv-field {
+    margin-bottom: 0;
+}
+
+.agp-pv-lubricants-row__actions {
+    align-self: end;
+}
+
+.agp-pv-lubricants-row__actions .button {
+    width: 100%;
+    min-height: 40px;
+    border-radius: 6px;
+}
+
 .agp-pv-grid--machine-status select:focus-visible,
 .agp-pv-grid--machine-status input[type="date"]:focus-visible {
     border-color: #ea580c;
@@ -820,5 +847,49 @@
         font-size: 12px;
         line-height: 1.2;
         min-height: 14px;
+    }
+
+    .agp-pv-grid--lubricants {
+        gap: 10px;
+    }
+
+    .agp-pv-lubricants-row {
+        padding: 10px;
+        gap: 8px;
+        border-radius: 8px;
+    }
+
+    .agp-pv-lubricants-row .agp-pv-field label {
+        font-size: 13px;
+    }
+
+    .agp-pv-lubricants-row .agp-pv-field input,
+    .agp-pv-lubricants-row .agp-pv-field select {
+        min-height: 40px;
+        font-size: 15px;
+        padding: 8px 10px;
+    }
+
+    .agp-pv-lubricants-row__actions .button {
+        min-height: 38px;
+    }
+}
+
+@media (min-width: 600px) {
+    .agp-pv-lubricants-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .agp-pv-lubricants-row .agp-pv-field--full {
+        grid-column: 1 / -1;
+    }
+
+    .agp-pv-lubricants-row__actions {
+        grid-column: 1 / -1;
+    }
+
+    .agp-pv-lubricants-row__actions .button {
+        width: auto;
+        min-width: 180px;
     }
 }

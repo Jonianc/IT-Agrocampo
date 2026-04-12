@@ -1,3 +1,8 @@
+## [1.19.0] - 2026-04-12
+- formulario standalone (paso "Detalle de trabajo"): ajuste visual del bloque `Lubricantes` para mejorar lectura operativa en terreno (filas tipo tarjeta, mejor separación de campos y acción de quitar fila más clara).
+- mejora responsive en mobile para el repeater de lubricantes (controles más compactos y jerarquía visual consistente), manteniendo el comportamiento funcional existente.
+- alcance estrictamente visual y backward-compatible: sin cambios en permisos/capabilities, nonces, validación, persistencia ni integraciones.
+
 ## [1.18.6] - 2026-04-09
 - admin: se agrega importador de `aceites-catalog.json` en Ajustes del plugin (formulario con capability `manage_options`, nonce y upload `.json`).
 - backend admin: validación/sanitización del catálogo importado (`type` y `product` obligatorios), conteo de omitidos y reemplazo seguro del archivo `data/aceites-catalog.json`.

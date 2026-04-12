@@ -2128,16 +2128,16 @@ function initPhotos() {
 
             var data = initialData || {};
             var rowHtml = '' +
-                '<div class="agp-pv-grid" data-lubricants-row>' +
+                '<div class="agp-pv-grid agp-pv-lubricants-row" data-lubricants-row>' +
                 '<div class="agp-pv-field"><label>Tipo</label><select data-lubricant-type>' + buildTypeSelectHtml(data.type || '') + '</select></div>' +
                 '<div class="agp-pv-field"><label>Producto</label><select data-lubricant-product></select></div>' +
                 '<div class="agp-pv-field"><label>Código</label><input type="text" data-lubricant-code readonly></div>' +
                 '<div class="agp-pv-field"><label>Presentación</label><input type="text" data-lubricant-presentation readonly></div>' +
-                '<div class="agp-pv-field"><label>Descripción</label><input type="text" data-lubricant-description readonly></div>' +
+                '<div class="agp-pv-field agp-pv-field--full"><label>Descripción</label><input type="text" data-lubricant-description readonly></div>' +
                 '<div class="agp-pv-field"><label>Cantidad</label><input type="number" min="0" step="any" data-lubricant-quantity></div>' +
                 '<div class="agp-pv-field"><label>Unidad</label><input type="text" data-lubricant-unit></div>' +
-                '<div class="agp-pv-field"><label>Observación</label><input type="text" data-lubricant-observation></div>' +
-                '<div class="agp-pv-field"><label>&nbsp;</label><button type="button" class="button button-link-delete" data-lubricants-remove>Quitar fila</button></div>' +
+                '<div class="agp-pv-field agp-pv-field--full"><label>Observación</label><input type="text" data-lubricant-observation></div>' +
+                '<div class="agp-pv-field agp-pv-lubricants-row__actions"><label>&nbsp;</label><button type="button" class="button button-link-delete" data-lubricants-remove>Quitar fila</button></div>' +
                 '</div>';
 
             var $row = $(rowHtml);
