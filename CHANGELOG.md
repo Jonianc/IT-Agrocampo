@@ -1,3 +1,7 @@
+## [1.22.4] - 2026-04-12
+- ajustes (wp-admin): `Lubricantes` pasa a card independiente (separada de `Branding del PDF`), manteniendo en esa card tanto configuración como catálogo.
+- alcance acotado: sin cambios en handlers, nonces, capabilities, payload, guardado, PDF ni email.
+
 ## [1.22.3] - 2026-04-12
 - ajustes (wp-admin): se vuelve a agrupar en una sola card todo lo relacionado con `Lubricantes` (configuración + gestión de catálogo).
 - alcance acotado: sin cambios en handlers, nonces, capabilities, payload, guardado, PDF ni email.

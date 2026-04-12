@@ -276,83 +276,6 @@ class AGP_PV_Admin {
         echo '<option value="bottom" ' . selected( $machine_status_position, 'bottom', false ) . '>' . esc_html__( 'Al final del paso Detalle', 'agrocampo-post-venta' ) . '</option>';
         echo '</select></p>';
 
-        echo '<h3>' . esc_html__( 'Lubricantes', 'agrocampo-post-venta' ) . '</h3>';
-        echo '<p class="description">' . esc_html__( 'Configura modo de uso, visibilidad por campo y fallback sin cambiar payload ni persistencia.', 'agrocampo-post-venta' ) . '</p>';
-
-        echo '<div class="agp-pv-settings-stack agp-pv-lubricants-settings">';
-        echo '<p><label for="agp-pv-lubricants-usage-mode"><strong>' . esc_html__( 'Modo de uso', 'agrocampo-post-venta' ) . '</strong></label><br>';
-        echo '<select id="agp-pv-lubricants-usage-mode" name="agp_pv_lubricants_usage_mode">';
-        echo '<option value="catalog_only" ' . selected( (string) $lubricants_settings['usage_mode'], 'catalog_only', false ) . '>' . esc_html__( 'Solo catálogo', 'agrocampo-post-venta' ) . '</option>';
-        echo '<option value="mixed" ' . selected( (string) $lubricants_settings['usage_mode'], 'mixed', false ) . '>' . esc_html__( 'Mixto', 'agrocampo-post-venta' ) . '</option>';
-        echo '<option value="manual_only" ' . selected( (string) $lubricants_settings['usage_mode'], 'manual_only', false ) . '>' . esc_html__( 'Solo manual', 'agrocampo-post-venta' ) . '</option>';
-        echo '</select><br>';
-        echo '<span class="description">' . esc_html__( 'Solo catálogo: valores cerrados. Mixto: manual con sugerencias del catálogo. Solo manual: captura libre.', 'agrocampo-post-venta' ) . '</span></p>';
-
-        echo '<p><label for="agp-pv-lubricants-fallback-mode"><strong>' . esc_html__( 'Fallback cuando catálogo está vacío', 'agrocampo-post-venta' ) . '</strong></label><br>';
-        echo '<select id="agp-pv-lubricants-fallback-mode" name="agp_pv_lubricants_fallback_mode">';
-        echo '<option value="manual_only" ' . selected( (string) $lubricants_settings['fallback_mode'], 'manual_only', false ) . '>' . esc_html__( 'Forzar solo manual', 'agrocampo-post-venta' ) . '</option>';
-        echo '<option value="mixed" ' . selected( (string) $lubricants_settings['fallback_mode'], 'mixed', false ) . '>' . esc_html__( 'Forzar mixto', 'agrocampo-post-venta' ) . '</option>';
-        echo '<option value="catalog_only" ' . selected( (string) $lubricants_settings['fallback_mode'], 'catalog_only', false ) . '>' . esc_html__( 'Mantener solo catálogo', 'agrocampo-post-venta' ) . '</option>';
-        echo '</select></p>';
-
-        $lubricants_field_labels = array(
-            'type' => __( 'Tipo', 'agrocampo-post-venta' ),
-            'product' => __( 'Producto', 'agrocampo-post-venta' ),
-            'quantity' => __( 'Cantidad', 'agrocampo-post-venta' ),
-            'code' => __( 'Código', 'agrocampo-post-venta' ),
-            'presentation' => __( 'Presentación', 'agrocampo-post-venta' ),
-            'description' => __( 'Descripción', 'agrocampo-post-venta' ),
-            'unit' => __( 'Unidad', 'agrocampo-post-venta' ),
-            'observation' => __( 'Observación', 'agrocampo-post-venta' ),
-        );
-
-        echo '<p><strong>' . esc_html__( 'Estado por campo', 'agrocampo-post-venta' ) . '</strong><br>';
-        echo '<span class="description">' . esc_html__( 'Tipo, Producto y Cantidad son fijos y se mantienen visibles por compatibilidad.', 'agrocampo-post-venta' ) . '</span></p>';
-        echo '<table class="widefat striped agp-pv-lubricants-field-table"><tbody>';
-        foreach ( $lubricants_field_labels as $field_key => $field_label ) {
-            $is_required = in_array( $field_key, array( 'type', 'product', 'quantity' ), true );
-            $field_state = (string) ( $lubricants_field_states[ $field_key ] ?? 'hidden' );
-            echo '<tr>';
-            echo '<th scope="row">' . esc_html( $field_label ) . ( $is_required ? ' (' . esc_html__( 'fijo', 'agrocampo-post-venta' ) . ')' : '' ) . '</th>';
-            echo '<td><select name="agp_pv_lubricants_field_states[' . esc_attr( $field_key ) . ']"' . ( $is_required ? ' disabled' : '' ) . '>';
-            echo '<option value="visible" ' . selected( $field_state, 'visible', false ) . '>' . esc_html__( 'Visible', 'agrocampo-post-venta' ) . '</option>';
-            echo '<option value="collapsed" ' . selected( $field_state, 'collapsed', false ) . '>' . esc_html__( 'Colapsado', 'agrocampo-post-venta' ) . '</option>';
-            echo '<option value="hidden" ' . selected( $field_state, 'hidden', false ) . '>' . esc_html__( 'Oculto', 'agrocampo-post-venta' ) . '</option>';
-            echo '</select></td>';
-            echo '</tr>';
-        }
-        echo '</tbody></table>';
-
-        $quick_types_lines = array();
-        foreach ( (array) ( $lubricants_settings['quick_types'] ?? array() ) as $quick_type ) {
-            if ( ! is_array( $quick_type ) ) {
-                continue;
-            }
-            $line = sanitize_text_field( (string) ( $quick_type['type'] ?? '' ) );
-            if ( '' === $line ) {
-                continue;
-            }
-            $unit = sanitize_text_field( (string) ( $quick_type['unit'] ?? '' ) );
-            if ( '' !== $unit ) {
-                $line .= '|' . $unit;
-            }
-            $quick_types_lines[] = $line;
-        }
-        echo '<p><label for="agp-pv-lubricants-quick-types"><strong>' . esc_html__( 'Tipos rápidos (uno por línea)', 'agrocampo-post-venta' ) . '</strong></label><br>';
-        echo '<textarea class="large-text code" rows="5" id="agp-pv-lubricants-quick-types" name="agp_pv_lubricants_quick_types">' . esc_textarea( implode( "\n", $quick_types_lines ) ) . '</textarea><br>';
-        echo '<span class="description">' . esc_html__( 'Formato: Tipo|Unidad por defecto. Ej: Hidráulico|L.', 'agrocampo-post-venta' ) . '</span></p>';
-
-        echo '<div class="agp-pv-lubricants-preview-box">';
-        echo '<h4>' . esc_html__( 'Preview simple (admin)', 'agrocampo-post-venta' ) . '</h4>';
-        echo '<p><strong>' . esc_html__( 'Modo actual:', 'agrocampo-post-venta' ) . '</strong> ' . esc_html( (string) $lubricants_settings['usage_mode'] ) . ' | <strong>' . esc_html__( 'Fallback:', 'agrocampo-post-venta' ) . '</strong> ' . esc_html( (string) $lubricants_settings['fallback_mode'] ) . '</p>';
-        echo '<ul class="agp-pv-lubricants-preview-list">';
-        foreach ( $lubricants_field_labels as $field_key => $field_label ) {
-            echo '<li><strong>' . esc_html( $field_label ) . ':</strong> ' . esc_html( (string) ( $lubricants_field_states[ $field_key ] ?? 'hidden' ) ) . '</li>';
-        }
-        echo '</ul>';
-        echo '</div>';
-        echo '</div>';
-
         echo '<h3>' . esc_html__( 'Iconos app (PWA)', 'agrocampo-post-venta' ) . '</h3>';
         echo '<p class="description">' . esc_html__( 'Configura iconos desde la biblioteca de medios para el manifiesto de instalación.', 'agrocampo-post-venta' ) . '</p>';
 
@@ -375,9 +298,101 @@ class AGP_PV_Admin {
 
         echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Guardar branding PDF', 'agrocampo-post-venta' ) . '</button></p>';
         echo '</form>';
+        echo '</section>';
+
+        $lubricants_field_labels = array(
+            'type' => __( 'Tipo', 'agrocampo-post-venta' ),
+            'product' => __( 'Producto', 'agrocampo-post-venta' ),
+            'quantity' => __( 'Cantidad', 'agrocampo-post-venta' ),
+            'code' => __( 'Código', 'agrocampo-post-venta' ),
+            'presentation' => __( 'Presentación', 'agrocampo-post-venta' ),
+            'description' => __( 'Descripción', 'agrocampo-post-venta' ),
+            'unit' => __( 'Unidad', 'agrocampo-post-venta' ),
+            'observation' => __( 'Observación', 'agrocampo-post-venta' ),
+        );
+
+        $quick_types_lines = array();
+        foreach ( (array) ( $lubricants_settings['quick_types'] ?? array() ) as $quick_type ) {
+            if ( ! is_array( $quick_type ) ) {
+                continue;
+            }
+            $line = sanitize_text_field( (string) ( $quick_type['type'] ?? '' ) );
+            if ( '' === $line ) {
+                continue;
+            }
+            $unit = sanitize_text_field( (string) ( $quick_type['unit'] ?? '' ) );
+            if ( '' !== $unit ) {
+                $line .= '|' . $unit;
+            }
+            $quick_types_lines[] = $line;
+        }
+
+        echo '<section class="card agp-pv-card">';
+        echo '<h2>' . esc_html__( 'Lubricantes', 'agrocampo-post-venta' ) . '</h2>';
+        echo '<p class="description">' . esc_html__( 'Configura modo de uso, visibilidad por campo, fallback y gestión del catálogo.', 'agrocampo-post-venta' ) . '</p>';
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+        echo '<input type="hidden" name="action" value="agp_pv_save_logo">';
+        wp_nonce_field( 'agp_pv_save_logo' );
+        echo '<input type="hidden" name="agp_pv_logo_attachment_id" value="' . esc_attr( (string) $logo_id ) . '">';
+        echo '<input type="hidden" name="agp_pv_logo_width_mm" value="' . esc_attr( (string) $logo_width ) . '">';
+        echo '<input type="hidden" name="agp_pv_pdf_header_title" value="' . esc_attr( $pdf_header_title ) . '">';
+        echo '<input type="hidden" name="agp_pv_pdf_it_label_template" value="' . esc_attr( $pdf_it_label_template ) . '">';
+        echo '<input type="hidden" name="agp_pv_pdf_footer_text" value="' . esc_attr( $pdf_footer_text ) . '">';
+        echo '<input type="hidden" name="agp_pv_machine_status_position" value="' . esc_attr( $machine_status_position ) . '">';
+        echo '<input type="hidden" name="agp_pv_app_icon_192_attachment_id" value="' . esc_attr( (string) $app_icon_192_id ) . '">';
+        echo '<input type="hidden" name="agp_pv_app_icon_512_attachment_id" value="' . esc_attr( (string) $app_icon_512_id ) . '">';
+
+        echo '<div class="agp-pv-settings-stack agp-pv-lubricants-settings">';
+        echo '<p><label for="agp-pv-lubricants-usage-mode"><strong>' . esc_html__( 'Modo de uso', 'agrocampo-post-venta' ) . '</strong></label><br>';
+        echo '<select id="agp-pv-lubricants-usage-mode" name="agp_pv_lubricants_usage_mode">';
+        echo '<option value="catalog_only" ' . selected( (string) $lubricants_settings['usage_mode'], 'catalog_only', false ) . '>' . esc_html__( 'Solo catálogo', 'agrocampo-post-venta' ) . '</option>';
+        echo '<option value="mixed" ' . selected( (string) $lubricants_settings['usage_mode'], 'mixed', false ) . '>' . esc_html__( 'Mixto', 'agrocampo-post-venta' ) . '</option>';
+        echo '<option value="manual_only" ' . selected( (string) $lubricants_settings['usage_mode'], 'manual_only', false ) . '>' . esc_html__( 'Solo manual', 'agrocampo-post-venta' ) . '</option>';
+        echo '</select></p>';
+
+        echo '<p><label for="agp-pv-lubricants-fallback-mode"><strong>' . esc_html__( 'Fallback cuando catálogo está vacío', 'agrocampo-post-venta' ) . '</strong></label><br>';
+        echo '<select id="agp-pv-lubricants-fallback-mode" name="agp_pv_lubricants_fallback_mode">';
+        echo '<option value="manual_only" ' . selected( (string) $lubricants_settings['fallback_mode'], 'manual_only', false ) . '>' . esc_html__( 'Forzar solo manual', 'agrocampo-post-venta' ) . '</option>';
+        echo '<option value="mixed" ' . selected( (string) $lubricants_settings['fallback_mode'], 'mixed', false ) . '>' . esc_html__( 'Forzar mixto', 'agrocampo-post-venta' ) . '</option>';
+        echo '<option value="catalog_only" ' . selected( (string) $lubricants_settings['fallback_mode'], 'catalog_only', false ) . '>' . esc_html__( 'Mantener solo catálogo', 'agrocampo-post-venta' ) . '</option>';
+        echo '</select></p>';
+
+        echo '<p><strong>' . esc_html__( 'Estado por campo', 'agrocampo-post-venta' ) . '</strong><br>';
+        echo '<span class="description">' . esc_html__( 'Tipo, Producto y Cantidad son fijos y se mantienen visibles por compatibilidad.', 'agrocampo-post-venta' ) . '</span></p>';
+        echo '<table class="widefat striped agp-pv-lubricants-field-table"><tbody>';
+        foreach ( $lubricants_field_labels as $field_key => $field_label ) {
+            $is_required = in_array( $field_key, array( 'type', 'product', 'quantity' ), true );
+            $field_state = (string) ( $lubricants_field_states[ $field_key ] ?? 'hidden' );
+            echo '<tr>';
+            echo '<th scope="row">' . esc_html( $field_label ) . ( $is_required ? ' (' . esc_html__( 'fijo', 'agrocampo-post-venta' ) . ')' : '' ) . '</th>';
+            echo '<td><select name="agp_pv_lubricants_field_states[' . esc_attr( $field_key ) . ']"' . ( $is_required ? ' disabled' : '' ) . '>';
+            echo '<option value="visible" ' . selected( $field_state, 'visible', false ) . '>' . esc_html__( 'Visible', 'agrocampo-post-venta' ) . '</option>';
+            echo '<option value="collapsed" ' . selected( $field_state, 'collapsed', false ) . '>' . esc_html__( 'Colapsado', 'agrocampo-post-venta' ) . '</option>';
+            echo '<option value="hidden" ' . selected( $field_state, 'hidden', false ) . '>' . esc_html__( 'Oculto', 'agrocampo-post-venta' ) . '</option>';
+            echo '</select></td>';
+            echo '</tr>';
+        }
+        echo '</tbody></table>';
+
+        echo '<p><label for="agp-pv-lubricants-quick-types"><strong>' . esc_html__( 'Tipos rápidos (uno por línea)', 'agrocampo-post-venta' ) . '</strong></label><br>';
+        echo '<textarea class="large-text code" rows="5" id="agp-pv-lubricants-quick-types" name="agp_pv_lubricants_quick_types">' . esc_textarea( implode( "\n", $quick_types_lines ) ) . '</textarea><br>';
+        echo '<span class="description">' . esc_html__( 'Formato: Tipo|Unidad por defecto. Ej: Hidráulico|L.', 'agrocampo-post-venta' ) . '</span></p>';
+
+        echo '<div class="agp-pv-lubricants-preview-box">';
+        echo '<h4>' . esc_html__( 'Preview simple (admin)', 'agrocampo-post-venta' ) . '</h4>';
+        echo '<p><strong>' . esc_html__( 'Modo actual:', 'agrocampo-post-venta' ) . '</strong> ' . esc_html( (string) $lubricants_settings['usage_mode'] ) . ' | <strong>' . esc_html__( 'Fallback:', 'agrocampo-post-venta' ) . '</strong> ' . esc_html( (string) $lubricants_settings['fallback_mode'] ) . '</p>';
+        echo '<ul class="agp-pv-lubricants-preview-list">';
+        foreach ( $lubricants_field_labels as $field_key => $field_label ) {
+            echo '<li><strong>' . esc_html( $field_label ) . ':</strong> ' . esc_html( (string) ( $lubricants_field_states[ $field_key ] ?? 'hidden' ) ) . '</li>';
+        }
+        echo '</ul>';
+        echo '</div>';
+        echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Guardar ajustes de lubricantes', 'agrocampo-post-venta' ) . '</button></p>';
+        echo '</div>';
+        echo '</form>';
 
         echo '<hr />';
-        echo '<h3>' . esc_html__( 'Lubricantes · Catálogo', 'agrocampo-post-venta' ) . '</h3>';
+        echo '<h3>' . esc_html__( 'Catálogo', 'agrocampo-post-venta' ) . '</h3>';
         echo '<p class="description">' . esc_html__( 'Gestiona catálogo: importar, exportar, validar y descargar plantilla.', 'agrocampo-post-venta' ) . '</p>';
         echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" enctype="multipart/form-data">';
         echo '<input type="hidden" name="action" value="agp_pv_import_lubricants_catalog">';
