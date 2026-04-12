@@ -375,6 +375,33 @@ class AGP_PV_Admin {
 
         echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Guardar branding PDF', 'agrocampo-post-venta' ) . '</button></p>';
         echo '</form>';
+
+        echo '<hr />';
+        echo '<h3>' . esc_html__( 'Lubricantes · Catálogo', 'agrocampo-post-venta' ) . '</h3>';
+        echo '<p class="description">' . esc_html__( 'Gestiona catálogo: importar, exportar, validar y descargar plantilla.', 'agrocampo-post-venta' ) . '</p>';
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" enctype="multipart/form-data">';
+        echo '<input type="hidden" name="action" value="agp_pv_import_lubricants_catalog">';
+        wp_nonce_field( 'agp_pv_import_lubricants_catalog' );
+        echo '<p><label for="agp-pv-lubricants-catalog"><strong>' . esc_html__( 'Archivo JSON', 'agrocampo-post-venta' ) . '</strong></label><br>';
+        echo '<input type="file" id="agp-pv-lubricants-catalog" name="agp_pv_lubricants_catalog" accept=".json,application/json" required></p>';
+        echo '<p class="description">' . esc_html__( 'Formato esperado: array de objetos con type, product, code, presentation, description, unit.', 'agrocampo-post-venta' ) . '</p>';
+        echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Importar catálogo', 'agrocampo-post-venta' ) . '</button></p>';
+        echo '</form>';
+
+        echo '<div class="agp-pv-inline-form" style="margin-top:10px;">';
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" enctype="multipart/form-data">';
+        echo '<input type="hidden" name="action" value="agp_pv_validate_lubricants_catalog">';
+        wp_nonce_field( 'agp_pv_validate_lubricants_catalog' );
+        echo '<label for="agp-pv-lubricants-catalog-validate" class="screen-reader-text">' . esc_html__( 'Validar archivo JSON', 'agrocampo-post-venta' ) . '</label>';
+        echo '<input type="file" id="agp-pv-lubricants-catalog-validate" name="agp_pv_lubricants_catalog" accept=".json,application/json" required>';
+        echo '<button type="submit" class="button button-secondary">' . esc_html__( 'Validar JSON (sin guardar)', 'agrocampo-post-venta' ) . '</button>';
+        echo '</form>';
+        echo '</div>';
+
+        echo '<p style="margin-top:10px;">';
+        echo '<a class="button button-secondary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=agp_pv_export_lubricants_catalog' ), 'agp_pv_export_lubricants_catalog' ) ) . '">' . esc_html__( 'Exportar catálogo actual', 'agrocampo-post-venta' ) . '</a> ';
+        echo '<a class="button button-secondary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=agp_pv_export_lubricants_catalog_template' ), 'agp_pv_export_lubricants_catalog_template' ) ) . '">' . esc_html__( 'Descargar plantilla JSON', 'agrocampo-post-venta' ) . '</a>';
+        echo '</p>';
         echo '</section>';
 
         echo '<section class="card agp-pv-card">';
@@ -498,35 +525,6 @@ class AGP_PV_Admin {
         echo '</form>';
         echo '<p><a class="button button-secondary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=agp_pv_export_legacy_csv' ), 'agp_pv_export_legacy_csv' ) ) . '">' . esc_html__( 'Exportar informes (CSV compatible)', 'agrocampo-post-venta' ) . '</a></p>';
         echo '</section>';
-
-        echo '<section class="card agp-pv-card">';
-        echo '<h2>' . esc_html__( 'Importador catálogo de aceites', 'agrocampo-post-venta' ) . '</h2>';
-        echo '<p>' . esc_html__( 'Gestiona catálogo: importar, exportar, validar y descargar plantilla.', 'agrocampo-post-venta' ) . '</p>';
-        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" enctype="multipart/form-data">';
-        echo '<input type="hidden" name="action" value="agp_pv_import_lubricants_catalog">';
-        wp_nonce_field( 'agp_pv_import_lubricants_catalog' );
-        echo '<p><label for="agp-pv-lubricants-catalog"><strong>' . esc_html__( 'Archivo JSON', 'agrocampo-post-venta' ) . '</strong></label><br>';
-        echo '<input type="file" id="agp-pv-lubricants-catalog" name="agp_pv_lubricants_catalog" accept=".json,application/json" required></p>';
-        echo '<p class="description">' . esc_html__( 'Formato esperado: array de objetos con type, product, code, presentation, description, unit.', 'agrocampo-post-venta' ) . '</p>';
-        echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Importar catálogo', 'agrocampo-post-venta' ) . '</button></p>';
-        echo '</form>';
-
-        echo '<div class="agp-pv-inline-form" style="margin-top:10px;">';
-        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" enctype="multipart/form-data">';
-        echo '<input type="hidden" name="action" value="agp_pv_validate_lubricants_catalog">';
-        wp_nonce_field( 'agp_pv_validate_lubricants_catalog' );
-        echo '<label for="agp-pv-lubricants-catalog-validate" class="screen-reader-text">' . esc_html__( 'Validar archivo JSON', 'agrocampo-post-venta' ) . '</label>';
-        echo '<input type="file" id="agp-pv-lubricants-catalog-validate" name="agp_pv_lubricants_catalog" accept=".json,application/json" required>';
-        echo '<button type="submit" class="button button-secondary">' . esc_html__( 'Validar JSON (sin guardar)', 'agrocampo-post-venta' ) . '</button>';
-        echo '</form>';
-        echo '</div>';
-
-        echo '<p style="margin-top:10px;">';
-        echo '<a class="button button-secondary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=agp_pv_export_lubricants_catalog' ), 'agp_pv_export_lubricants_catalog' ) ) . '">' . esc_html__( 'Exportar catálogo actual', 'agrocampo-post-venta' ) . '</a> ';
-        echo '<a class="button button-secondary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=agp_pv_export_lubricants_catalog_template' ), 'agp_pv_export_lubricants_catalog_template' ) ) . '">' . esc_html__( 'Descargar plantilla JSON', 'agrocampo-post-venta' ) . '</a>';
-        echo '</p>';
-        echo '</section>';
-
 
         echo '<section class="card agp-pv-card">';
         echo '<h2>' . esc_html__( 'Zona peligrosa', 'agrocampo-post-venta' ) . '</h2>';

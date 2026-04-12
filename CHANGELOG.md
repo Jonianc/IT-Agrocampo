@@ -1,3 +1,7 @@
+## [1.22.1] - 2026-04-12
+- ajustes (wp-admin): se agrupan en un único card todos los controles de `Lubricantes` (modo/fallback/estado por campo/tipos rápidos/preview + gestión de catálogo).
+- alcance acotado: sin cambios en payload, guardado, PDF, email, handlers, nonces ni capabilities.
+
 ## [1.22.0] - 2026-04-12
 - ajustes > lubricantes: reemplazo de checkboxes simples por configuración por secciones con `modo de uso` (`solo catálogo`, `mixto`, `solo manual`) y `fallback` configurable cuando el catálogo está vacío.
 - ajustes > lubricantes: estado por campo configurable (`visible`, `colapsado`, `oculto`) con compatibilidad backward para la opción legacy `agp_pv_lubricants_visible_fields`.
