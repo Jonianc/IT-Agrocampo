@@ -1,3 +1,10 @@
+## [1.24.9] - 2026-04-14
+- PDF (`Detalle > Lubricantes`): formato unificado por línea `NOMBRE DEL LUBRICANTE - CANTIDAD = "X"` y cuando no hay cantidad queda `CANTIDAD = ""`.
+- PDF (`Detalle > Lubricantes`): no se muestra unidad de medida ni metadatos (tipo/código/presentación/descripción) en la salida del reporte.
+- PDF (`Detalle > Lubricantes`): para ítems manuales se respeta el nombre persistido en `product`; compatibilidad backward mantenida para texto legacy.
+- PDF (plantilla visual): se refuerza jerarquía del encabezado, se mejora separación entre secciones, se ajusta card de `Datos Generales`/`Equipo`, se compacta bloque de lubricantes y se mejora pie de página con paginación alineada.
+- alcance acotado: sin cambios en guardado, payload, validación, permisos/capabilities, nonces ni persistencia.
+
 ## [1.24.8] - 2026-04-14
 - PDF `Detalle > Lubricantes`: render condicional en columnas por cantidad de ítems (1 columna hasta 3 líneas; 2 columnas desde 4 líneas).
 - en 2 columnas, los ítems se reparten en lectura vertical (primera mitad columna izquierda, segunda mitad columna derecha) y cada línea hace wrap dentro de su columna sin partirse entre columnas.

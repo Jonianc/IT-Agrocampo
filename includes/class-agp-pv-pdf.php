@@ -96,20 +96,23 @@ class AGP_PV_PDF_Document extends FPDF {
             }
         }
 
-        // Title (center).
-        $this->SetFont( 'Helvetica', 'B', 15 );
+        // Title (center) with subtitle for better visual hierarchy.
+        $this->SetFont( 'Helvetica', 'B', 16 );
         $title_text = '' !== $this->header_title ? $this->header_title : __( 'INFORME TÉCNICO', 'agrocampo-post-venta' );
         $title      = self::enc( $title_text );
         $title_w    = $this->GetStringWidth( $title );
         $center_x   = ( $this->w - $title_w ) / 2;
-        $title_y    = $start_y + 3;
+        $title_y    = $start_y + 1.8;
         $this->SetXY( $center_x, $title_y );
-        $this->Cell( $title_w, 7.5, $title, 0, 0, 'C' );
+        $this->Cell( $title_w, 7.0, $title, 0, 0, 'C' );
+        $this->SetFont( 'Helvetica', '', 9 );
+        $this->SetXY( $center_x, $title_y + 6.0 );
+        $this->Cell( $title_w, 3.8, self::enc( __( 'Reporte de Post Venta', 'agrocampo-post-venta' ) ), 0, 0, 'C' );
 
         // Right block (IT + date).
         $this->SetFont( 'Helvetica', 'B', 10 );
         $right_w = 38;
-        $right_h = 10.8;
+        $right_h = 12.0;
         $right_x = $this->w - $this->rMargin - $right_w;
         $this->RoundedRect( $right_x, $start_y, $right_w, $right_h, 2.5, 'D' );
         $this->SetXY( $right_x + 2.2, $start_y + 1.8 );
@@ -123,20 +126,24 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->Cell( $right_w - 4.4, 3.6, self::enc( $this->issue_date ), 0, 0, 'L' );
 
         // Separator line.
-        $header_h = max( $logo_h, 17.0 );
+        $header_h = max( $logo_h, 18.6 );
         $line_y   = $start_y + $header_h + 4;
         $this->Line( $this->lMargin, $line_y, $this->w - $this->rMargin, $line_y );
-        $this->SetY( $line_y + 4.2 );
+        $this->SetY( $line_y + 5.0 );
     }
 
     public function Footer(): void { // phpcs:ignore WordPress.NamingConventions.ValidFunctionName.MethodNameInvalid
-        $this->SetY( -12 );
-        $this->SetFont( 'Helvetica', '', 9.5 );
+        $this->SetY( -14 );
+        $this->Line( $this->lMargin, $this->GetY(), $this->w - $this->rMargin, $this->GetY() );
+        $this->SetY( -11.5 );
+        $this->SetFont( 'Helvetica', '', 8.9 );
         $footer_source = '' !== $this->footer_text ? $this->footer_text : __( 'Talca • Linares • Parral   |   +56 9 9748 5650', 'agrocampo-post-venta' );
         $footer_text = self::enc( $footer_source );
         $page_text   = self::enc( sprintf( __( 'Página %d', 'agrocampo-post-venta' ), $this->PageNo() ) );
-        $full        = $footer_text . self::enc( '   |   ' ) . $page_text;
-        $this->Cell( 0, 5.2, $full, 0, 0, 'C' );
+        $this->SetX( $this->lMargin );
+        $this->Cell( 0, 4.8, $footer_text, 0, 0, 'L' );
+        $this->SetX( $this->lMargin );
+        $this->Cell( $this->w - $this->lMargin - $this->rMargin, 4.8, $page_text, 0, 0, 'R' );
     }
 
     public function section_title( string $text ): void {
@@ -158,10 +165,10 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->card_w = $this->w - $this->lMargin - $this->rMargin;
         $this->card_open = true;
 
-        $title_top = $this->compact_density ? 2.5 : 3.2;
-        $title_h   = $this->compact_density ? 4.6 : 5.2;
+        $title_top = $this->compact_density ? 2.7 : 3.4;
+        $title_h   = $this->compact_density ? 4.8 : 5.4;
         $line_gap  = $this->compact_density ? 0.45 : 0.6;
-        $body_gap  = $this->compact_density ? 1.3 : 2.1;
+        $body_gap  = $this->compact_density ? 1.5 : 2.4;
 
         $this->SetXY( $this->card_x + 3, $this->card_y + $title_top );
         $this->SetFont( 'Helvetica', 'B', max( $this->compact_density ? 11.2 : 12, $this->readability['min_title_font'] ) );
@@ -177,8 +184,8 @@ class AGP_PV_PDF_Document extends FPDF {
             return;
         }
 
-        $effective_bottom = $this->compact_density ? max( 1.2, $bottom_padding - 0.8 ) : $bottom_padding;
-        $after_gap = $this->compact_density ? 0.9 : 1.5;
+        $effective_bottom = $this->compact_density ? max( 1.3, $bottom_padding - 0.7 ) : $bottom_padding;
+        $after_gap = $this->compact_density ? 1.1 : 2.2;
 
         $end_y = $this->GetY() + $effective_bottom;
         $this->RoundedRect( $this->card_x, $this->card_y, $this->card_w, $end_y - $this->card_y, 3.2, 'D' );
@@ -312,12 +319,12 @@ class AGP_PV_PDF_Document extends FPDF {
 
         $title_top = 2.6;
         $title_h = 4.8;
-        $line_gap = 0.5;
-        $body_gap = 1.3;
-        $line_h = 4.1;
-        $row_gap = 0.8;
-        $bottom_pad = 1.6;
-        $after_gap = 1.3;
+        $line_gap = 0.6;
+        $body_gap = 1.7;
+        $line_h = 4.2;
+        $row_gap = 1.0;
+        $bottom_pad = 1.9;
+        $after_gap = 2.0;
 
         $general_h = $this->estimate_two_up_card_height( $general_rows, $value_w, $line_h, $row_gap, $title_top, $title_h, $line_gap, $body_gap, $bottom_pad );
         $equipment_h = $this->estimate_two_up_card_height( $equipment_rows, $value_w, $line_h, $row_gap, $title_top, $title_h, $line_gap, $body_gap, $bottom_pad );
@@ -383,7 +390,7 @@ class AGP_PV_PDF_Document extends FPDF {
         float $row_gap,
         float $card_h
     ): void {
-        $this->SetFont( 'Helvetica', 'B', 11.1 );
+        $this->SetFont( 'Helvetica', 'B', 11.4 );
         $this->SetXY( $x + 2.6, $y + $title_top );
         $this->Cell( $w - 5.2, $title_h, self::enc( $title ), 0, 0, 'L' );
 
@@ -397,7 +404,7 @@ class AGP_PV_PDF_Document extends FPDF {
             $nb = max( 1, $this->NbLines( $value_w, $value ) );
             $row_h = $line_h * $nb;
 
-            $this->SetFont( 'Helvetica', 'B', 9.6 );
+            $this->SetFont( 'Helvetica', 'B', 9.7 );
             $this->SetXY( $x + 2.6, $cursor_y );
             $this->Cell( $label_w, $row_h, $label, 0, 0, 'L' );
 
@@ -405,7 +412,7 @@ class AGP_PV_PDF_Document extends FPDF {
             if ( $value_is_placeholder ) {
                 $this->SetTextColor( 115, 115, 115 );
             }
-            $this->SetFont( 'Helvetica', '', 9.5 );
+            $this->SetFont( 'Helvetica', '', 9.6 );
             $this->SetXY( $x + 2.6 + $label_w + $value_gap, $cursor_y );
             $this->MultiCell( $value_w, $line_h, $value, 0, 'L' );
             if ( $value_is_placeholder ) {
@@ -415,7 +422,7 @@ class AGP_PV_PDF_Document extends FPDF {
             $cursor_y += $row_h + $row_gap;
         }
 
-        $this->RoundedRect( $x, $y, $w, $card_h, 3.0, 'D' );
+        $this->RoundedRect( $x, $y, $w, $card_h, 2.8, 'D' );
     }
 
     /**
@@ -486,7 +493,7 @@ class AGP_PV_PDF_Document extends FPDF {
             $lines[] = $line;
         }
 
-        if ( count( $lines ) <= 3 ) {
+        if ( count( $lines ) <= 4 ) {
             $this->box_text( $title, implode( "\n", $lines ) );
             return;
         }
@@ -496,7 +503,7 @@ class AGP_PV_PDF_Document extends FPDF {
         $col_w    = ( $usable_w - $gap ) / 2;
         $title_h  = $this->compact_density ? 5.0 : 6.3;
         $padding  = $this->compact_density ? 1.3 : 1.9;
-        $line_h   = $this->compact_density ? 4.0 : 4.7;
+        $line_h   = $this->compact_density ? 3.9 : 4.4;
         $line_gap = $this->compact_density ? 0.3 : 0.5;
         $inner_w  = $col_w - ( 2 * $padding );
 
@@ -1468,7 +1475,7 @@ class AGP_PV_PDF {
                 $document->card_end();
             }
 
-            $lub = self::format_supply_lines( self::limit_pdf_block_text( self::build_pdf_lubricants_text( $submission ) ) );
+            $lub = self::limit_pdf_block_text( self::build_pdf_lubricants_text( $submission ) );
             $fil = self::format_supply_lines( self::limit_pdf_block_text( self::normalize_pdf_value( $submission['filtros_utilizados'] ?? '', '', true ) ) );
             $com = self::format_supply_lines( self::limit_pdf_block_text( self::normalize_pdf_value( $submission['componentes_utilizados'] ?? '', '', true ) ) );
             $trabajos = self::limit_pdf_block_text( self::normalize_pdf_value( $submission['trabajos_realizados'] ?? '', '', true ) );
@@ -2135,14 +2142,12 @@ class AGP_PV_PDF {
 
             $product  = sanitize_text_field( (string) ( $item['product'] ?? '' ) );
             $quantity = sanitize_text_field( (string) ( $item['quantity'] ?? '' ) );
-            $unit     = sanitize_text_field( (string) ( $item['unit'] ?? '' ) );
 
             if ( '' === $product ) {
                 continue;
             }
 
-            $qty_part = trim( $quantity . ( '' !== $unit ? ' ' . $unit : '' ) );
-            $lines[]  = '' !== $qty_part ? $product . ' - ' . $qty_part : $product;
+            $lines[] = self::format_pdf_lubricant_line( $product, $quantity );
         }
 
         return $lines;
@@ -2170,15 +2175,41 @@ class AGP_PV_PDF {
                         $qty_part = trim( (string) ( $qty_matches[1] ?? '' ) );
                     }
 
-                    $lines[] = '' !== $qty_part ? $product . ' - ' . $qty_part : $product;
+                    $lines[] = self::format_pdf_lubricant_line( $product, $qty_part );
                     continue;
                 }
             }
 
-            $lines[] = $line;
+            $clean_line = preg_replace( '/\s*\([^)]*\)\s*$/u', '', $line );
+            $clean_line = is_string( $clean_line ) ? trim( $clean_line ) : '';
+            if ( '' === $clean_line ) {
+                continue;
+            }
+
+            $lines[] = self::format_pdf_lubricant_line( $clean_line, '' );
         }
 
         return $lines;
+    }
+
+    private static function format_pdf_lubricant_line( string $product, string $quantity ): string {
+        $product_clean = sanitize_text_field( trim( $product ) );
+        $qty_clean = self::normalize_lubricant_quantity_for_pdf( $quantity );
+
+        return $product_clean . ' - CANTIDAD = "' . $qty_clean . '"';
+    }
+
+    private static function normalize_lubricant_quantity_for_pdf( string $quantity ): string {
+        $quantity = sanitize_text_field( trim( $quantity ) );
+        if ( '' === $quantity ) {
+            return '';
+        }
+
+        if ( preg_match( '/(\d+(?:[.,]\d+)?)/u', $quantity, $matches ) ) {
+            return (string) $matches[1];
+        }
+
+        return '';
     }
 
     /**
