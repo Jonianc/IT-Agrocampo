@@ -1982,7 +1982,6 @@ function initPhotos() {
         var $rows = $wrapper.find('[data-lubricants-rows]');
         var $summaryCount = $wrapper.find('[data-lubricants-summary-count]');
         var $summaryTotal = $wrapper.find('[data-lubricants-summary-total]');
-        var $chips = $wrapper.find('[data-lubricants-type-chips]');
         var $hiddenLegacy = $('#agp-pv-lubricantes');
         var $hiddenJson = $('#agp-pv-lubricantes-json');
         var allowOverwriteEmpty = false;
@@ -2233,43 +2232,6 @@ function initPhotos() {
             }
         }
 
-        function collectTypeOptionsFromRows() {
-            var bucket = {};
-
-            typeOptions.forEach(function (type) {
-                bucket[type] = true;
-            });
-
-            $rows.find('[data-lubricants-row]').each(function () {
-                var type = $.trim(String($(this).find('[data-lubricant-type]').val() || ''));
-                if (type) {
-                    bucket[type] = true;
-                }
-            });
-
-            manualTypeOptions = Object.keys(bucket).sort();
-        }
-
-        function updateTypeChips() {
-            if (!$chips.length) {
-                return;
-            }
-
-            collectTypeOptionsFromRows();
-            $chips.empty();
-
-            if (!manualTypeOptions.length) {
-                return;
-            }
-
-            manualTypeOptions.forEach(function (type) {
-                $('<button type="button" class="agp-pv-chip" data-lubricants-type-chip />')
-                    .attr('data-type', type)
-                    .text(type)
-                    .appendTo($chips);
-            });
-        }
-
         function setActiveRow($row) {
             if (!$row || !$row.length) {
                 return;
@@ -2314,6 +2276,16 @@ function initPhotos() {
             $toggle.text(collapsed ? 'Ver' : 'Ocultar');
         }
 
+        function collapseAllRowsExcept($exceptRow) {
+            $rows.find('[data-lubricants-row]').each(function () {
+                var $current = $(this);
+                if ($exceptRow && $exceptRow.length && $current.is($exceptRow)) {
+                    return;
+                }
+                setCollapsedState($current, true);
+            });
+        }
+
         function toggleExpanded($row, forceState) {
             if (!$row || !$row.length) {
                 return;
@@ -2327,13 +2299,6 @@ function initPhotos() {
             $meta.attr('hidden', !expanded);
             $toggle.attr('aria-expanded', expanded ? 'true' : 'false');
             $toggle.text(expanded ? 'Contraer' : 'Expandir');
-        }
-
-        function getRowById(rowId) {
-            if (!rowId) {
-                return $();
-            }
-            return $rows.find('[data-lubricants-row][data-row-id="' + rowId + '"]');
         }
 
         function syncHiddenFields() {
@@ -2352,18 +2317,18 @@ function initPhotos() {
             $hiddenJson.val(items.length ? JSON.stringify(items) : '');
             $hiddenLegacy.val(items.length ? buildLegacySummary(items) : '');
             recalculateSummary(items);
-            updateTypeChips();
         }
 
-        function addRow(initialData, shouldSync) {
+        function addRow(initialData, shouldSync, options) {
             if (catalogEmptyLocked && $rows.find('[data-lubricants-row]').length >= 1) {
-                return;
+                return $();
             }
             if ($rows.find('[data-lubricants-row]').length >= maxRows) {
-                return;
+                return $();
             }
 
             var data = initialData || {};
+            var behavior = options || {};
             var rowId = nextRowId();
             var typeControl = catalogEmptyLocked
                 ? '<input type="text" data-lubricant-type value="" placeholder="Tipo" disabled>'
@@ -2433,13 +2398,18 @@ function initPhotos() {
             if (showSecondary) {
                 toggleExpanded($row, secondaryExpandedByData);
             }
-            setCollapsedState($row, false);
+            var shouldStartCollapsed = typeof behavior.startCollapsed === 'boolean'
+                ? behavior.startCollapsed
+                : !!rowToPayload($row);
+            setCollapsedState($row, shouldStartCollapsed);
             updateRowSummary($row);
             setActiveRow($row);
 
             if (shouldSync !== false) {
                 syncHiddenFields();
             }
+
+            return $row;
         }
 
         $wrapper.on('click', '[data-lubricants-add]', function () {
@@ -2447,7 +2417,12 @@ function initPhotos() {
                 return;
             }
             allowOverwriteEmpty = true;
-            addRow();
+            var $newRow = addRow({}, true, { startCollapsed: false });
+            if ($newRow.length) {
+                collapseAllRowsExcept($newRow);
+                setCollapsedState($newRow, false);
+                setActiveRow($newRow);
+            }
             clearLubricantsError();
         });
 
@@ -2471,7 +2446,7 @@ function initPhotos() {
             allowOverwriteEmpty = true;
             var $row = $(this).closest('[data-lubricants-row]');
             var payload = rowToPayload($row) || {};
-            addRow(payload);
+            addRow(payload, true, { startCollapsed: true });
             syncHiddenFields();
             clearLubricantsError();
         });
@@ -2519,47 +2494,25 @@ function initPhotos() {
             clearLubricantsError();
         });
 
-        $wrapper.on('click', '[data-lubricants-type-chip]', function () {
-            if (catalogEmptyLocked) {
-                return;
-            }
-            allowOverwriteEmpty = true;
-            var chipType = $.trim(String($(this).attr('data-type') || ''));
-            if (!chipType) {
-                return;
-            }
-            addRow({ type: chipType }, false);
-            var $targetRow = getRowById(activeRowId);
-            if (!$targetRow.length) {
-                return;
-            }
-            $targetRow.find('[data-lubricant-type]').val(chipType).trigger('change');
-            $targetRow.find('[data-lubricant-product]').trigger('focus');
-            setActiveRow($targetRow);
-            updateRowSummary($targetRow);
-            syncHiddenFields();
-            clearLubricantsError();
-        });
-
         var initialItems = getHiddenJsonItems();
         if (catalogEmptyLocked) {
-            addRow({}, false);
+            addRow({}, false, { startCollapsed: false });
             $wrapper.find('[data-lubricants-add]').prop('disabled', true);
             $('<p class="description agp-pv-lubricants-empty-catalog-lock">Catálogo vacío: modo solo catálogo bloqueado hasta importar catálogo.</p>').appendTo($wrapper);
             syncHiddenFields();
         } else if (initialItems.length) {
             $rows.empty();
             initialItems.slice(0, maxRows).forEach(function (item) {
-                addRow(item || {}, false);
+                addRow(item || {}, false, { startCollapsed: true });
             });
             syncHiddenFields();
         } else {
             var legacyText = $.trim(String($hiddenLegacy.val() || ''));
             if (!catalogEnabled && legacyText) {
-                addRow({ product: legacyText }, false);
+                addRow({ product: legacyText }, false, { startCollapsed: true });
                 syncHiddenFields();
             } else {
-                addRow();
+                addRow({}, true, { startCollapsed: false });
             }
         }
 
@@ -2569,11 +2522,9 @@ function initPhotos() {
 
         $('#agp-pv-form').on('click', '.agp-pv-new-report', function () {
             $rows.empty();
-            addRow();
+            addRow({}, true, { startCollapsed: false });
             syncHiddenFields();
         });
-
-        updateTypeChips();
         syncHiddenFields();
     }
 

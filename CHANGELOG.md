@@ -1,3 +1,10 @@
+## [1.24.1] - 2026-04-14
+- standalone `/post-venta/` (`Lubricantes`): se eliminan chips rápidos de tipos.
+- acción `+ Agregar lubricante`: crea nueva card al final, la deja abierta automáticamente y colapsa las demás.
+- cards con datos precargados: inician colapsadas y conservan resumen en header.
+- al agregar un nuevo ítem, el anterior queda colapsado; se mantiene expandir/contraer manual por card.
+- alcance acotado: sin cambios en payload (`lubricantes` / `lubricantes_json`), validación backend, nonces/capabilities, DB, PDF ni email.
+
 ## [1.24.0] - 2026-04-14
 - standalone `/post-venta/` (móvil, bloque `Lubricantes`): cards ahora permiten colapsar contenido principal y mantienen un resumen visible por ítem en header.
 - chips por tipo: al tocar un chip se crea un nuevo ítem con `Tipo` aplicado y foco en `Producto`.

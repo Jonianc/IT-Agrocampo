@@ -221,7 +221,6 @@ $render_machine_status_block = static function () use ( $machine_status_options,
                     <span class="agp-pv-lubricants-summary__pill"><?php esc_html_e( 'Ítems', 'agrocampo-post-venta' ); ?>: <strong data-lubricants-summary-count>0</strong></span>
                     <span class="agp-pv-lubricants-summary__pill"><?php esc_html_e( 'Total cantidad', 'agrocampo-post-venta' ); ?>: <strong data-lubricants-summary-total>0</strong></span>
                 </div>
-                <div class="agp-pv-lubricants-chips" data-lubricants-type-chips></div>
                 <div class="agp-pv-grid agp-pv-grid--lubricants" data-lubricants-rows></div>
                 <div class="agp-pv-step-actions agp-pv-lubricants-actions">
                     <button type="button" class="button button-primary" data-lubricants-add><?php esc_html_e( '+ Agregar lubricante', 'agrocampo-post-venta' ); ?></button>
