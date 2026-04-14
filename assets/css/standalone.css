@@ -775,6 +775,24 @@
     color: #334155;
 }
 
+.agp-pv-lubricants-summary__label {
+    width: 100%;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
+}
+
+.agp-pv-lubricants-summary__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f8fafc;
+    border: 1px solid #dbe4ee;
+    border-radius: 999px;
+    padding: 4px 10px;
+}
+
 .agp-pv-lubricants-chips {
     display: flex;
     flex-wrap: wrap;
@@ -820,9 +838,21 @@
     grid-column: 1 / -1;
 }
 
+.agp-pv-lubricants-row__header-main {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
 .agp-pv-lubricants-row__title {
     font-size: 13px;
     color: #334155;
+}
+
+.agp-pv-lubricants-row__summary {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.3;
 }
 
 .agp-pv-lubricants-row__actions {
@@ -847,6 +877,17 @@
     margin-top: 2px;
     padding-top: 10px;
     border-top: 1px dashed #d9e2ec;
+}
+
+.agp-pv-lubricants-row__qty-unit {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 10px;
+}
+
+.agp-pv-lubricants-actions .button,
+[data-lubricants-add] {
+    font-weight: 700;
 }
 
 .agp-pv-lubricants-row.is-active {
@@ -930,6 +971,8 @@
 
     .agp-pv-lubricants-summary {
         font-size: 12px;
+        gap: 6px;
+        margin-bottom: 10px;
     }
 
     .agp-pv-lubricants-row {
@@ -950,18 +993,51 @@
     }
 
     .agp-pv-lubricants-row__actions .button {
-        min-height: 32px;
+        min-height: 28px;
+        padding: 4px 7px;
+        font-size: 11px;
+        border-radius: 5px;
     }
 
     .agp-pv-lubricants-row__header {
         align-items: flex-start;
-        flex-direction: column;
+        flex-direction: row;
+        gap: 6px;
+    }
+
+    .agp-pv-lubricants-row__actions {
+        margin-left: auto;
+        flex-wrap: nowrap;
+    }
+
+    .agp-pv-lubricants-row.is-collapsed > .agp-pv-field,
+    .agp-pv-lubricants-row.is-collapsed > .agp-pv-lubricants-row__meta,
+    .agp-pv-lubricants-row.is-collapsed > .agp-pv-lubricants-row__qty-unit {
+        display: none !important;
+    }
+
+    .agp-pv-lubricants-row.is-collapsed .agp-pv-lubricants-row__header {
+        margin-bottom: 0;
+    }
+
+    .agp-pv-lubricants-row__qty-unit {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    [data-lubricants-add] {
+        width: 100%;
+        min-height: 42px;
     }
 }
 
 @media (min-width: 600px) {
     .agp-pv-lubricants-row {
         grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .agp-pv-lubricants-row__qty-unit {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .agp-pv-lubricants-row__meta {

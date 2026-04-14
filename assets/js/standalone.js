@@ -2091,7 +2091,13 @@ function initPhotos() {
             }
 
             var list = type && catalogByType[type] ? catalogByType[type] : [];
-            var html = '<option value="">' + 'Seleccionar' + '</option>';
+            var placeholderText = 'Seleccionar';
+            if (!type) {
+                placeholderText = 'Primero seleccione tipo';
+            } else if (!list.length) {
+                placeholderText = 'Sin productos para este tipo';
+            }
+            var html = '<option value="">' + placeholderText + '</option>';
 
             list.forEach(function (item) {
                 var isSelected = selectedProduct === item.product ? ' selected' : '';
@@ -2274,6 +2280,40 @@ function initPhotos() {
             $row.addClass('is-active');
         }
 
+        function updateRowSummary($row) {
+            if (!$row || !$row.length) {
+                return;
+            }
+
+            var type = $.trim(String($row.find('[data-lubricant-type]').val() || ''));
+            var product = $.trim(String($row.find('[data-lubricant-product]').val() || ''));
+            var quantity = $.trim(String($row.find('[data-lubricant-quantity]').val() || ''));
+            var unit = $.trim(String($row.find('[data-lubricant-unit]').val() || ''));
+            var summaryParts = [];
+
+            if (type) {
+                summaryParts.push(type);
+            }
+            if (product) {
+                summaryParts.push(product);
+            }
+            if (quantity) {
+                summaryParts.push(quantity + (unit ? (' ' + unit) : ''));
+            }
+
+            $row.find('[data-lubricants-row-summary]').text(summaryParts.length ? summaryParts.join(' • ') : 'Sin producto seleccionado');
+        }
+
+        function setCollapsedState($row, collapsed) {
+            if (!$row || !$row.length) {
+                return;
+            }
+            var $toggle = $row.find('[data-lubricants-collapse]');
+            $row.toggleClass('is-collapsed', !!collapsed);
+            $toggle.attr('aria-expanded', collapsed ? 'false' : 'true');
+            $toggle.text(collapsed ? 'Ver' : 'Ocultar');
+        }
+
         function toggleExpanded($row, forceState) {
             if (!$row || !$row.length) {
                 return;
@@ -2363,21 +2403,24 @@ function initPhotos() {
             var rowHtml = '' +
                 '<article class="agp-pv-grid agp-pv-lubricants-row" data-lubricants-row data-row-id="' + rowId + '">' +
                 '<div class="agp-pv-lubricants-row__header">' +
-                '<strong class="agp-pv-lubricants-row__title">Lubricante</strong>' +
+                '<div class="agp-pv-lubricants-row__header-main"><strong class="agp-pv-lubricants-row__title">Lubricante</strong><span class="agp-pv-lubricants-row__summary" data-lubricants-row-summary>Sin producto seleccionado</span></div>' +
                 '<div class="agp-pv-lubricants-row__actions">' +
+                '<button type="button" class="button button-secondary" data-lubricants-collapse aria-expanded="true">Ocultar</button>' +
                 '<button type="button" class="button button-secondary" data-lubricants-duplicate>Duplicar</button>' +
-                '<button type="button" class="button button-link-delete" data-lubricants-remove>Eliminar</button>' +
+                '<button type="button" class="button button-link-delete" data-lubricants-remove aria-label="Eliminar lubricante">Eliminar</button>' +
                 (showSecondary ? ('<button type="button" class="button button-secondary" data-lubricants-expand aria-expanded="' + (secondaryExpandedByData ? 'true' : 'false') + '">Expandir</button>') : '') +
                 '</div>' +
                 '</div>' +
                 '<div class="agp-pv-field"><label>Tipo</label>' + typeControl + '</div>' +
                 '<div class="agp-pv-field"><label>Producto</label>' + productControl + '</div>' +
+                '<div class="agp-pv-grid agp-pv-lubricants-row__qty-unit">' +
                 '<div class="agp-pv-field"><label>Cantidad</label><input type="number" min="0" step="any" data-lubricant-quantity value="' + quantityValue + '"' + (catalogEmptyLocked ? ' disabled' : '') + '></div>' +
+                unitFieldHtml +
+                '</div>' +
                 '<div class="agp-pv-grid agp-pv-lubricants-row__meta" data-lubricants-meta' + (showSecondary ? ' hidden' : ' data-meta-empty="1" hidden') + '>' +
                 codeFieldHtml +
                 presentationFieldHtml +
                 descriptionFieldHtml +
-                unitFieldHtml +
                 observationFieldHtml +
                 '</div>' +
                 '</article>';
@@ -2390,6 +2433,8 @@ function initPhotos() {
             if (showSecondary) {
                 toggleExpanded($row, secondaryExpandedByData);
             }
+            setCollapsedState($row, false);
+            updateRowSummary($row);
             setActiveRow($row);
 
             if (shouldSync !== false) {
@@ -2438,6 +2483,13 @@ function initPhotos() {
             setActiveRow($row);
         });
 
+        $wrapper.on('click', '[data-lubricants-collapse]', function () {
+            allowOverwriteEmpty = true;
+            var $row = $(this).closest('[data-lubricants-row]');
+            setCollapsedState($row, !$row.hasClass('is-collapsed'));
+            setActiveRow($row);
+        });
+
         $wrapper.on('click', '[data-lubricants-row]', function () {
             setActiveRow($(this));
         });
@@ -2451,6 +2503,7 @@ function initPhotos() {
             syncRowReadonlyFields($row);
             applyQuickTypeDefaultUnit($row);
             setActiveRow($row);
+            updateRowSummary($row);
             syncHiddenFields();
             clearLubricantsError();
         });
@@ -2461,6 +2514,7 @@ function initPhotos() {
             syncRowReadonlyFields($row);
             applyQuickTypeDefaultUnit($row);
             setActiveRow($row);
+            updateRowSummary($row);
             syncHiddenFields();
             clearLubricantsError();
         });
@@ -2471,16 +2525,19 @@ function initPhotos() {
             }
             allowOverwriteEmpty = true;
             var chipType = $.trim(String($(this).attr('data-type') || ''));
-            var $targetRow = getRowById(activeRowId);
-            if (!$targetRow.length) {
-                $targetRow = $rows.find('[data-lubricants-row]').first();
-            }
-            if (!$targetRow.length || !chipType) {
+            if (!chipType) {
                 return;
             }
-
+            addRow({ type: chipType }, false);
+            var $targetRow = getRowById(activeRowId);
+            if (!$targetRow.length) {
+                return;
+            }
             $targetRow.find('[data-lubricant-type]').val(chipType).trigger('change');
+            $targetRow.find('[data-lubricant-product]').trigger('focus');
             setActiveRow($targetRow);
+            updateRowSummary($targetRow);
+            syncHiddenFields();
             clearLubricantsError();
         });
 

@@ -1,3 +1,12 @@
+## [1.24.0] - 2026-04-14
+- standalone `/post-venta/` (móvil, bloque `Lubricantes`): cards ahora permiten colapsar contenido principal y mantienen un resumen visible por ítem en header.
+- chips por tipo: al tocar un chip se crea un nuevo ítem con `Tipo` aplicado y foco en `Producto`.
+- layout de captura: `Cantidad` y `Unidad` comparten una misma fila visual.
+- header de card: acciones más compactas en móvil y resumen superior del bloque más claro.
+- UX de selección: estado vacío de `Producto` ahora guía mejor cuando falta tipo o no hay productos del tipo.
+- CTA `+ Agregar lubricante`: pasa a estilo primario para mayor jerarquía visual.
+- alcance acotado: sin cambios en persistencia (`lubricantes` / `lubricantes_json`), validación backend, nonces/capabilities, DB, PDF ni email.
+
 ## [1.23.0] - 2026-04-14
 - ajustes > lubricantes (wp-admin): `Tipos rápidos` pasa de textarea visible a repeater visual (tipo/unidad + agregar/quitar), manteniendo el mismo payload `agp_pv_lubricants_quick_types` para compatibilidad backward.
 - ajustes > lubricantes (wp-admin): la tabla de `Estado por campo` se reemplaza por filas/cards visuales sin cambiar names, opciones ni guardado.
