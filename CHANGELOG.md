@@ -1,3 +1,10 @@
+## [1.24.5] - 2026-04-14
+- submit AJAX: `request_rejected_rate_limit` ahora registra contexto detallado de bloqueo (`reason`, `window_seconds`, `retry_window_seconds`, `key`, `attempts`, `max_attempts`, `timestamp`) para diagnóstico en `debug.log`.
+- rate limit submit: se agrega ventana corta anti-reintento inmediato (`agp_pv_rate_limit_retry_window_seconds`, default 12s) y se conserva ventana principal configurable existente.
+- rate limit key en anónimos: se endurece fingerprint usando `IP + User-Agent` para reducir colisiones cuando IP es compartida/no confiable.
+- submit backend: el registro de intento de rate limit se mueve después de validación + uploads + firmas para evitar falsos positivos en envíos normales con errores previos.
+- frontend standalone: se refuerza bloqueo anti-doble submit al primer intento (disable inmediato + estado `Enviando...`) con desbloqueo controlado en validación/offline/finalización.
+
 ## [1.24.4] - 2026-04-14
 - PDF (`Detalle > Lubricantes`): cada línea se renderiza en formato limpio `Producto - Cantidad Unidad`; si no hay cantidad, queda solo `Producto`.
 - se elimina del render PDF de lubricantes la exposición de metadatos (`tipo`, `código`, `presentación`, `descripción`, `obs.` y similares), sin tocar persistencia ni payload guardado.

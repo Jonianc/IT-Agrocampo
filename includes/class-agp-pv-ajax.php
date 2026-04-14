@@ -81,8 +81,20 @@ class AGP_PV_Ajax {
             wp_send_json_error( array( 'message' => __( 'Formulario inválido.', 'agrocampo-post-venta' ) ) );
         }
 
-        if ( $this->is_rate_limited() ) {
-            $this->log_submit_event( 'request_rejected_rate_limit' );
+        $rate_limit_state = $this->get_rate_limit_state();
+        if ( ! empty( $rate_limit_state['blocked'] ) ) {
+            $this->log_submit_event(
+                'request_rejected_rate_limit',
+                array(
+                    'reason' => (string) ( $rate_limit_state['reason'] ?? 'limit' ),
+                    'window_seconds' => (int) ( $rate_limit_state['window_seconds'] ?? 0 ),
+                    'retry_window_seconds' => (int) ( $rate_limit_state['retry_window_seconds'] ?? 0 ),
+                    'key' => (string) ( $rate_limit_state['key'] ?? '' ),
+                    'attempts' => (int) ( $rate_limit_state['attempts'] ?? 0 ),
+                    'max_attempts' => (int) ( $rate_limit_state['max_attempts'] ?? 0 ),
+                    'timestamp' => (int) ( $rate_limit_state['timestamp'] ?? time() ),
+                )
+            );
             wp_send_json_error(
                 array(
                     'message' => __( 'Demasiados intentos. Espera unos minutos e inténtalo nuevamente.', 'agrocampo-post-venta' ),
@@ -90,8 +102,6 @@ class AGP_PV_Ajax {
                 429
             );
         }
-
-        $this->register_rate_limit_attempt();
 
         $data = $this->sanitize_submission( $_POST );
         $data['tipo_servicio_label'] = $this->get_tipo_servicio_label( $data['tipo_servicio'] );
@@ -125,6 +135,8 @@ class AGP_PV_Ajax {
         $data['firma_tecnico_id'] = $signature_result['firma_tecnico_id'];
         $data['firma_jefe_taller_id'] = $signature_result['firma_jefe_taller_id'];
         $data['fotos_ids'] = wp_json_encode( $upload_result['fotos_ids'] );
+
+        $this->register_rate_limit_attempt();
 
         $insert_result = $this->insert_submission( $data );
         $submission_id = (int) ( $insert_result['submission_id'] ?? 0 );
@@ -761,22 +773,59 @@ class AGP_PV_Ajax {
         return (bool) apply_filters( 'agp_pv_rate_limit_exempt', $is_logged_in, $is_logged_in ? 'logged_in' : 'anonymous' );
     }
 
-    private function is_rate_limited(): bool {
+    private function get_rate_limit_state(): array {
         if ( $this->is_rate_limit_exempt() ) {
-            return false;
+            return array(
+                'blocked' => false,
+                'reason' => 'exempt',
+            );
         }
 
         $max_attempts = (int) apply_filters( 'agp_pv_rate_limit_max_attempts', 5 );
         $window_seconds = (int) apply_filters( 'agp_pv_rate_limit_window_seconds', 15 * MINUTE_IN_SECONDS );
+        $retry_window_seconds = (int) apply_filters( 'agp_pv_rate_limit_retry_window_seconds', 12 );
 
         if ( $max_attempts < 1 || $window_seconds < 1 ) {
-            return false;
+            return array(
+                'blocked' => false,
+                'reason' => 'disabled',
+            );
         }
 
         $key = $this->get_rate_limit_key();
         $attempts = (int) get_transient( $key );
+        $retry_lock_at = (int) get_transient( $this->get_rate_limit_retry_key( $key ) );
 
-        return $attempts >= $max_attempts;
+        $state = array(
+            'blocked' => false,
+            'reason' => '',
+            'window_seconds' => $window_seconds,
+            'retry_window_seconds' => max( 0, $retry_window_seconds ),
+            'key' => $key,
+            'attempts' => $attempts,
+            'max_attempts' => $max_attempts,
+            'timestamp' => time(),
+        );
+
+        if ( $retry_window_seconds > 0 && $retry_lock_at > 0 ) {
+            $state['blocked'] = true;
+            $state['reason']  = 'retry_window';
+
+            return $state;
+        }
+
+        if ( $attempts >= $max_attempts ) {
+            $state['blocked'] = true;
+            $state['reason']  = 'window_limit';
+        }
+
+        return $state;
+    }
+
+    private function is_rate_limited(): bool {
+        $state = $this->get_rate_limit_state();
+
+        return ! empty( $state['blocked'] );
     }
 
     private function register_rate_limit_attempt(): void {
@@ -792,13 +841,26 @@ class AGP_PV_Ajax {
         $key = $this->get_rate_limit_key();
         $attempts = (int) get_transient( $key );
         set_transient( $key, $attempts + 1, $window_seconds );
+
+        $retry_window_seconds = (int) apply_filters( 'agp_pv_rate_limit_retry_window_seconds', 12 );
+        if ( $retry_window_seconds > 0 ) {
+            set_transient( $this->get_rate_limit_retry_key( $key ), time(), $retry_window_seconds );
+        }
     }
 
     private function get_rate_limit_key(): string {
         $ip = $this->get_request_ip();
-        $default = 'agp_pv_rate_limit_' . md5( $ip );
+        $anon_fingerprint = '';
+        if ( ! is_user_logged_in() ) {
+            $anon_fingerprint = strtolower( sanitize_text_field( wp_unslash( (string) ( $_SERVER['HTTP_USER_AGENT'] ?? '' ) ) ) );
+        }
+        $default = 'agp_pv_rate_limit_' . md5( $ip . '|' . $anon_fingerprint );
 
         return (string) apply_filters( 'agp_pv_rate_limit_key', $default, $ip );
+    }
+
+    private function get_rate_limit_retry_key( string $base_key ): string {
+        return $base_key . '_retry';
     }
 
     private function get_request_ip(): string {

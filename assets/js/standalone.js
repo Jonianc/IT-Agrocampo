@@ -2708,17 +2708,34 @@ function initPhotos() {
         $('#agp-pv-form').on('submit', function (e) {
             e.preventDefault();
 
+            var $form = $('#agp-pv-form');
+            var $submit = $('.agp-pv-submit');
+            var $retryButton = $('.agp-pv-retry-pending');
+            var originalText = $submit.data('original-text') || $submit.text();
+            $submit.data('original-text', originalText);
+
+            var unlockSubmitUi = function () {
+                $submit.prop('disabled', false).text(originalText);
+                $retryButton.prop('disabled', false);
+                $form.data('agpPvSubmitInFlight', false);
+                $form.data('agpPvInternalReset', false);
+            };
+
             clearFieldErrors();
 
             emitFrontendEvent('submit_attempt', { online: navigator.onLine !== false });
 
-            if ($('#agp-pv-form').data('agpPvSubmitInFlight')) {
+            if ($form.data('agpPvSubmitInFlight')) {
                 emitFrontendEvent('submit_skipped_inflight', {});
                 return;
             }
 
-            var savePendingSubmit = $('#agp-pv-form').data('agpPvSavePendingSubmit');
-            var clearPendingSubmit = $('#agp-pv-form').data('agpPvClearPendingSubmit');
+            $form.data('agpPvSubmitInFlight', true);
+            $submit.prop('disabled', true).text(getMessage('statusSending', 'Enviando...'));
+            $retryButton.prop('disabled', true);
+
+            var savePendingSubmit = $form.data('agpPvSavePendingSubmit');
+            var clearPendingSubmit = $form.data('agpPvClearPendingSubmit');
 
             if (navigator.onLine === false) {
                 if (typeof savePendingSubmit === 'function') {
@@ -2727,10 +2744,11 @@ function initPhotos() {
                 setStatusMessage(getMessage('networkOfflineSubmitBlocked', 'Sin conexión. Guardamos el envío como pendiente para que puedas reintentarlo.'), 'warning');
                 emitFrontendEvent('submit_blocked_offline', { reason: 'offline_before_submit' });
                 $('.agp-pv-retry-pending').removeAttr('hidden');
+                unlockSubmitUi();
                 return;
             }
 
-            var goToStep = $('#agp-pv-form').data('agpPvGoToStep');
+            var goToStep = $form.data('agpPvGoToStep');
             if (typeof goToStep === 'function') {
                 goToStep(4);
             }
@@ -2770,18 +2788,11 @@ function initPhotos() {
                 renderErrorSummary(summaryItems, getMessage('errorSummaryTitle', 'Revisa los siguientes campos antes de continuar:'), true);
                 setStatusMessage(getMessage('statusReviewFields', 'Revisa los campos marcados.'), 'error');
                 emitFrontendEvent('submit_validation_failed', { invalidCount: summaryItems.length });
+                unlockSubmitUi();
                 return;
             }
 
             collectSignatureData();
-
-            var $submit = $('.agp-pv-submit');
-            var $retryButton = $('.agp-pv-retry-pending');
-            var originalText = $submit.data('original-text') || $submit.text();
-            $submit.data('original-text', originalText);
-            $submit.prop('disabled', true).text(getMessage('statusSending', 'Enviando...'));
-            $retryButton.prop('disabled', true);
-            $('#agp-pv-form').data('agpPvSubmitInFlight', true);
 
             var formData = new FormData(formEl);
             formData.append('action', 'agp_pv_submit');
@@ -2808,7 +2819,7 @@ function initPhotos() {
 
                         emitFrontendEvent('submit_success', { statusType: (response.data && response.data.status_type) || 'success', reportId: (response.data && (response.data.report_id || response.data.submission_id)) || null });
 
-                        $('#agp-pv-form').data('agpPvInternalReset', true);
+                        $form.data('agpPvInternalReset', true);
 
                         // Reset UI (keep status)
                         formEl.reset();
@@ -2826,19 +2837,19 @@ function initPhotos() {
                         // Re-apply conditional logic after reset
                         $('#agp-pv-tipo-servicio').trigger('change');
 
-                        var setSubmittedState = $('#agp-pv-form').data('agpPvSetSubmittedState');
+                        var setSubmittedState = $form.data('agpPvSetSubmittedState');
                         if (typeof setSubmittedState === 'function') {
                             setSubmittedState(successState.type);
                         }
 
                         updateSubmittedStepContent(successState);
 
-                        var goToStep = $('#agp-pv-form').data('agpPvGoToStep');
+                        var goToStep = $form.data('agpPvGoToStep');
                         if (typeof goToStep === 'function') {
                             goToStep(5);
                         }
 
-                        var clearDraft = $('#agp-pv-form').data('agpPvClearDraft');
+                        var clearDraft = $form.data('agpPvClearDraft');
                         if (typeof clearDraft === 'function') {
                             clearDraft();
                         }
@@ -2847,7 +2858,7 @@ function initPhotos() {
                             clearPendingSubmit();
                         }
                         $('.agp-pv-retry-pending').attr('hidden', true);
-                        $('#agp-pv-form').data('agpPvInternalReset', false);
+                        $form.data('agpPvInternalReset', false);
                     } else {
                         // Field errors
                         if (response && response.data && response.data.errors) {
@@ -2878,10 +2889,7 @@ function initPhotos() {
                     emitFrontendEvent('submit_request_failed', { xhrStatus: xhr && typeof xhr.status !== 'undefined' ? xhr.status : null });
                 })
                 .always(function () {
-                    $submit.prop('disabled', false).text(originalText);
-                    $retryButton.prop('disabled', false);
-                    $('#agp-pv-form').data('agpPvSubmitInFlight', false);
-                    $('#agp-pv-form').data('agpPvInternalReset', false);
+                    unlockSubmitUi();
                 });
         });
     }
