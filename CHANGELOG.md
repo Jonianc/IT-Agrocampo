@@ -1,3 +1,9 @@
+## [1.24.6] - 2026-04-14
+- lubricantes (frontend): `syncHiddenFields()` ahora fuerza sincronización por fila (`product` según modo `mixed`, readonly por catálogo y unidad por tipo) antes de construir `lubricantes_json`.
+- submit (frontend): antes de validar/enviar se fuerza reserialización final de lubricantes usando callback de formulario (`agpPvSyncLubricants`).
+- submit (frontend): se agrega log temporal en consola con el valor final de `#agp-pv-lubricantes-json` antes del envío (`[agp_pv][lubricantes_json_before_submit]`).
+- alcance acotado: sin cambios en backend de validación, PDF, emails ni persistencia fuera del bug de serialización en cliente.
+
 ## [1.24.5] - 2026-04-14
 - submit AJAX: `request_rejected_rate_limit` ahora registra contexto detallado de bloqueo (`reason`, `window_seconds`, `retry_window_seconds`, `key`, `attempts`, `max_attempts`, `timestamp`) para diagnóstico en `debug.log`.
 - rate limit submit: se agrega ventana corta anti-reintento inmediato (`agp_pv_rate_limit_retry_window_seconds`, default 12s) y se conserva ventana principal configurable existente.

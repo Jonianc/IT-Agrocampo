@@ -2365,7 +2365,11 @@ function initPhotos() {
         function syncHiddenFields() {
             var items = [];
             $rows.find('[data-lubricants-row]').each(function () {
-                var payload = rowToPayload($(this));
+                var $row = $(this);
+                syncProductValueByMode($row);
+                syncRowReadonlyFields($row);
+                applyQuickTypeDefaultUnit($row);
+                var payload = rowToPayload($row);
                 if (payload) {
                     items.push(payload);
                 }
@@ -2378,6 +2382,8 @@ function initPhotos() {
             $hiddenJson.val(items.length ? JSON.stringify(items) : '');
             $hiddenLegacy.val(items.length ? buildLegacySummary(items) : '');
             recalculateSummary(items);
+
+            return items;
         }
 
         function addRow(initialData, shouldSync, options) {
@@ -2603,6 +2609,8 @@ function initPhotos() {
             syncHiddenFields();
         });
 
+        $('#agp-pv-form').data('agpPvSyncLubricants', syncHiddenFields);
+
         $('#agp-pv-form').on('click', '.agp-pv-new-report', function () {
             $rows.empty();
             addRow({}, true, { startCollapsed: false });
@@ -2722,6 +2730,14 @@ function initPhotos() {
             };
 
             clearFieldErrors();
+
+            var forceLubricantsSync = $form.data('agpPvSyncLubricants');
+            if (typeof forceLubricantsSync === 'function') {
+                forceLubricantsSync();
+            }
+            if (window.console && typeof window.console.info === 'function') {
+                window.console.info('[agp_pv][lubricantes_json_before_submit]', $.trim(String($('#agp-pv-lubricantes-json').val() || '')));
+            }
 
             emitFrontendEvent('submit_attempt', { online: navigator.onLine !== false });
 
