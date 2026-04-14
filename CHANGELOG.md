@@ -1,3 +1,10 @@
+## [1.24.2] - 2026-04-14
+- standalone `/post-venta/` (`Lubricantes`, modo `mixed`): `Tipo` y `Producto` vuelven a usar catálogo igual que `catalog_only`.
+- en `mixed`, `Tipo` se renderiza como select con tipos del catálogo y `Producto` como select dependiente del tipo.
+- al cambiar `Tipo` en `mixed`, se recargan opciones de `Producto` y se mantiene autocompletado por catálogo.
+- se mantienen campos manuales según modo/configuración, sin perder el flujo de catálogo para `Tipo`/`Producto`.
+- alcance acotado: sin cambios en payload (`lubricantes` / `lubricantes_json`), validación backend, nonces/capabilities, DB, PDF ni email.
+
 ## [1.24.1] - 2026-04-14
 - standalone `/post-venta/` (`Lubricantes`): se eliminan chips rápidos de tipos.
 - acción `+ Agregar lubricante`: crea nueva card al final, la deja abierta automáticamente y colapsa las demás.

@@ -1998,6 +1998,7 @@ function initPhotos() {
         var catalogEmptyLocked = !hasCatalog && usageMode === 'catalog_only';
         var catalogEnabled = hasCatalog && usageMode === 'catalog_only';
         var mixedMode = usageMode === 'mixed';
+        var catalogTypeProductEnabled = hasCatalog && (catalogEnabled || mixedMode);
         var activeRowId = '';
         var rowSeq = 0;
         var manualTypeOptions = typeOptions.slice(0);
@@ -2332,12 +2333,12 @@ function initPhotos() {
             var rowId = nextRowId();
             var typeControl = catalogEmptyLocked
                 ? '<input type="text" data-lubricant-type value="" placeholder="Tipo" disabled>'
-                : (catalogEnabled
+                : (catalogTypeProductEnabled
                 ? ('<select data-lubricant-type>' + buildTypeSelectHtml(data.type || '') + '</select>')
                 : ('<input type="text" data-lubricant-type value="' + $('<div>').text(data.type || '').html() + '" placeholder="Tipo">'));
             var productControl = catalogEmptyLocked
                 ? '<input type="text" data-lubricant-product value="" placeholder="Producto" disabled>'
-                : (catalogEnabled
+                : (catalogTypeProductEnabled
                 ? '<select data-lubricant-product></select>'
                 : ('<input type="text" data-lubricant-product value="' + $('<div>').text(data.product || '').html() + '" placeholder="Producto">'));
             var readonlyAttr = catalogEnabled ? ' readonly' : '';
@@ -2472,7 +2473,7 @@ function initPhotos() {
         $wrapper.on('change input', '[data-lubricant-type]', function () {
             allowOverwriteEmpty = true;
             var $row = $(this).closest('[data-lubricants-row]');
-            if (catalogEnabled) {
+            if (catalogTypeProductEnabled) {
                 setProductOptions($row, $(this).val(), '');
             }
             syncRowReadonlyFields($row);
@@ -2508,7 +2509,7 @@ function initPhotos() {
             syncHiddenFields();
         } else {
             var legacyText = $.trim(String($hiddenLegacy.val() || ''));
-            if (!catalogEnabled && legacyText) {
+            if (!catalogTypeProductEnabled && legacyText) {
                 addRow({ product: legacyText }, false, { startCollapsed: true });
                 syncHiddenFields();
             } else {
