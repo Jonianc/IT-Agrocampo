@@ -1,3 +1,9 @@
+## [1.23.0] - 2026-04-14
+- ajustes > lubricantes (wp-admin): `Tipos rápidos` pasa de textarea visible a repeater visual (tipo/unidad + agregar/quitar), manteniendo el mismo payload `agp_pv_lubricants_quick_types` para compatibilidad backward.
+- ajustes > lubricantes (wp-admin): la tabla de `Estado por campo` se reemplaza por filas/cards visuales sin cambiar names, opciones ni guardado.
+- ajustes > lubricantes (wp-admin): `Preview simple` se reemplaza por preview visual con chips de estado por campo y badges de modo/fallback.
+- ajustes > lubricantes (wp-admin): `Catálogo` se mantiene en el mismo bloque y ahora muestra estado visible (`cargado/vacío` + cantidad de ítems) sin alterar handlers/nonces existentes.
+
 ## [1.22.4] - 2026-04-12
 - ajustes (wp-admin): `Lubricantes` pasa a card independiente (separada de `Branding del PDF`), manteniendo en esa card tanto configuración como catálogo.
 - alcance acotado: sin cambios en handlers, nonces, capabilities, payload, guardado, PDF ni email.

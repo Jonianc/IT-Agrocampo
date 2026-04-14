@@ -109,6 +109,95 @@
     padding-left: 18px;
 }
 
+.agp-pv-admin .agp-pv-lubricants-field-rows {
+    display: grid;
+    gap: 8px;
+}
+
+.agp-pv-admin .agp-pv-lubricants-field-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.agp-pv-admin .agp-pv-lubricants-field-row__label {
+    font-weight: 600;
+}
+
+.agp-pv-admin .agp-pv-lubricants-field-fixed {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 11px;
+    color: #50575e;
+    background: #f0f0f1;
+    border-radius: 999px;
+    padding: 2px 6px;
+}
+
+.agp-pv-admin .agp-pv-lubricants-quick-types__list {
+    display: grid;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.agp-pv-admin .agp-pv-lubricants-quick-types__row {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) 80px auto;
+    gap: 8px;
+    align-items: center;
+}
+
+.agp-pv-admin .agp-pv-lubricants-preview-head {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.agp-pv-admin .agp-pv-lubricants-preview-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.agp-pv-admin .agp-pv-lubricants-preview-chip {
+    display: inline-block;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    border: 1px solid #dcdcde;
+    background: #fff;
+}
+
+.agp-pv-admin .agp-pv-lubricants-preview-chip[data-state="visible"] {
+    border-color: #9fd5b3;
+    background: #eaf8f0;
+    color: #1d4a2f;
+}
+
+.agp-pv-admin .agp-pv-lubricants-preview-chip[data-state="collapsed"] {
+    border-color: #c7d3e6;
+    background: #eef3fb;
+    color: #1f3f66;
+}
+
+.agp-pv-admin .agp-pv-lubricants-preview-chip[data-state="hidden"] {
+    border-color: #e1e4e8;
+    background: #f6f7f7;
+    color: #50575e;
+    opacity: 0.85;
+}
+
+.agp-pv-admin .agp-pv-lubricants-catalog-box {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid #dcdcde;
+}
+
 .agp-pv-admin .agp-pv-checkbox-grid {
     display: grid;
     gap: 8px;
