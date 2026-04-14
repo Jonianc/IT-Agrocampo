@@ -1,3 +1,9 @@
+## [1.24.4] - 2026-04-14
+- PDF (`Detalle > Lubricantes`): cada línea se renderiza en formato limpio `Producto - Cantidad Unidad`; si no hay cantidad, queda solo `Producto`.
+- se elimina del render PDF de lubricantes la exposición de metadatos (`tipo`, `código`, `presentación`, `descripción`, `obs.` y similares), sin tocar persistencia ni payload guardado.
+- se mantiene prioridad del valor persistido en `product` (incluye nombre manual cuando se ingresó en modo manual/mixed).
+- compatibilidad backward en PDF: si existe texto legacy, se intenta extraer y mostrar solo `producto + cantidad` cuando sea posible.
+
 ## [1.24.3] - 2026-04-14
 - standalone `/post-venta/` (`Lubricantes`, modo `mixed`): `Tipo` se mantiene desde catálogo y `Producto` agrega switch `Catálogo / Manual`.
 - en `mixed`, solo se muestra una entrada de `Producto` a la vez (catálogo o manual).

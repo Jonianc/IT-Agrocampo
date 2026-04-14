@@ -1377,7 +1377,7 @@ class AGP_PV_PDF {
                 $document->card_end();
             }
 
-            $lub = self::format_supply_lines( self::limit_pdf_block_text( self::normalize_pdf_value( AGP_PV_Plugin::resolve_lubricants_text_from_submission( $submission ), '', true ) ) );
+            $lub = self::format_supply_lines( self::limit_pdf_block_text( self::build_pdf_lubricants_text( $submission ) ) );
             $fil = self::format_supply_lines( self::limit_pdf_block_text( self::normalize_pdf_value( $submission['filtros_utilizados'] ?? '', '', true ) ) );
             $com = self::format_supply_lines( self::limit_pdf_block_text( self::normalize_pdf_value( $submission['componentes_utilizados'] ?? '', '', true ) ) );
             $trabajos = self::limit_pdf_block_text( self::normalize_pdf_value( $submission['trabajos_realizados'] ?? '', '', true ) );
@@ -2001,6 +2001,86 @@ class AGP_PV_PDF {
         }
 
         return implode( "\n", $formatted );
+    }
+
+    private static function build_pdf_lubricants_text( array $submission ): string {
+        $raw_json = isset( $submission['lubricantes_json'] ) ? trim( (string) $submission['lubricantes_json'] ) : '';
+        if ( '' !== $raw_json ) {
+            $decoded = json_decode( $raw_json, true );
+            if ( is_array( $decoded ) ) {
+                $json_lines = self::build_pdf_lubricants_lines_from_json_items( $decoded );
+                if ( ! empty( $json_lines ) ) {
+                    return implode( "\n", $json_lines );
+                }
+            }
+        }
+
+        $legacy_text = self::normalize_pdf_value( AGP_PV_Plugin::resolve_lubricants_text_from_submission( $submission ), '', true );
+        if ( self::is_missing_display_value( $legacy_text ) ) {
+            return '';
+        }
+
+        return implode( "\n", self::build_pdf_lubricants_lines_from_legacy_text( $legacy_text ) );
+    }
+
+    /**
+     * @param array<int,mixed> $items
+     * @return array<int,string>
+     */
+    private static function build_pdf_lubricants_lines_from_json_items( array $items ): array {
+        $lines = array();
+
+        foreach ( $items as $item ) {
+            if ( ! is_array( $item ) ) {
+                continue;
+            }
+
+            $product  = sanitize_text_field( (string) ( $item['product'] ?? '' ) );
+            $quantity = sanitize_text_field( (string) ( $item['quantity'] ?? '' ) );
+            $unit     = sanitize_text_field( (string) ( $item['unit'] ?? '' ) );
+
+            if ( '' === $product ) {
+                continue;
+            }
+
+            $qty_part = trim( $quantity . ( '' !== $unit ? ' ' . $unit : '' ) );
+            $lines[]  = '' !== $qty_part ? $product . ' - ' . $qty_part : $product;
+        }
+
+        return $lines;
+    }
+
+    /**
+     * @return array<int,string>
+     */
+    private static function build_pdf_lubricants_lines_from_legacy_text( string $legacy_text ): array {
+        $lines = array();
+
+        foreach ( explode( "\n", $legacy_text ) as $line ) {
+            $line = trim( (string) $line );
+            if ( '' === $line ) {
+                continue;
+            }
+
+            if ( preg_match( '/^(?:(.+?)\s-\s)?(.+?)(?:\s\((.*)\))?$/u', $line, $matches ) ) {
+                $product = isset( $matches[2] ) ? trim( (string) $matches[2] ) : '';
+                $meta    = isset( $matches[3] ) ? trim( (string) $matches[3] ) : '';
+
+                if ( '' !== $product ) {
+                    $qty_part = '';
+                    if ( '' !== $meta && preg_match( '/(?:^|;\s*)Cantidad:\s*([^;]+)/u', $meta, $qty_matches ) ) {
+                        $qty_part = trim( (string) ( $qty_matches[1] ?? '' ) );
+                    }
+
+                    $lines[] = '' !== $qty_part ? $product . ' - ' . $qty_part : $product;
+                    continue;
+                }
+            }
+
+            $lines[] = $line;
+        }
+
+        return $lines;
     }
 
     /**
