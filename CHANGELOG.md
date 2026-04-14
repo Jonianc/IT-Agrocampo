@@ -1,3 +1,10 @@
+## [1.24.3] - 2026-04-14
+- standalone `/post-venta/` (`Lubricantes`, modo `mixed`): `Tipo` se mantiene desde catálogo y `Producto` agrega switch `Catálogo / Manual`.
+- en `mixed`, solo se muestra una entrada de `Producto` a la vez (catálogo o manual).
+- `Catálogo` queda por defecto cuando hay opciones; `Manual` permanece siempre disponible.
+- el resumen/payload usa el valor realmente activo de `Producto` (seleccionado en catálogo o escrito manualmente).
+- alcance acotado: sin cambios en payload/schema backend, validación backend, nonces/capabilities, DB, PDF ni email.
+
 ## [1.24.2] - 2026-04-14
 - standalone `/post-venta/` (`Lubricantes`, modo `mixed`): `Tipo` y `Producto` vuelven a usar catálogo igual que `catalog_only`.
 - en `mixed`, `Tipo` se renderiza como select con tipos del catálogo y `Producto` como select dependiente del tipo.

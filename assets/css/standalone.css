@@ -811,6 +811,17 @@
     margin-bottom: 0;
 }
 
+.agp-pv-lubricants-product-switch {
+    display: inline-flex;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.agp-pv-lubricants-product-switch .button[aria-pressed="true"] {
+    background: #eff6ff;
+    border-color: #93c5fd;
+}
+
 .agp-pv-lubricants-row__header {
     display: flex;
     justify-content: space-between;
