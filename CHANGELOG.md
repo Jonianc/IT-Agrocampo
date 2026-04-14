@@ -1,3 +1,9 @@
+## [1.24.8] - 2026-04-14
+- PDF `Detalle > Lubricantes`: render condicional en columnas por cantidad de ítems (1 columna hasta 3 líneas; 2 columnas desde 4 líneas).
+- en 2 columnas, los ítems se reparten en lectura vertical (primera mitad columna izquierda, segunda mitad columna derecha) y cada línea hace wrap dentro de su columna sin partirse entre columnas.
+- se mantiene formato por línea `NOMBRE DEL LUBRICANTE - CANTIDAD` (o solo nombre si no hay cantidad) sin mostrar tipo/código/presentación/descripción.
+- alcance acotado: solo render PDF, sin cambios en guardado/payload/validación.
+
 ## [1.24.7] - 2026-04-14
 - lubricantes backend (`normalize_lubricants_json`): en `usage_mode` `mixed`/`manual_only`, se acepta `product` manual no vacío aunque no exista en catálogo; la validación contra catálogo se mantiene solo para flujo catálogo.
 - lubricantes backend: para producto manual no se exige `code`, `presentation`, `description` ni `unit`; se sanitiza y guarda compatiblemente en el mismo payload.

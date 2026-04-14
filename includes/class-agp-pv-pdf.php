@@ -471,6 +471,97 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->box_text( $title, $trimmed );
     }
 
+    public function lubricants_columns_text( string $title, string $text ): void {
+        $trimmed = trim( $text );
+        if ( '' === $trimmed ) {
+            return;
+        }
+
+        $lines = array();
+        foreach ( explode( "\n", $trimmed ) as $line ) {
+            $line = trim( (string) $line );
+            if ( '' === $line ) {
+                continue;
+            }
+            $lines[] = $line;
+        }
+
+        if ( count( $lines ) <= 3 ) {
+            $this->box_text( $title, implode( "\n", $lines ) );
+            return;
+        }
+
+        $usable_w = $this->w - $this->lMargin - $this->rMargin;
+        $gap      = 6.0;
+        $col_w    = ( $usable_w - $gap ) / 2;
+        $title_h  = $this->compact_density ? 5.0 : 6.3;
+        $padding  = $this->compact_density ? 1.3 : 1.9;
+        $line_h   = $this->compact_density ? 4.0 : 4.7;
+        $line_gap = $this->compact_density ? 0.3 : 0.5;
+        $inner_w  = $col_w - ( 2 * $padding );
+
+        $left_lines  = array_slice( $lines, 0, (int) ceil( count( $lines ) / 2 ) );
+        $right_lines = array_slice( $lines, count( $left_lines ) );
+
+        $left_text_h = 0.0;
+        foreach ( $left_lines as $left_line ) {
+            $encoded = self::enc( $left_line );
+            $left_text_h += max( 1, $this->NbLines( $inner_w, $encoded ) ) * $line_h;
+            $left_text_h += $line_gap;
+        }
+        if ( $left_text_h > 0 ) {
+            $left_text_h -= $line_gap;
+        }
+
+        $right_text_h = 0.0;
+        foreach ( $right_lines as $right_line ) {
+            $encoded = self::enc( $right_line );
+            $right_text_h += max( 1, $this->NbLines( $inner_w, $encoded ) ) * $line_h;
+            $right_text_h += $line_gap;
+        }
+        if ( $right_text_h > 0 ) {
+            $right_text_h -= $line_gap;
+        }
+
+        $box_h = max( $line_h, $left_text_h, $right_text_h ) + ( 2 * $padding );
+        $row_h = $title_h + $box_h + ( $this->compact_density ? 1.2 : 2.0 );
+        $this->ensure_space( $row_h + ( $this->compact_density ? 1.0 : 1.5 ) );
+
+        $x = $this->lMargin;
+        $y = $this->GetY();
+
+        $this->SetFont( 'Helvetica', 'B', $this->compact_density ? 9.9 : 10.4 );
+        $this->SetXY( $x, $y );
+        $this->Cell( $usable_w, $title_h, self::enc( $title ), 0, 1, 'L' );
+
+        $left_x  = $x;
+        $right_x = $x + $col_w + $gap;
+        $box_y   = $y + $title_h;
+
+        $this->Rect( $left_x, $box_y, $col_w, $box_h );
+        $this->Rect( $right_x, $box_y, $col_w, $box_h );
+
+        $this->SetFont( 'Helvetica', '', $this->compact_density ? 9.7 : 10.1 );
+
+        $cursor_y = $box_y + $padding;
+        foreach ( $left_lines as $left_line ) {
+            $encoded = self::enc( $left_line );
+            $this->SetXY( $left_x + $padding, $cursor_y );
+            $this->MultiCell( $inner_w, $line_h, $encoded, 0, 'L' );
+            $cursor_y = $this->GetY() + $line_gap;
+        }
+
+        $cursor_y = $box_y + $padding;
+        foreach ( $right_lines as $right_line ) {
+            $encoded = self::enc( $right_line );
+            $this->SetXY( $right_x + $padding, $cursor_y );
+            $this->MultiCell( $inner_w, $line_h, $encoded, 0, 'L' );
+            $cursor_y = $this->GetY() + $line_gap;
+        }
+
+        $this->SetXY( $this->lMargin, $y + $row_h );
+    }
+
     /**
      * Render two medium/short lists in a two-column 50/50 layout.
      * Returns true when rendered in two columns; false to fallback single-column.
@@ -1395,8 +1486,15 @@ class AGP_PV_PDF {
 
             if ( ! empty( $visible_detail_rows ) ) {
                 $document->card_start( __( 'Detalle', 'agrocampo-post-venta' ), 20.0 );
+                $lubricants_label = __( 'Lubricantes', 'agrocampo-post-venta' );
                 foreach ( $visible_detail_rows as $detail_row ) {
-                    $document->adaptive_text( (string) $detail_row[0], (string) $detail_row[1] );
+                    $row_label = (string) $detail_row[0];
+                    $row_text  = (string) $detail_row[1];
+                    if ( $row_label === $lubricants_label ) {
+                        $document->lubricants_columns_text( $row_label, $row_text );
+                        continue;
+                    }
+                    $document->adaptive_text( $row_label, $row_text );
                 }
             }
 
