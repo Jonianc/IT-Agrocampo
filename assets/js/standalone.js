@@ -2218,6 +2218,12 @@ function initPhotos() {
                 unit: $.trim(String($row.find('[data-lubricant-unit]').val() || '')),
                 observation: $.trim(String($row.find('[data-lubricant-observation]').val() || ''))
             };
+            var isManualMode = String($row.find('[data-lubricant-product-mode]').val() || '') === 'manual';
+            var $manualProduct = $row.find('[data-lubricant-product-manual]');
+            if ($manualProduct.length) {
+                var shouldRequireManualName = isManualMode && !!(payload.type || payload.quantity || payload.unit || payload.observation);
+                $manualProduct.prop('required', shouldRequireManualName);
+            }
 
             if (!payload.type && !payload.product && !payload.quantity && !payload.unit && !payload.observation) {
                 return null;

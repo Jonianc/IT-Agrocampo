@@ -274,6 +274,9 @@ class AGP_PV_Plugin {
 
         $catalog = self::get_lubricants_catalog();
         $has_catalog = ! empty( $catalog );
+        $lubricants_settings = self::get_lubricants_settings();
+        $usage_mode = sanitize_key( (string) ( $lubricants_settings['usage_mode'] ?? 'catalog_only' ) );
+        $allow_manual_products = in_array( $usage_mode, array( 'mixed', 'manual_only' ), true ) || ! $has_catalog;
         $catalog_map = array();
         if ( $has_catalog ) {
             foreach ( $catalog as $catalog_item ) {
@@ -289,7 +292,8 @@ class AGP_PV_Plugin {
             }
 
             $type = sanitize_text_field( (string) ( $row['type'] ?? '' ) );
-            $product = sanitize_text_field( (string) ( $row['product'] ?? '' ) );
+            $raw_product = (string) ( $row['product'] ?? '' );
+            $product = sanitize_text_field( $raw_product );
             $quantity = sanitize_text_field( (string) ( $row['quantity'] ?? '' ) );
             $unit = sanitize_text_field( (string) ( $row['unit'] ?? '' ) );
             $observation = sanitize_textarea_field( (string) ( $row['observation'] ?? '' ) );
@@ -299,6 +303,12 @@ class AGP_PV_Plugin {
             }
 
             if ( '' === $product ) {
+                if ( '' !== trim( $raw_product ) ) {
+                    return array(
+                        'items' => array(),
+                        'error' => __( 'Producto manual de lubricantes inválido.', 'agrocampo-post-venta' ),
+                    );
+                }
                 continue;
             }
 
@@ -311,28 +321,39 @@ class AGP_PV_Plugin {
 
             if ( $has_catalog ) {
                 $catalog_key = strtolower( trim( $type ) . '|' . trim( $product ) );
-                if ( ! isset( $catalog_map[ $catalog_key ] ) ) {
+                if ( isset( $catalog_map[ $catalog_key ] ) ) {
+                    $catalog_item = $catalog_map[ $catalog_key ];
+                    if ( '' === $unit ) {
+                        $unit = (string) ( $catalog_item['unit'] ?? '' );
+                    }
+
+                    $normalized[] = array(
+                        'type' => $type,
+                        'product' => $product,
+                        'code' => sanitize_text_field( (string) ( $catalog_item['code'] ?? '' ) ),
+                        'presentation' => sanitize_text_field( (string) ( $catalog_item['presentation'] ?? '' ) ),
+                        'description' => sanitize_text_field( (string) ( $catalog_item['description'] ?? '' ) ),
+                        'quantity' => $quantity,
+                        'unit' => $unit,
+                        'observation' => $observation,
+                    );
+                } elseif ( $allow_manual_products ) {
+                    $normalized[] = array(
+                        'type' => $type,
+                        'product' => $product,
+                        'code' => sanitize_text_field( (string) ( $row['code'] ?? '' ) ),
+                        'presentation' => sanitize_text_field( (string) ( $row['presentation'] ?? '' ) ),
+                        'description' => sanitize_text_field( (string) ( $row['description'] ?? '' ) ),
+                        'quantity' => $quantity,
+                        'unit' => $unit,
+                        'observation' => $observation,
+                    );
+                } else {
                     return array(
                         'items' => array(),
                         'error' => __( 'Producto de lubricantes inválido.', 'agrocampo-post-venta' ),
                     );
                 }
-
-                $catalog_item = $catalog_map[ $catalog_key ];
-                if ( '' === $unit ) {
-                    $unit = (string) ( $catalog_item['unit'] ?? '' );
-                }
-
-                $normalized[] = array(
-                    'type' => $type,
-                    'product' => $product,
-                    'code' => sanitize_text_field( (string) ( $catalog_item['code'] ?? '' ) ),
-                    'presentation' => sanitize_text_field( (string) ( $catalog_item['presentation'] ?? '' ) ),
-                    'description' => sanitize_text_field( (string) ( $catalog_item['description'] ?? '' ) ),
-                    'quantity' => $quantity,
-                    'unit' => $unit,
-                    'observation' => $observation,
-                );
             } else {
                 $normalized[] = array(
                     'type' => $type,

@@ -1,3 +1,9 @@
+## [1.24.7] - 2026-04-14
+- lubricantes backend (`normalize_lubricants_json`): en `usage_mode` `mixed`/`manual_only`, se acepta `product` manual no vacío aunque no exista en catálogo; la validación contra catálogo se mantiene solo para flujo catálogo.
+- lubricantes backend: para producto manual no se exige `code`, `presentation`, `description` ni `unit`; se sanitiza y guarda compatiblemente en el mismo payload.
+- lubricantes backend: nuevo error específico para manual corrupto/vacío tras sanitización (`Producto manual de lubricantes inválido.`).
+- lubricantes frontend (`mixed`): al serializar fila se exige nombre manual solo cuando está en modo manual y la fila tiene datos, alineando regla con backend.
+
 ## [1.24.6] - 2026-04-14
 - lubricantes (frontend): `syncHiddenFields()` ahora fuerza sincronización por fila (`product` según modo `mixed`, readonly por catálogo y unidad por tipo) antes de construir `lubricantes_json`.
 - submit (frontend): antes de validar/enviar se fuerza reserialización final de lubricantes usando callback de formulario (`agpPvSyncLubricants`).
