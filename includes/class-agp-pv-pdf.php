@@ -1523,7 +1523,8 @@ class AGP_PV_PDF {
             $firma_jefe_taller_path = self::resolve_attachment_path( (int) ( $submission['firma_jefe_taller_id'] ?? 0 ) );
             $nombre_cliente = self::normalize_entity_case( self::normalize_pdf_value( $submission['cliente'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
             $nombre_tecnico = self::normalize_entity_case( self::normalize_pdf_value( $submission['tecnico_label'] ?? ( $submission['tecnico'] ?? '' ), __( 'No informado', 'agrocampo-post-venta' ) ) );
-            $nombre_jefe_taller = self::normalize_entity_case( self::normalize_pdf_value( $submission['jefe_taller_nombre'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
+            $branding = self::get_branding_config();
+            $nombre_jefe_taller = self::normalize_entity_case( self::normalize_pdf_value( (string) ( $branding['jefe_taller_nombre'] ?? '' ), __( 'No informado', 'agrocampo-post-venta' ) ) );
             $is_garantia = 'two' === (string) ( $submission['tipo_servicio'] ?? '' );
             $show_jefe_signature = $is_garantia || ( '' !== $firma_jefe_taller_path );
             $signatures_no_images = ! $firma_cliente_path && ! $firma_tecnico_path && ! $firma_jefe_taller_path;
@@ -1869,16 +1870,18 @@ class AGP_PV_PDF {
     /**
      * Configurable branding used by PDF header/footer.
      *
-     * @return array{header_title:string,footer_text:string,it_label_template:string}
+     * @return array{header_title:string,footer_text:string,it_label_template:string,jefe_taller_nombre:string}
      */
     public static function get_branding_config(): array {
         $header_title = (string) get_option( 'agp_pv_pdf_header_title', __( 'INFORME TÉCNICO', 'agrocampo-post-venta' ) );
         $footer_text = (string) get_option( 'agp_pv_pdf_footer_text', __( 'Talca • Linares • Parral   |   +56 9 9748 5650', 'agrocampo-post-venta' ) );
         $it_label_template = (string) get_option( 'agp_pv_pdf_it_label_template', __( 'IT: %d', 'agrocampo-post-venta' ) );
+        $jefe_taller_nombre = (string) get_option( 'agp_pv_jefe_taller_nombre', '' );
 
         $header_title = sanitize_text_field( $header_title );
         $footer_text = sanitize_text_field( $footer_text );
         $it_label_template = sanitize_text_field( $it_label_template );
+        $jefe_taller_nombre = sanitize_text_field( $jefe_taller_nombre );
 
         if ( '' === $header_title ) {
             $header_title = __( 'INFORME TÉCNICO', 'agrocampo-post-venta' );
@@ -1894,16 +1897,19 @@ class AGP_PV_PDF {
             $header_title = mb_substr( $header_title, 0, 70 );
             $footer_text = mb_substr( $footer_text, 0, 110 );
             $it_label_template = mb_substr( $it_label_template, 0, 40 );
+            $jefe_taller_nombre = mb_substr( $jefe_taller_nombre, 0, 80 );
         } else {
             $header_title = substr( $header_title, 0, 70 );
             $footer_text = substr( $footer_text, 0, 110 );
             $it_label_template = substr( $it_label_template, 0, 40 );
+            $jefe_taller_nombre = substr( $jefe_taller_nombre, 0, 80 );
         }
 
         return array(
             'header_title' => $header_title,
             'footer_text' => $footer_text,
             'it_label_template' => $it_label_template,
+            'jefe_taller_nombre' => $jefe_taller_nombre,
         );
     }
 

@@ -1,3 +1,10 @@
+## [1.24.11] - 2026-04-16
+- ajustes (wp-admin > Branding del PDF): nuevo campo editable `Nombre fijo Jefe de Taller (PDF)` persistido en option `agp_pv_jefe_taller_nombre`.
+- PDF (`Firmas`, Garantía): el nombre bajo `Firma Jefe de Taller` ahora usa el setting fijo `agp_pv_jefe_taller_nombre` (ya no depende de `submission`).
+- se mantiene mapeo solicitado en salida PDF: Cliente=`cliente`; Técnico=`tecnico_label` con fallback `tecnico`; Jefe de Taller=setting fijo.
+- si no existe imagen de firma, se mantiene `Firma no disponible` y se muestra igualmente el nombre bajo la firma.
+- alcance acotado: sin cambios en formulario ni guardado/validación del informe.
+
 ## [1.24.10] - 2026-04-16
 - PDF (`Firmas`): se muestra el nombre bajo cada firma manteniendo etiquetas actuales (`Firma Cliente`, `Firma Técnico`, `Firma Jefe de Taller`).
 - mapeo de nombre en PDF: Cliente=`cliente`; Técnico=`tecnico_label` con fallback `tecnico`; Jefe de Taller=`jefe_taller_nombre`.
