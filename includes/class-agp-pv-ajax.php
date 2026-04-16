@@ -306,10 +306,6 @@ class AGP_PV_Ajax {
             $errors['faena_lugar'] = __( 'Faena Lugar es obligatorio para Garantía.', 'agrocampo-post-venta' );
         }
 
-        if ( 'two' === $data['tipo_servicio'] && '' === $data['jefe_taller_nombre'] ) {
-            $errors['jefe_taller_nombre'] = __( 'Nombre Jefe de Taller es obligatorio para Garantía.', 'agrocampo-post-venta' );
-        }
-
         $allowed_machine_statuses = array_keys( AGP_PV_Plugin::get_machine_status_options() );
         if ( '' !== $data['estado_maquina'] && ! in_array( $data['estado_maquina'], $allowed_machine_statuses, true ) ) {
             $errors['estado_maquina'] = __( 'Selecciona un estado de la máquina válido.', 'agrocampo-post-venta' );
@@ -333,7 +329,6 @@ class AGP_PV_Ajax {
         $max_lengths = array(
             'cliente' => 80,
             'faena_lugar' => 80,
-            'jefe_taller_nombre' => 80,
             'maquina' => 50,
             'modelo' => 50,
             'serie' => 60,

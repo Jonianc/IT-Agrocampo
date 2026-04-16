@@ -1,3 +1,10 @@
+## [1.24.12] - 2026-04-16
+- formulario standalone (paso `Firmas`): se elimina el campo `Nombre Jefe de Taller`; ya no se muestra ni participa en validaciones del formulario.
+- frontend standalone: se elimina la regla asociada al input removido para evitar bloqueo de envío por `jefe_taller_nombre`.
+- submit backend: se elimina la validación obligatoria y el mensaje de error de `jefe_taller_nombre`; el flujo de firmas se mantiene intacto.
+- ajustes (wp-admin > Branding del PDF): si `agp_pv_jefe_taller_nombre` está vacío, se muestra aviso solo en Ajustes (no en el formulario del informe).
+- PDF se mantiene: Cliente/Técnico desde informe y Jefe de Taller desde setting fijo `agp_pv_jefe_taller_nombre`.
+
 ## [1.24.11] - 2026-04-16
 - ajustes (wp-admin > Branding del PDF): nuevo campo editable `Nombre fijo Jefe de Taller (PDF)` persistido en option `agp_pv_jefe_taller_nombre`.
 - PDF (`Firmas`, Garantía): el nombre bajo `Firma Jefe de Taller` ahora usa el setting fijo `agp_pv_jefe_taller_nombre` (ya no depende de `submission`).

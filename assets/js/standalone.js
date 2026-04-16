@@ -283,7 +283,6 @@
                 // clear tecnico signature when not in garantia mode
                 clearSignature($('.agp-pv-signature[data-signature="tecnico"]'));
                 clearSignature($('.agp-pv-signature[data-signature="jefe_taller"]'));
-                $('#agp-pv-jefe-taller').val('');
             }
 
             // Tipo mantencion only for Interno

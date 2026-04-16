@@ -269,6 +269,9 @@ class AGP_PV_Admin {
         echo '<input type="text" class="large-text" maxlength="110" id="agp-pv-pdf-footer-text" name="agp_pv_pdf_footer_text" value="' . esc_attr( $pdf_footer_text ) . '"></p>';
         echo '<p><label for="agp-pv-jefe-taller-nombre"><strong>' . esc_html__( 'Nombre fijo Jefe de Taller (PDF)', 'agrocampo-post-venta' ) . '</strong></label><br>';
         echo '<input type="text" class="regular-text" maxlength="80" id="agp-pv-jefe-taller-nombre" name="agp_pv_jefe_taller_nombre" value="' . esc_attr( $pdf_jefe_taller_nombre ) . '"></p>';
+        if ( '' === trim( $pdf_jefe_taller_nombre ) ) {
+            echo '<p class="description" style="color:#b32d2e;">' . esc_html__( 'Debes configurar el nombre fijo de Jefe de Taller para que aparezca en el PDF de Garantía.', 'agrocampo-post-venta' ) . '</p>';
+        }
 
         echo '<h3>' . esc_html__( 'Paso Detalle', 'agrocampo-post-venta' ) . '</h3>';
         echo '<p class="description">' . esc_html__( 'Define dónde se muestra el bloque Estado de la máquina dentro del paso Detalle.', 'agrocampo-post-venta' ) . '</p>';

@@ -271,13 +271,6 @@ $render_machine_status_block = static function () use ( $machine_status_options,
         <div class="agp-pv-step" data-step="3" hidden>
             <h2 class="agp-pv-section-title"><?php esc_html_e( 'Firmas', 'agrocampo-post-venta' ); ?></h2>
 
-            <div class="agp-pv-field" data-condition="garantia">
-                <label for="agp-pv-jefe-taller"><?php esc_html_e( 'Nombre Jefe de Taller', 'agrocampo-post-venta' ); ?> *</label>
-                <input id="agp-pv-jefe-taller" name="jefe_taller_nombre" type="text" required maxlength="80" data-maxlength-target="jefe_taller_nombre" autocomplete="name" autocapitalize="words">
-                <small class="agp-pv-help agp-pv-charcount" data-maxlength-counter="jefe_taller_nombre"></small>
-                <span class="agp-pv-error" data-error-for="jefe_taller_nombre"></span>
-            </div>
-
             <div class="agp-pv-field">
                 <label><?php esc_html_e( 'Firma Cliente', 'agrocampo-post-venta' ); ?></label>
                 <div class="agp-pv-signature" data-signature="cliente">
