@@ -670,14 +670,15 @@ class AGP_PV_PDF_Document extends FPDF {
             $box_h = min( $box_h, $this->compact_density ? 12.5 : 15.0 );
             $tail_gap = min( $tail_gap, $this->compact_density ? 1.6 : 2.2 );
         }
+        $tail_gap = max( $tail_gap, 5.2 );
 
-        $this->ensure_space( $box_h + 7.0 );
+        $this->ensure_space( $box_h + 10.0 );
 
         $y = $this->GetY();
         $x = $this->lMargin;
 
-        $this->signature_box( (string) $left['label'], (string) $left['path'], $x, $y, $box_w, $box_h );
-        $this->signature_box( (string) $right['label'], (string) $right['path'], $x + $box_w + $gap, $y, $box_w, $box_h );
+        $this->signature_box( (string) $left['label'], (string) $left['path'], (string) ( $left['name'] ?? '' ), $x, $y, $box_w, $box_h );
+        $this->signature_box( (string) $right['label'], (string) $right['path'], (string) ( $right['name'] ?? '' ), $x + $box_w + $gap, $y, $box_w, $box_h );
 
         $this->SetXY( $this->lMargin, $y + $box_h + $tail_gap );
         $this->force_signature_compact = false;
@@ -708,22 +709,24 @@ class AGP_PV_PDF_Document extends FPDF {
             $box_h = min( $box_h, $this->compact_density ? 12.5 : 15.0 );
             $tail_gap = min( $tail_gap, $this->compact_density ? 1.6 : 2.2 );
         }
+        $tail_gap = max( $tail_gap, 5.2 );
 
-        $this->ensure_space( $box_h + 7.0 );
+        $this->ensure_space( $box_h + 10.0 );
 
         $y = $this->GetY();
         $x = $this->lMargin;
 
-        $this->signature_box( (string) $left['label'], (string) $left['path'], $x, $y, $box_w, $box_h );
-        $this->signature_box( (string) $center['label'], (string) $center['path'], $x + $box_w + $gap, $y, $box_w, $box_h );
-        $this->signature_box( (string) $right['label'], (string) $right['path'], $x + ( 2 * ( $box_w + $gap ) ), $y, $box_w, $box_h );
+        $this->signature_box( (string) $left['label'], (string) $left['path'], (string) ( $left['name'] ?? '' ), $x, $y, $box_w, $box_h );
+        $this->signature_box( (string) $center['label'], (string) $center['path'], (string) ( $center['name'] ?? '' ), $x + $box_w + $gap, $y, $box_w, $box_h );
+        $this->signature_box( (string) $right['label'], (string) $right['path'], (string) ( $right['name'] ?? '' ), $x + ( 2 * ( $box_w + $gap ) ), $y, $box_w, $box_h );
 
         $this->SetXY( $this->lMargin, $y + $box_h + $tail_gap );
         $this->force_signature_compact = false;
     }
 
-    private function signature_box( string $label, string $path, float $x, float $y, float $w, float $h ): void {
+    private function signature_box( string $label, string $path, string $name, float $x, float $y, float $w, float $h ): void {
         $label = self::enc( $label );
+        $name  = self::enc( $name );
 
         $this->SetFont( 'Helvetica', 'B', 10 );
         $this->SetXY( $x, $y );
@@ -733,6 +736,8 @@ class AGP_PV_PDF_Document extends FPDF {
         $this->Rect( $x, $box_y, $w, $h );
 
         $this->SetFont( 'Helvetica', '', 9.5 );
+
+        $has_rendered_image = false;
 
         if ( $path && file_exists( $path ) ) {
             $prepared = AGP_PV_PDF::prepare_image_for_fpdf( $path, 'signature' );
@@ -758,7 +763,7 @@ class AGP_PV_PDF_Document extends FPDF {
 
                     try {
                         $this->Image( $img_path, $img_x, $img_y, $img_w, $img_h );
-                        return;
+                        $has_rendered_image = true;
                     } catch ( Exception $e ) {
                         $this->warnings[] = 'Firma omitida: ' . $e->getMessage();
                     }
@@ -768,8 +773,14 @@ class AGP_PV_PDF_Document extends FPDF {
             }
         }
 
-        $this->SetXY( $x, $box_y + ( $h / 2 ) - 2 );
-        $this->Cell( $w, 4.2, self::enc( __( 'Firma no disponible', 'agrocampo-post-venta' ) ), 0, 0, 'C' );
+        if ( ! $has_rendered_image ) {
+            $this->SetXY( $x, $box_y + ( $h / 2 ) - 2 );
+            $this->Cell( $w, 4.2, self::enc( __( 'Firma no disponible', 'agrocampo-post-venta' ) ), 0, 0, 'C' );
+        }
+
+        $this->SetFont( 'Helvetica', '', 8.7 );
+        $this->SetXY( $x, $box_y + $h + 1.1 );
+        $this->Cell( $w, 3.8, $name, 0, 0, 'C' );
     }
 
     /**
@@ -860,6 +871,7 @@ class AGP_PV_PDF_Document extends FPDF {
             $box_h = min( $box_h, $this->compact_density ? 12.5 : 15.0 );
             $tail_gap = min( $tail_gap, $this->compact_density ? 1.6 : 2.2 );
         }
+        $tail_gap = max( $tail_gap, 5.2 );
 
         // signature_row places label + 6mm top before box.
         $row_h = 6.0 + $box_h + $tail_gap;
@@ -1509,6 +1521,9 @@ class AGP_PV_PDF {
             $firma_cliente_path = self::resolve_attachment_path( (int) ( $submission['firma_cliente_id'] ?? 0 ) );
             $firma_tecnico_path = self::resolve_attachment_path( (int) ( $submission['firma_tecnico_id'] ?? 0 ) );
             $firma_jefe_taller_path = self::resolve_attachment_path( (int) ( $submission['firma_jefe_taller_id'] ?? 0 ) );
+            $nombre_cliente = self::normalize_entity_case( self::normalize_pdf_value( $submission['cliente'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
+            $nombre_tecnico = self::normalize_entity_case( self::normalize_pdf_value( $submission['tecnico_label'] ?? ( $submission['tecnico'] ?? '' ), __( 'No informado', 'agrocampo-post-venta' ) ) );
+            $nombre_jefe_taller = self::normalize_entity_case( self::normalize_pdf_value( $submission['jefe_taller_nombre'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ) );
             $is_garantia = 'two' === (string) ( $submission['tipo_servicio'] ?? '' );
             $show_jefe_signature = $is_garantia || ( '' !== $firma_jefe_taller_path );
             $signatures_no_images = ! $firma_cliente_path && ! $firma_tecnico_path && ! $firma_jefe_taller_path;
@@ -1531,14 +1546,17 @@ class AGP_PV_PDF {
                     array(
                         'label' => __( 'Firma Cliente', 'agrocampo-post-venta' ),
                         'path'  => $firma_cliente_path,
+                        'name'  => $nombre_cliente,
                     ),
                     array(
                         'label' => __( 'Firma Técnico', 'agrocampo-post-venta' ),
                         'path'  => $firma_tecnico_path,
+                        'name'  => $nombre_tecnico,
                     ),
                     array(
                         'label' => __( 'Firma Jefe de Taller', 'agrocampo-post-venta' ),
                         'path'  => $firma_jefe_taller_path,
+                        'name'  => $nombre_jefe_taller,
                     )
                 );
             } else {
@@ -1546,10 +1564,12 @@ class AGP_PV_PDF {
                     array(
                         'label' => __( 'Firma Cliente', 'agrocampo-post-venta' ),
                         'path'  => $firma_cliente_path,
+                        'name'  => $nombre_cliente,
                     ),
                     array(
                         'label' => __( 'Firma Técnico', 'agrocampo-post-venta' ),
                         'path'  => $firma_tecnico_path,
+                        'name'  => $nombre_tecnico,
                     )
                 );
             }

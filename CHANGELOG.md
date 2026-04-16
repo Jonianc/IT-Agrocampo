@@ -1,3 +1,9 @@
+## [1.24.10] - 2026-04-16
+- PDF (`Firmas`): se muestra el nombre bajo cada firma manteniendo etiquetas actuales (`Firma Cliente`, `Firma Técnico`, `Firma Jefe de Taller`).
+- mapeo de nombre en PDF: Cliente=`cliente`; Técnico=`tecnico_label` con fallback `tecnico`; Jefe de Taller=`jefe_taller_nombre`.
+- PDF (`Firmas`): el nombre se renderiza incluso cuando no existe imagen de firma (`Firma no disponible`).
+- alcance acotado: sin cambios en formulario, guardado, validaciones, permisos/capabilities, nonces ni persistencia.
+
 ## [1.24.9] - 2026-04-14
 - PDF (`Detalle > Lubricantes`): formato unificado por línea `NOMBRE DEL LUBRICANTE - CANTIDAD = "X"` y cuando no hay cantidad queda `CANTIDAD = ""`.
 - PDF (`Detalle > Lubricantes`): no se muestra unidad de medida ni metadatos (tipo/código/presentación/descripción) en la salida del reporte.
