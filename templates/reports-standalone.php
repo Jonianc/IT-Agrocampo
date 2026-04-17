@@ -96,11 +96,32 @@ $pdf_status_labels = array(
 );
 
 $service_type_labels = array(
-    'one'   => __( '1º servicio', 'agrocampo-post-venta' ),
-    'two'   => __( '2º servicio', 'agrocampo-post-venta' ),
-    'three' => __( '3º servicio', 'agrocampo-post-venta' ),
-    'four'  => __( '4º servicio', 'agrocampo-post-venta' ),
+    'one'                => __( 'Factura Cliente', 'agrocampo-post-venta' ),
+    'two'                => __( 'Garantía', 'agrocampo-post-venta' ),
+    'Interno'            => __( 'Mantención', 'agrocampo-post-venta' ),
+    'interno'            => __( 'Mantención', 'agrocampo-post-venta' ),
+    'Visita-de-Cortesía' => __( 'Visita de Cortesía', 'agrocampo-post-venta' ),
+    'Diagnostico-Técnico' => __( 'Diagnóstico Técnico', 'agrocampo-post-venta' ),
+    'Entrega-Técnica'    => __( 'Entrega Técnica', 'agrocampo-post-venta' ),
 );
+
+$resolve_service_type_label = static function ( array $item ) use ( $service_type_labels ): string {
+    $service_type = (string) ( $item['tipo_servicio'] ?? '' );
+    $custom_label = sanitize_text_field( (string) ( $item['tipo_servicio_label'] ?? '' ) );
+
+    if ( '' !== $custom_label ) {
+        return $custom_label;
+    }
+
+    $mantencion_label = sanitize_text_field( (string) ( $item['tipo_mantencion_label'] ?? '' ) );
+    if ( in_array( $service_type, array( 'Interno', 'interno' ), true ) && '' !== $mantencion_label ) {
+        return sprintf( __( 'Mantención — %s', 'agrocampo-post-venta' ), $mantencion_label );
+    }
+
+    $mapped_label = $service_type_labels[ $service_type ] ?? $service_type;
+
+    return '' !== $mapped_label ? $mapped_label : '—';
+};
 
 $reports_notice = sanitize_key( wp_unslash( $_GET['agp_pv_notice'] ?? '' ) );
 $reports_notice_message = sanitize_text_field( wp_unslash( $_GET['agp_pv_notice_message'] ?? '' ) );
@@ -248,11 +269,7 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                             <td><?php echo esc_html( (string) $item['email_cliente'] ); ?></td>
                             <td><?php echo esc_html( (string) $item['serie'] ); ?></td>
                             <td>
-                                <?php
-                                $service_type       = (string) $item['tipo_servicio'];
-                                $service_type_label = $service_type_labels[ $service_type ] ?? $service_type;
-                                ?>
-                                <?php echo esc_html( $service_type_label ); ?>
+                                <?php echo esc_html( $resolve_service_type_label( $item ) ); ?>
                             </td>
                             <td>
                                 <?php
@@ -397,11 +414,7 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                             </div>
                             <div class="agp-pv-report-card__meta-row">
                                 <dt><?php esc_html_e( 'Tipo de servicio', 'agrocampo-post-venta' ); ?></dt>
-                                <?php
-                                $service_type       = (string) $item['tipo_servicio'];
-                                $service_type_label = $service_type_labels[ $service_type ] ?? $service_type;
-                                ?>
-                                <dd><?php echo esc_html( $service_type_label ); ?></dd>
+                                <dd><?php echo esc_html( $resolve_service_type_label( $item ) ); ?></dd>
                             </div>
                             <div class="agp-pv-report-card__meta-row agp-pv-report-card__meta-row--status">
                                 <dt><?php esc_html_e( 'Estado correo', 'agrocampo-post-venta' ); ?></dt>

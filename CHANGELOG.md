@@ -1,3 +1,9 @@
+## [1.25.2] - 2026-04-17
+- `/post-venta-informes/` (`Tipo de servicio`): se reemplaza mapeo visual `1º/2º servicio` por etiquetas de criterio backend/PDF (`Factura Cliente`, `Garantía`, `Mantención`, `Visita de Cortesía`, `Diagnóstico Técnico`, `Entrega Técnica`).
+- `Tipo de servicio`: si existe `tipo_servicio_label` se prioriza su render; fallback seguro al valor original escapado cuando no hay label.
+- `Interno`: si existe `tipo_mantencion_label`, se muestra `Mantención — {tipo_mantencion_label}`.
+- alcance acotado: sin cambios en query SQL, filtros, paginación, nonces, acciones `admin-post`, permisos ni rutas.
+
 ## [1.25.1] - 2026-04-17
 - `/post-venta-informes/` (header): se simplifica la parte superior para reducir densidad visual, mejorar jerarquía del título/descripción y reforzar acciones de navegación como botones secundarios consistentes.
 - `/post-venta-informes/` (header): mejor separación visual entre encabezado y bloque de filtros, con mejor espaciado/alineación en desktop y apilado claro en móvil.
