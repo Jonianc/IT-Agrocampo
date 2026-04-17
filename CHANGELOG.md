@@ -1,3 +1,9 @@
+## [1.25.0] - 2026-04-17
+- gestor de informes standalone (`reports-standalone`): UI híbrida responsive con tabla optimizada en escritorio y vista de tarjetas en móvil/tablet usando el mismo dataset ya cargado.
+- tarjetas móvil/tablet por informe: muestran ID visible, cliente, técnico, fecha, serie, tipo de servicio, estado correo, estado PDF y acciones `Ver PDF`, `Reenviar correo`, `Regenerar PDF`.
+- estilos de tabla en escritorio: menor ruido visual en acciones, mejor jerarquía de columnas y legibilidad sin cambiar lógica de filtros/paginación/URLs.
+- alcance acotado: sin cambios en backend, query SQL, nonces, rutas, acciones `admin-post`, permisos/capabilities ni lógica de negocio.
+
 ## [1.24.12] - 2026-04-16
 - formulario standalone (paso `Firmas`): se elimina el campo `Nombre Jefe de Taller`; ya no se muestra ni participa en validaciones del formulario.
 - frontend standalone: se elimina la regla asociada al input removido para evitar bloqueo de envío por `jefe_taller_nombre`.

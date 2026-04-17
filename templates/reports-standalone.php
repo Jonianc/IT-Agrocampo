@@ -204,7 +204,7 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
         </div>
         <p><strong><?php echo esc_html( sprintf( _n( '%d informe', '%d informes', $total_items, 'agrocampo-post-venta' ), $total_items ) ); ?></strong></p>
 
-        <div class="agp-pv-reports-table-wrap">
+        <div class="agp-pv-reports-table-wrap" aria-label="<?php esc_attr_e( 'Tabla de informes', 'agrocampo-post-venta' ); ?>">
             <table class="wp-list-table widefat striped table-view-list">
                 <thead>
                 <tr>
@@ -309,6 +309,109 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                 <?php endif; ?>
                 </tbody>
             </table>
+        </div>
+
+        <div class="agp-pv-reports-cards" aria-label="<?php esc_attr_e( 'Listado de informes en tarjetas', 'agrocampo-post-venta' ); ?>">
+            <?php if ( empty( $items ) ) : ?>
+                <div class="agp-pv-reports-empty agp-pv-reports-empty--cards">
+                    <p class="agp-pv-reports-empty__title"><?php esc_html_e( 'No hay informes para los filtros seleccionados.', 'agrocampo-post-venta' ); ?></p>
+                    <p class="agp-pv-reports-empty__hint"><?php esc_html_e( 'Prueba ajustando el rango de fechas o limpiando filtros para ampliar los resultados.', 'agrocampo-post-venta' ); ?></p>
+                    <?php if ( ! empty( $active_filters ) ) : ?>
+                        <p class="agp-pv-reports-empty__actions"><a class="button button-secondary" href="<?php echo esc_url( $base_url ); ?>"><?php esc_html_e( 'Limpiar filtros', 'agrocampo-post-venta' ); ?></a></p>
+                    <?php endif; ?>
+                </div>
+            <?php else : ?>
+                <?php foreach ( $items as $item ) : ?>
+                    <?php
+                    $mail_state       = (string) $item['mail_status'];
+                    $mail_state_label = $mail_status_labels[ $mail_state ] ?? $mail_state;
+
+                    $pdf_state       = (string) $item['pdf_status'];
+                    $pdf_state_label = $pdf_status_labels[ $pdf_state ] ?? $pdf_state;
+
+                    $submission_id = absint( $item['id'] );
+                    $redirect_to   = add_query_arg(
+                        array_filter(
+                            array(
+                                's' => $search,
+                                'mail_status' => $mail_status,
+                                'pdf_status' => $pdf_status,
+                                'email' => $email,
+                                'date_from' => $date_from,
+                                'date_to' => $date_to,
+                                'paged' => $current_page > 1 ? $current_page : null,
+                            ),
+                            static function ( $value ) {
+                                return null !== $value && '' !== (string) $value;
+                            }
+                        ),
+                        $base_url
+                    );
+                    $view_pdf_url  = wp_nonce_url(
+                        admin_url( 'admin.php?page=agp-pv-submissions&view=' . $submission_id ),
+                        'agp_pv_view_pdf_' . $submission_id
+                    );
+                    $resend_url    = wp_nonce_url(
+                        admin_url(
+                            'admin-post.php?action=agp_pv_resend_email&submission_id=' . $submission_id . '&manager_page=agp-pv-submissions&redirect_to=' . rawurlencode( $redirect_to )
+                        ),
+                        'agp_pv_resend_email_' . $submission_id
+                    );
+                    $regenerate_url = wp_nonce_url(
+                        admin_url(
+                            'admin-post.php?action=agp_pv_regenerate_pdf&submission_id=' . $submission_id . '&manager_page=agp-pv-submissions&redirect_to=' . rawurlencode( $redirect_to )
+                        ),
+                        'agp_pv_regenerate_pdf_' . $submission_id
+                    );
+                    ?>
+                    <article class="agp-pv-report-card">
+                        <header class="agp-pv-report-card__header">
+                            <span class="agp-pv-report-card__id-label"><?php esc_html_e( 'ID', 'agrocampo-post-venta' ); ?></span>
+                            <strong class="agp-pv-report-card__id"><?php echo esc_html( (string) AGP_PV_DB::get_visible_report_id( $item ) ); ?></strong>
+                            <span class="agp-pv-report-card__date"><?php echo esc_html( mysql2date( 'd/m/Y H:i', (string) $item['created_at'] ) ); ?></span>
+                        </header>
+                        <dl class="agp-pv-report-card__meta">
+                            <div class="agp-pv-report-card__meta-row">
+                                <dt><?php esc_html_e( 'Cliente', 'agrocampo-post-venta' ); ?></dt>
+                                <dd><?php echo esc_html( (string) $item['cliente'] ); ?></dd>
+                            </div>
+                            <div class="agp-pv-report-card__meta-row">
+                                <dt><?php esc_html_e( 'Técnico', 'agrocampo-post-venta' ); ?></dt>
+                                <dd><?php echo esc_html( (string) $item['tecnico'] ); ?></dd>
+                            </div>
+                            <div class="agp-pv-report-card__meta-row">
+                                <dt><?php esc_html_e( 'Serie', 'agrocampo-post-venta' ); ?></dt>
+                                <dd><?php echo esc_html( (string) $item['serie'] ); ?></dd>
+                            </div>
+                            <div class="agp-pv-report-card__meta-row">
+                                <dt><?php esc_html_e( 'Tipo de servicio', 'agrocampo-post-venta' ); ?></dt>
+                                <dd><?php echo esc_html( (string) $item['tipo_servicio'] ); ?></dd>
+                            </div>
+                            <div class="agp-pv-report-card__meta-row agp-pv-report-card__meta-row--status">
+                                <dt><?php esc_html_e( 'Estado correo', 'agrocampo-post-venta' ); ?></dt>
+                                <dd>
+                                    <span class="agp-pv-status-badge agp-pv-status-badge--mail agp-pv-status-badge--<?php echo esc_attr( sanitize_html_class( $mail_state ) ); ?>">
+                                        <?php echo esc_html( $mail_state_label ); ?>
+                                    </span>
+                                </dd>
+                            </div>
+                            <div class="agp-pv-report-card__meta-row agp-pv-report-card__meta-row--status">
+                                <dt><?php esc_html_e( 'Estado PDF', 'agrocampo-post-venta' ); ?></dt>
+                                <dd>
+                                    <span class="agp-pv-status-badge agp-pv-status-badge--pdf agp-pv-status-badge--<?php echo esc_attr( sanitize_html_class( $pdf_state ) ); ?>">
+                                        <?php echo esc_html( $pdf_state_label ); ?>
+                                    </span>
+                                </dd>
+                            </div>
+                        </dl>
+                        <div class="agp-pv-reports-row-actions agp-pv-reports-row-actions--card">
+                            <a class="agp-pv-report-action agp-pv-report-action--primary" href="<?php echo esc_url( $view_pdf_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Ver PDF', 'agrocampo-post-venta' ); ?></a>
+                            <a class="agp-pv-report-action" href="<?php echo esc_url( $resend_url ); ?>"><?php esc_html_e( 'Reenviar correo', 'agrocampo-post-venta' ); ?></a>
+                            <a class="agp-pv-report-action" href="<?php echo esc_url( $regenerate_url ); ?>"><?php esc_html_e( 'Regenerar PDF', 'agrocampo-post-venta' ); ?></a>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
 
         <?php if ( $total_pages > 1 ) : ?>
