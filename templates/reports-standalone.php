@@ -95,6 +95,13 @@ $pdf_status_labels = array(
     'failed'  => __( 'Falló', 'agrocampo-post-venta' ),
 );
 
+$service_type_labels = array(
+    'one'   => __( '1º servicio', 'agrocampo-post-venta' ),
+    'two'   => __( '2º servicio', 'agrocampo-post-venta' ),
+    'three' => __( '3º servicio', 'agrocampo-post-venta' ),
+    'four'  => __( '4º servicio', 'agrocampo-post-venta' ),
+);
+
 $reports_notice = sanitize_key( wp_unslash( $_GET['agp_pv_notice'] ?? '' ) );
 $reports_notice_message = sanitize_text_field( wp_unslash( $_GET['agp_pv_notice_message'] ?? '' ) );
 
@@ -130,11 +137,10 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
 <main class="agp-pv-observations-wrap agp-pv-reports-wrap">
     <header class="agp-pv-observations-header agp-pv-observations-header--compact">
         <div class="agp-pv-observations-header__main">
-            <p class="agp-pv-observations-kicker"><?php esc_html_e( 'Gestor visual principal', 'agrocampo-post-venta' ); ?></p>
             <h1><?php esc_html_e( 'Informes técnicos', 'agrocampo-post-venta' ); ?></h1>
-            <p><?php esc_html_e( 'Busca y filtra informes enviados sin depender de componentes de wp-admin.', 'agrocampo-post-venta' ); ?></p>
+            <p><?php esc_html_e( 'Consulta informes, aplica filtros y ejecuta acciones rápidas.', 'agrocampo-post-venta' ); ?></p>
         </div>
-        <div class="agp-pv-observations-header__actions">
+        <div class="agp-pv-observations-header__actions" role="navigation" aria-label="<?php esc_attr_e( 'Acciones de navegación de informes', 'agrocampo-post-venta' ); ?>">
             <a class="button button-secondary" href="<?php echo esc_url( AGP_PV_Plugin::observations_standalone_url() ); ?>"><?php esc_html_e( 'Ir a observaciones', 'agrocampo-post-venta' ); ?></a>
             <a class="button button-secondary" href="<?php echo esc_url( admin_url( 'admin.php?page=agp-pv-submissions' ) ); ?>"><?php esc_html_e( 'Abrir respaldo admin', 'agrocampo-post-venta' ); ?></a>
         </div>
@@ -241,7 +247,13 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                             <td><?php echo esc_html( (string) $item['cliente'] ); ?></td>
                             <td><?php echo esc_html( (string) $item['email_cliente'] ); ?></td>
                             <td><?php echo esc_html( (string) $item['serie'] ); ?></td>
-                            <td><?php echo esc_html( (string) $item['tipo_servicio'] ); ?></td>
+                            <td>
+                                <?php
+                                $service_type       = (string) $item['tipo_servicio'];
+                                $service_type_label = $service_type_labels[ $service_type ] ?? $service_type;
+                                ?>
+                                <?php echo esc_html( $service_type_label ); ?>
+                            </td>
                             <td>
                                 <?php
                                 $mail_state       = (string) $item['mail_status'];
@@ -385,7 +397,11 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                             </div>
                             <div class="agp-pv-report-card__meta-row">
                                 <dt><?php esc_html_e( 'Tipo de servicio', 'agrocampo-post-venta' ); ?></dt>
-                                <dd><?php echo esc_html( (string) $item['tipo_servicio'] ); ?></dd>
+                                <?php
+                                $service_type       = (string) $item['tipo_servicio'];
+                                $service_type_label = $service_type_labels[ $service_type ] ?? $service_type;
+                                ?>
+                                <dd><?php echo esc_html( $service_type_label ); ?></dd>
                             </div>
                             <div class="agp-pv-report-card__meta-row agp-pv-report-card__meta-row--status">
                                 <dt><?php esc_html_e( 'Estado correo', 'agrocampo-post-venta' ); ?></dt>

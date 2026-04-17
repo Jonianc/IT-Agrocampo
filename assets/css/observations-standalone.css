@@ -1486,6 +1486,53 @@ body.agp-pv-observations-standalone {
     white-space: nowrap;
 }
 
+.agp-pv-reports-wrap .agp-pv-observations-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px 24px;
+    margin-bottom: 22px;
+    padding: 0 0 18px;
+    border-bottom: 1px solid #dfe7f1;
+}
+
+.agp-pv-reports-wrap .agp-pv-observations-header__main {
+    max-width: 760px;
+}
+
+.agp-pv-reports-wrap .agp-pv-observations-header__main h1 {
+    margin: 0;
+    color: #1d385a;
+    font-size: clamp(24px, 3vw, 32px);
+    line-height: 1.15;
+}
+
+.agp-pv-reports-wrap .agp-pv-observations-header__main p {
+    margin: 8px 0 0;
+    color: var(--agp-text-soft);
+    font-size: 14px;
+}
+
+.agp-pv-reports-wrap .agp-pv-observations-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.agp-pv-reports-wrap .agp-pv-observations-header__actions .button {
+    min-height: 36px;
+    padding: 0 12px;
+    border-color: #c6d2df;
+    color: #2d4866;
+    background: #fff;
+    font-weight: 600;
+}
+
+.agp-pv-reports-wrap .agp-pv-observations-panel {
+    padding-top: 4px;
+}
+
 .agp-pv-reports-wrap .agp-pv-status-badge--pending {
     color: #8a5f00;
     background: #fff4cf;
@@ -1600,6 +1647,24 @@ body.agp-pv-observations-standalone {
 }
 
 @media (max-width: 782px) {
+    .agp-pv-reports-wrap .agp-pv-observations-header {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 16px;
+        padding-bottom: 14px;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-observations-header__actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-observations-header__actions .button {
+        width: 100%;
+        justify-content: center;
+    }
+
     .agp-pv-reports-wrap .agp-pv-filter-row {
         grid-template-columns: 1fr;
     }

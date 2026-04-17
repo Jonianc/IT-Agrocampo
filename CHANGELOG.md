@@ -1,3 +1,9 @@
+## [1.25.1] - 2026-04-17
+- `/post-venta-informes/` (header): se simplifica la parte superior para reducir densidad visual, mejorar jerarquía del título/descripción y reforzar acciones de navegación como botones secundarios consistentes.
+- `/post-venta-informes/` (header): mejor separación visual entre encabezado y bloque de filtros, con mejor espaciado/alineación en desktop y apilado claro en móvil.
+- gestor de informes (`tipo_servicio`): se agrega mapeo legible en render (`one` → `1º servicio`, `two` → `2º servicio`, incluidos valores previstos adicionales) con fallback seguro al valor original escapado.
+- alcance acotado: sin cambios en query SQL, filtros, paginación, nonces, rutas, handlers `admin-post`, permisos/capabilities ni lógica de acciones.
+
 ## [1.25.0] - 2026-04-17
 - gestor de informes standalone (`reports-standalone`): UI híbrida responsive con tabla optimizada en escritorio y vista de tarjetas en móvil/tablet usando el mismo dataset ya cargado.
 - tarjetas móvil/tablet por informe: muestran ID visible, cliente, técnico, fecha, serie, tipo de servicio, estado correo, estado PDF y acciones `Ver PDF`, `Reenviar correo`, `Regenerar PDF`.
