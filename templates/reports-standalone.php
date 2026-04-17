@@ -17,6 +17,20 @@ $offset       = ( $current_page - 1 ) * $per_page;
 $search      = sanitize_text_field( wp_unslash( $_GET['s'] ?? '' ) );
 $mail_status = sanitize_key( wp_unslash( $_GET['mail_status'] ?? '' ) );
 $pdf_status  = sanitize_key( wp_unslash( $_GET['pdf_status'] ?? '' ) );
+$allowed_service_types = array(
+    'one',
+    'two',
+    'Interno',
+    'interno',
+    'Visita-de-Cortesía',
+    'Diagnostico-Técnico',
+    'Entrega-Técnica',
+);
+$service_type = sanitize_text_field( wp_unslash( $_GET['service_type'] ?? '' ) );
+if ( ! in_array( $service_type, $allowed_service_types, true ) ) {
+    $service_type = '';
+}
+$service_type_normalized = in_array( $service_type, array( 'Interno', 'interno' ), true ) ? 'interno' : $service_type;
 $email       = sanitize_text_field( wp_unslash( $_GET['email'] ?? '' ) );
 $date_from   = preg_match( '/^\d{4}-\d{2}-\d{2}$/', (string) ( $_GET['date_from'] ?? '' ) ) ? (string) $_GET['date_from'] : '';
 $date_to     = preg_match( '/^\d{4}-\d{2}-\d{2}$/', (string) ( $_GET['date_to'] ?? '' ) ) ? (string) $_GET['date_to'] : '';
@@ -25,6 +39,7 @@ $active_filters = array_filter(
         's'           => $search,
         'mail_status' => $mail_status,
         'pdf_status'  => $pdf_status,
+        'service_type' => $service_type,
         'email'       => $email,
         'date_from'   => $date_from,
         'date_to'     => $date_to,
@@ -53,6 +68,16 @@ if ( in_array( $pdf_status, array( 'pending', 'ready', 'failed' ), true ) ) {
     $where_values[]  = $pdf_status;
 }
 
+if ( '' !== $service_type_normalized ) {
+    if ( 'interno' === $service_type_normalized ) {
+        $where_clauses[] = 'tipo_servicio IN (%s, %s)';
+        array_push( $where_values, 'Interno', 'interno' );
+    } else {
+        $where_clauses[] = 'tipo_servicio = %s';
+        $where_values[]  = $service_type_normalized;
+    }
+}
+
 if ( '' !== $email ) {
     $where_clauses[] = 'email_cliente LIKE %s';
     $where_values[]  = '%' . $wpdb->esc_like( $email ) . '%';
@@ -77,7 +102,7 @@ $count_sql   = "SELECT COUNT(*) FROM {$table_name} {$where_sql}";
 $total_items = (int) ( empty( $where_values ) ? $wpdb->get_var( $count_sql ) : $wpdb->get_var( $wpdb->prepare( $count_sql, $where_values ) ) );
 $total_pages = max( 1, (int) ceil( $total_items / $per_page ) );
 
-$list_sql    = "SELECT id, legacy_id, tecnico, cliente, email_cliente, serie, tipo_servicio, mail_status, pdf_status, created_at FROM {$table_name} {$where_sql} ORDER BY created_at DESC LIMIT %d OFFSET %d";
+$list_sql    = "SELECT id, legacy_id, tecnico, cliente, email_cliente, serie, tipo_servicio, tipo_servicio_label, tipo_mantencion_label, mail_status, pdf_status, created_at FROM {$table_name} {$where_sql} ORDER BY created_at DESC LIMIT %d OFFSET %d";
 $list_values = array_merge( $where_values, array( $per_page, $offset ) );
 $items       = $wpdb->get_results( $wpdb->prepare( $list_sql, $list_values ), ARRAY_A );
 
@@ -192,6 +217,18 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                         </select>
                     </label>
 
+                    <label class="agp-pv-field" for="agp-pv-filter-service-type"><span class="agp-pv-field__label"><?php esc_html_e( 'Tipo de servicio', 'agrocampo-post-venta' ); ?></span>
+                        <select id="agp-pv-filter-service-type" name="service_type">
+                            <option value=""><?php esc_html_e( 'Todos', 'agrocampo-post-venta' ); ?></option>
+                            <option value="one" <?php selected( $service_type, 'one' ); ?>><?php esc_html_e( 'Factura Cliente', 'agrocampo-post-venta' ); ?></option>
+                            <option value="two" <?php selected( $service_type, 'two' ); ?>><?php esc_html_e( 'Garantía', 'agrocampo-post-venta' ); ?></option>
+                            <option value="interno" <?php selected( $service_type_normalized, 'interno' ); ?>><?php esc_html_e( 'Mantención', 'agrocampo-post-venta' ); ?></option>
+                            <option value="Visita-de-Cortesía" <?php selected( $service_type, 'Visita-de-Cortesía' ); ?>><?php esc_html_e( 'Visita de Cortesía', 'agrocampo-post-venta' ); ?></option>
+                            <option value="Diagnostico-Técnico" <?php selected( $service_type, 'Diagnostico-Técnico' ); ?>><?php esc_html_e( 'Diagnóstico Técnico', 'agrocampo-post-venta' ); ?></option>
+                            <option value="Entrega-Técnica" <?php selected( $service_type, 'Entrega-Técnica' ); ?>><?php esc_html_e( 'Entrega Técnica', 'agrocampo-post-venta' ); ?></option>
+                        </select>
+                    </label>
+
                     <label class="agp-pv-field agp-pv-field--wide" for="agp-pv-filter-email"><span class="agp-pv-field__label"><?php esc_html_e( 'Correo', 'agrocampo-post-venta' ); ?></span>
                         <input type="text" id="agp-pv-filter-email" name="email" value="<?php echo esc_attr( $email ); ?>" placeholder="cliente@correo.cl">
                     </label>
@@ -299,6 +336,7 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                                             's' => $search,
                                             'mail_status' => $mail_status,
                                             'pdf_status' => $pdf_status,
+                                            'service_type' => $service_type,
                                             'email' => $email,
                                             'date_from' => $date_from,
                                             'date_to' => $date_to,
@@ -365,6 +403,7 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                                 's' => $search,
                                 'mail_status' => $mail_status,
                                 'pdf_status' => $pdf_status,
+                                'service_type' => $service_type,
                                 'email' => $email,
                                 'date_from' => $date_from,
                                 'date_to' => $date_to,
@@ -459,6 +498,7 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                                         's' => $search,
                                         'mail_status' => $mail_status,
                                         'pdf_status' => $pdf_status,
+                                        'service_type' => $service_type,
                                         'email' => $email,
                                         'date_from' => $date_from,
                                         'date_to' => $date_to,

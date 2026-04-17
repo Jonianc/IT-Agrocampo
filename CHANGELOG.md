@@ -1,3 +1,10 @@
+## [1.25.3] - 2026-04-17
+- `/post-venta-informes/`: nuevo filtro `Tipo de servicio` (`service_type`) con sanitización, validación por allowlist y aplicación en SQL sobre `tipo_servicio`.
+- filtros activos: `service_type` se integra al contador y a la preservación de estado en paginación y `redirect_to` de acciones.
+- filtro `Mantención`: compatibilidad para valores almacenados `Interno`/`interno` (normalización en lógica de filtro).
+- consulta de informes: se extiende `SELECT` para incluir `tipo_servicio_label` y `tipo_mantencion_label` para compatibilidad con render existente.
+- alcance acotado: sin cambios en nonces, handlers `admin-post`, permisos, rutas ni acciones.
+
 ## [1.25.2] - 2026-04-17
 - `/post-venta-informes/` (`Tipo de servicio`): se reemplaza mapeo visual `1º/2º servicio` por etiquetas de criterio backend/PDF (`Factura Cliente`, `Garantía`, `Mantención`, `Visita de Cortesía`, `Diagnóstico Técnico`, `Entrega Técnica`).
 - `Tipo de servicio`: si existe `tipo_servicio_label` se prioriza su render; fallback seguro al valor original escapado cuando no hay label.
