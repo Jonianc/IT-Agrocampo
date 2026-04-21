@@ -66,6 +66,15 @@
             title: 'Seleccionar icono 512x512',
             buttonText: 'Usar icono 512x512',
         });
+
+        initMediaSelector({
+            selectButton: '#agp-pv-jefe-taller-firma-select',
+            removeButton: '#agp-pv-jefe-taller-firma-remove',
+            input: '#agp-pv-jefe-taller-firma-id',
+            preview: '#agp-pv-jefe-taller-firma-preview',
+            title: 'Seleccionar firma fija Jefe de Taller',
+            buttonText: 'Usar firma',
+        });
     }
 
     function initLubricantsSettingsUi() {

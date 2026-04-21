@@ -1,3 +1,10 @@
+## [1.25.4] - 2026-04-21
+- ajustes (`Ajustes > Branding del PDF`): nuevo campo `Firma fija Jefe de Taller` con Media Library (seleccionar/reemplazar/quitar), persistido en option `agp_pv_jefe_taller_firma_attachment_id`.
+- validación submit AJAX (Garantía): `firma_jefe_taller` ahora se acepta por firma enviada en el informe o por firma fija configurada; solo falla si no existe ninguna.
+- PDF (`Firmas`): prioridad de firma Jefe de Taller mantenida como `firma_jefe_taller_id` del informe y fallback a firma fija de ajustes cuando no exista firma propia.
+- frontend standalone (`Garantía`): cuando existe firma fija en ajustes se oculta el bloque de captura de firma del Jefe de Taller y no se envía dataURL de ese campo.
+- frontend state: se expone `agpPvData.settings.hasFixedJefeTallerSignature` para control de UI/recolección de firma sin romper flujo actual.
+
 ## [1.25.3] - 2026-04-17
 - `/post-venta-informes/`: nuevo filtro `Tipo de servicio` (`service_type`) con sanitización, validación por allowlist y aplicación en SQL sobre `tipo_servicio`.
 - filtros activos: `service_type` se integra al contador y a la preservación de estado en paginación y `redirect_to` de acciones.

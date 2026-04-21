@@ -1159,6 +1159,9 @@ class AGP_PV_Plugin {
                     'shellPath' => wp_parse_url( home_url( '/post-venta/' ), PHP_URL_PATH ) ?: '/post-venta/',
                     'assetPrefix' => wp_parse_url( AGP_PV_PLUGIN_URL . 'assets/', PHP_URL_PATH ) ?: '/wp-content/plugins/agrocampo-post-venta/assets/',
                 ),
+                'settings' => array(
+                    'hasFixedJefeTallerSignature' => absint( get_option( 'agp_pv_jefe_taller_firma_attachment_id', 0 ) ) > 0,
+                ),
                 'messages' => array(
                     'invalid' => __( 'Error: tu formulario no es válido, ¡por favor, corrige los errores!', 'agrocampo-post-venta' ),
                     'success' => __( 'Informe enviado.', 'agrocampo-post-venta' ),

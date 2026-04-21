@@ -433,7 +433,10 @@ class AGP_PV_Ajax {
             }
         }
 
-        if ( 'two' === $tipo_servicio && ! $result['firma_jefe_taller_id'] ) {
+        $fixed_jefe_taller_signature_id = absint( get_option( 'agp_pv_jefe_taller_firma_attachment_id', 0 ) );
+        $has_fixed_jefe_taller_signature = $fixed_jefe_taller_signature_id > 0;
+
+        if ( 'two' === $tipo_servicio && ! $result['firma_jefe_taller_id'] && ! $has_fixed_jefe_taller_signature ) {
             return array(
                 'success' => false,
                 'message' => __( 'La firma del jefe de taller es obligatoria para Garantía.', 'agrocampo-post-venta' ),

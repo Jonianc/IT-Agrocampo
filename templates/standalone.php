@@ -7,6 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $machine_status_position = AGP_PV_Plugin::get_machine_status_field_position();
 $machine_status_options  = AGP_PV_Plugin::get_machine_status_options();
 $machine_status_empty_label = __( 'Sin seleccionar', 'agrocampo-post-venta' );
+$has_fixed_jefe_taller_signature = absint( get_option( 'agp_pv_jefe_taller_firma_attachment_id', 0 ) ) > 0;
 
 $render_machine_status_block = static function () use ( $machine_status_options, $machine_status_empty_label ) {
     ?>
@@ -291,15 +292,17 @@ $render_machine_status_block = static function () use ( $machine_status_options,
                 <input type="hidden" name="firma_tecnico" id="agp-pv-firma-tecnico">
             </div>
 
-            <div class="agp-pv-field" data-condition="garantia">
-                <label><?php esc_html_e( 'Firma Jefe de Taller', 'agrocampo-post-venta' ); ?> *</label>
-                <div class="agp-pv-signature" data-signature="jefe_taller">
-                    <canvas width="600" height="200"></canvas>
-                    <div class="agp-pv-signature-hint"><?php esc_html_e( 'Firme aquí', 'agrocampo-post-venta' ); ?></div>
-                    <button type="button" class="agp-pv-signature-clear" data-signature-clear="jefe_taller"><?php esc_html_e( 'Limpiar', 'agrocampo-post-venta' ); ?></button>
+            <?php if ( ! $has_fixed_jefe_taller_signature ) : ?>
+                <div class="agp-pv-field" data-condition="garantia" data-jefe-taller-signature-field>
+                    <label><?php esc_html_e( 'Firma Jefe de Taller', 'agrocampo-post-venta' ); ?> *</label>
+                    <div class="agp-pv-signature" data-signature="jefe_taller">
+                        <canvas width="600" height="200"></canvas>
+                        <div class="agp-pv-signature-hint"><?php esc_html_e( 'Firme aquí', 'agrocampo-post-venta' ); ?></div>
+                        <button type="button" class="agp-pv-signature-clear" data-signature-clear="jefe_taller"><?php esc_html_e( 'Limpiar', 'agrocampo-post-venta' ); ?></button>
+                    </div>
+                    <input type="hidden" name="firma_jefe_taller" id="agp-pv-firma-jefe-taller">
                 </div>
-                <input type="hidden" name="firma_jefe_taller" id="agp-pv-firma-jefe-taller">
-            </div>
+            <?php endif; ?>
 
             <div class="agp-pv-step-actions">
                 <button type="button" class="agp-pv-prev" data-prev-step="2"><?php esc_html_e( 'Anterior', 'agrocampo-post-venta' ); ?></button>

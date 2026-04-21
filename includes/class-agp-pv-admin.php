@@ -222,6 +222,8 @@ class AGP_PV_Admin {
         $pdf_footer_text = (string) get_option( 'agp_pv_pdf_footer_text', __( 'Talca • Linares • Parral   |   +56 9 9748 5650', 'agrocampo-post-venta' ) );
         $pdf_it_label_template = (string) get_option( 'agp_pv_pdf_it_label_template', __( 'IT: %d', 'agrocampo-post-venta' ) );
         $pdf_jefe_taller_nombre = (string) get_option( 'agp_pv_jefe_taller_nombre', '' );
+        $pdf_jefe_taller_firma_id = absint( get_option( 'agp_pv_jefe_taller_firma_attachment_id', 0 ) );
+        $pdf_jefe_taller_firma_url = $pdf_jefe_taller_firma_id ? wp_get_attachment_url( $pdf_jefe_taller_firma_id ) : '';
         $machine_status_position = AGP_PV_Plugin::get_machine_status_field_position();
         $lubricants_settings = AGP_PV_Plugin::get_lubricants_settings();
         $lubricants_field_states = $lubricants_settings['field_states'];
@@ -269,6 +271,13 @@ class AGP_PV_Admin {
         echo '<input type="text" class="large-text" maxlength="110" id="agp-pv-pdf-footer-text" name="agp_pv_pdf_footer_text" value="' . esc_attr( $pdf_footer_text ) . '"></p>';
         echo '<p><label for="agp-pv-jefe-taller-nombre"><strong>' . esc_html__( 'Nombre fijo Jefe de Taller (PDF)', 'agrocampo-post-venta' ) . '</strong></label><br>';
         echo '<input type="text" class="regular-text" maxlength="80" id="agp-pv-jefe-taller-nombre" name="agp_pv_jefe_taller_nombre" value="' . esc_attr( $pdf_jefe_taller_nombre ) . '"></p>';
+        echo '<input type="hidden" name="agp_pv_jefe_taller_firma_attachment_id" id="agp-pv-jefe-taller-firma-id" value="' . esc_attr( (string) $pdf_jefe_taller_firma_id ) . '">';
+        echo '<p><strong>' . esc_html__( 'Firma fija Jefe de Taller', 'agrocampo-post-venta' ) . '</strong></p>';
+        echo '<p><img id="agp-pv-jefe-taller-firma-preview" src="' . esc_url( $pdf_jefe_taller_firma_url ) . '" style="max-width:220px;display:' . ( $pdf_jefe_taller_firma_url ? 'block' : 'none' ) . ';" alt=""></p>';
+        echo '<p>';
+        echo '<button type="button" class="button button-secondary" id="agp-pv-jefe-taller-firma-select">' . esc_html__( 'Seleccionar firma', 'agrocampo-post-venta' ) . '</button> ';
+        echo '<button type="button" class="button button-secondary" id="agp-pv-jefe-taller-firma-remove">' . esc_html__( 'Quitar firma', 'agrocampo-post-venta' ) . '</button>';
+        echo '</p>';
         if ( '' === trim( $pdf_jefe_taller_nombre ) ) {
             echo '<p class="description" style="color:#b32d2e;">' . esc_html__( 'Debes configurar el nombre fijo de Jefe de Taller para que aparezca en el PDF de Garantía.', 'agrocampo-post-venta' ) . '</p>';
         }
@@ -346,6 +355,7 @@ class AGP_PV_Admin {
         echo '<input type="hidden" name="agp_pv_pdf_it_label_template" value="' . esc_attr( $pdf_it_label_template ) . '">';
         echo '<input type="hidden" name="agp_pv_pdf_footer_text" value="' . esc_attr( $pdf_footer_text ) . '">';
         echo '<input type="hidden" name="agp_pv_jefe_taller_nombre" value="' . esc_attr( $pdf_jefe_taller_nombre ) . '">';
+        echo '<input type="hidden" name="agp_pv_jefe_taller_firma_attachment_id" value="' . esc_attr( (string) $pdf_jefe_taller_firma_id ) . '">';
         echo '<input type="hidden" name="agp_pv_machine_status_position" value="' . esc_attr( $machine_status_position ) . '">';
         echo '<input type="hidden" name="agp_pv_app_icon_192_attachment_id" value="' . esc_attr( (string) $app_icon_192_id ) . '">';
         echo '<input type="hidden" name="agp_pv_app_icon_512_attachment_id" value="' . esc_attr( (string) $app_icon_512_id ) . '">';
@@ -1998,6 +2008,7 @@ class AGP_PV_Admin {
         $footer_text = isset( $_POST['agp_pv_pdf_footer_text'] ) ? sanitize_text_field( wp_unslash( $_POST['agp_pv_pdf_footer_text'] ) ) : __( 'Talca • Linares • Parral   |   +56 9 9748 5650', 'agrocampo-post-venta' );
         $it_label_template = isset( $_POST['agp_pv_pdf_it_label_template'] ) ? sanitize_text_field( wp_unslash( $_POST['agp_pv_pdf_it_label_template'] ) ) : __( 'IT: %d', 'agrocampo-post-venta' );
         $jefe_taller_nombre = isset( $_POST['agp_pv_jefe_taller_nombre'] ) ? sanitize_text_field( wp_unslash( $_POST['agp_pv_jefe_taller_nombre'] ) ) : '';
+        $jefe_taller_firma_id = isset( $_POST['agp_pv_jefe_taller_firma_attachment_id'] ) ? absint( $_POST['agp_pv_jefe_taller_firma_attachment_id'] ) : 0;
         $machine_status_position = AGP_PV_Plugin::parse_machine_status_position( (string) ( wp_unslash( $_POST['agp_pv_machine_status_position'] ?? '' ) ) );
         $quick_types_raw = isset( $_POST['agp_pv_lubricants_quick_types'] ) ? wp_unslash( (string) $_POST['agp_pv_lubricants_quick_types'] ) : '';
         $quick_types_lines = preg_split( '/\r\n|\r|\n/', $quick_types_raw ) ?: array();
@@ -2058,6 +2069,7 @@ class AGP_PV_Admin {
         update_option( 'agp_pv_pdf_footer_text', $footer_text );
         update_option( 'agp_pv_pdf_it_label_template', $it_label_template );
         update_option( 'agp_pv_jefe_taller_nombre', $jefe_taller_nombre );
+        update_option( 'agp_pv_jefe_taller_firma_attachment_id', $jefe_taller_firma_id );
         update_option( 'agp_pv_machine_status_position', $machine_status_position );
         update_option( 'agp_pv_lubricants_settings', $lubricants_settings );
         update_option( 'agp_pv_lubricants_visible_fields', $lubricants_visible_fields );

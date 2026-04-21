@@ -1,4 +1,8 @@
 (function ($) {
+    var hasFixedJefeTallerSignature = !!(window.agpPvData
+        && window.agpPvData.settings
+        && window.agpPvData.settings.hasFixedJefeTallerSignature);
+
     function clearFieldErrors() {
         $('.agp-pv-error').text('');
         clearErrorSummary();
@@ -235,6 +239,7 @@
         var $mantencionField = $('[data-condition="tipo-mantencion"]');
         var $cantidadHorasField = $('[data-condition="cantidad-horas"]');
         var $garantiaFields = $('[data-condition="garantia"]');
+        var $jefeTallerSignatureField = $('[data-jefe-taller-signature-field]');
         var $fechaContactoField = $('[data-condition="fecha-contacto"]');
         var $machineStatusHelp = $('[data-machine-status-help]');
         var $machineStatusBlock = $('[data-machine-status-block]');
@@ -279,6 +284,9 @@
 
             // Garantia block
             setVisibility($garantiaFields, tipoServicio === 'two');
+            if (hasFixedJefeTallerSignature && $jefeTallerSignatureField.length) {
+                setVisibility($jefeTallerSignatureField, false);
+            }
             if (tipoServicio !== 'two') {
                 // clear tecnico signature when not in garantia mode
                 clearSignature($('.agp-pv-signature[data-signature="tecnico"]'));
@@ -478,7 +486,7 @@
             $('#agp-pv-firma-tecnico').val('');
         }
 
-        var jefeTallerEligible = jefeTallerCanvas && isGarantia;
+        var jefeTallerEligible = jefeTallerCanvas && isGarantia && !hasFixedJefeTallerSignature;
         if (jefeTallerEligible && $jefeTallerWrap.hasClass('has-signature')) {
             $('#agp-pv-firma-jefe-taller').val(jefeTallerCanvas.toDataURL('image/png'));
         } else {
