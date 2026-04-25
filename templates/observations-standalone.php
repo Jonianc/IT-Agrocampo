@@ -156,6 +156,36 @@ $rows_values = array_merge( $filtered_values, array( $per_page, $offset ) );
 $rows_query  = $wpdb->prepare( $rows_sql, $rows_values );
 $rows        = $wpdb->get_results( $rows_query, ARRAY_A );
 
+if ( ! empty( $rows ) ) {
+    usort(
+        $rows,
+        static function ( array $a, array $b ): int {
+            $a_status      = (string) ( $a['review_status'] ?? '' );
+            $b_status      = (string) ( $b['review_status'] ?? '' );
+            $a_is_reviewed = AGP_PV_Plugin::is_reviewed_observation_status( $a_status );
+            $b_is_reviewed = AGP_PV_Plugin::is_reviewed_observation_status( $b_status );
+            $a_is_overdue  = AGP_PV_Plugin::is_overdue_observation_row( $a );
+            $b_is_overdue  = AGP_PV_Plugin::is_overdue_observation_row( $b );
+
+            $a_priority = $a_is_overdue ? 0 : ( $a_is_reviewed ? 2 : 1 );
+            $b_priority = $b_is_overdue ? 0 : ( $b_is_reviewed ? 2 : 1 );
+
+            if ( $a_priority !== $b_priority ) {
+                return $a_priority <=> $b_priority;
+            }
+
+            $a_legacy = (int) ( $a['legacy_id'] ?? 0 );
+            $b_legacy = (int) ( $b['legacy_id'] ?? 0 );
+
+            if ( $a_legacy !== $b_legacy ) {
+                return $b_legacy <=> $a_legacy;
+            }
+
+            return (int) ( $b['id'] ?? 0 ) <=> (int) ( $a['id'] ?? 0 );
+        }
+    );
+}
+
 $notice = isset( $_GET['agp_pv_notice'] ) ? sanitize_key( wp_unslash( $_GET['agp_pv_notice'] ) ) : '';
 
 $status_tabs = array(
@@ -345,19 +375,33 @@ if ( $range_active ) {
 <main class="agp-pv-observations-wrap">
     <?php if ( $is_public_read_only ) : ?>
         <?php
-        $public_notice = __( 'Acceso temporal público activo — solo lectura.', 'agrocampo-post-venta' );
+        $public_notice = __( 'Acceso temporal público · solo lectura.', 'agrocampo-post-venta' );
         if ( '' !== (string) $public_access_context['expires_in_human'] ) {
             $public_notice .= ' ' . sprintf( __( 'Vence en %s.', 'agrocampo-post-venta' ), (string) $public_access_context['expires_in_human'] );
         }
         ?>
-        <div class="agp-pv-notice agp-pv-notice-public"><?php echo esc_html( $public_notice ); ?></div>
+        <div class="agp-pv-notice agp-pv-notice-public agp-pv-notice-public-compact"><?php echo esc_html( $public_notice ); ?></div>
     <?php endif; ?>
 
     <section class="agp-pv-shell-header">
         <div class="agp-pv-shell-header__title">
-            <span class="agp-pv-shell-header__eyebrow"><?php esc_html_e( 'Post venta', 'agrocampo-post-venta' ); ?></span>
-            <h1><?php esc_html_e( 'Observaciones', 'agrocampo-post-venta' ); ?></h1>
-            <p class="agp-pv-shell-header__hint"><?php echo esc_html( $period_text ); ?></p>
+            <h1><?php esc_html_e( 'Observaciones Post Venta', 'agrocampo-post-venta' ); ?></h1>
+            <p class="agp-pv-shell-header__hint">
+                <?php
+                echo esc_html(
+                    sprintf(
+                        __( 'Últimos %1$d días · Total %2$d · Vencidas %3$d', 'agrocampo-post-venta' ),
+                        $days,
+                        $total_count,
+                        $overdue_count
+                    )
+                );
+                ?>
+            </p>
+            <details class="agp-pv-period-help">
+                <summary><?php esc_html_e( 'Detalle del período', 'agrocampo-post-venta' ); ?></summary>
+                <p><?php echo esc_html( $period_text ); ?></p>
+            </details>
         </div>
 
         <div class="agp-pv-shell-header__aside">
@@ -397,63 +441,6 @@ if ( $range_active ) {
         <div class="agp-pv-notice agp-pv-notice-error"><?php echo esc_html( sanitize_text_field( wp_unslash( $_GET['agp_pv_notice_message'] ?? __( 'No se pudo generar el reporte XLSX.', 'agrocampo-post-venta' ) ) ) ); ?></div>
     <?php endif; ?>
 
-    <section class="agp-pv-panel agp-pv-filters-panel">
-        <div class="agp-pv-panel__heading"><?php esc_html_e( 'Filtros', 'agrocampo-post-venta' ); ?></div>
-
-        <div class="agp-pv-period-presets" aria-label="<?php esc_attr_e( 'Períodos rápidos', 'agrocampo-post-venta' ); ?>">
-            <?php foreach ( $preset_links as $preset_key => $preset ) : ?>
-                <?php $preset_class = 'agp-pv-period-preset' . ( $current_preset === $preset_key ? ' is-active' : '' ); ?>
-                <a class="<?php echo esc_attr( $preset_class ); ?>" href="<?php echo esc_url( $build_url( $preset['args'] ) ); ?>"><?php echo esc_html( $preset['label'] ); ?></a>
-            <?php endforeach; ?>
-            <span class="agp-pv-period-preset is-custom <?php echo esc_attr( 'custom' === $current_preset ? 'is-active' : '' ); ?>"><?php esc_html_e( 'Personalizado', 'agrocampo-post-venta' ); ?></span>
-        </div>
-
-        <?php $filters_form_classes = array( 'agp-pv-observations-filters' );
-        if ( $range_active ) {
-            $filters_form_classes[] = 'has-active-range';
-        }
-        ?>
-        <form method="get" class="<?php echo esc_attr( implode( ' ', $filters_form_classes ) ); ?>">
-            <label>
-                <span><?php esc_html_e( 'Buscar', 'agrocampo-post-venta' ); ?></span>
-                <input type="text" name="s" value="<?php echo esc_attr( $search ); ?>" placeholder="cliente, técnico, serie...">
-            </label>
-            <label>
-                <span><?php esc_html_e( 'Estado', 'agrocampo-post-venta' ); ?></span>
-                <select name="review_status">
-                    <option value=""><?php esc_html_e( 'Todos', 'agrocampo-post-venta' ); ?></option>
-                    <option value="not_reviewed" <?php selected( $review_status, 'not_reviewed' ); ?>><?php esc_html_e( 'No revisado', 'agrocampo-post-venta' ); ?></option>
-                    <option value="strict_pending_review" <?php selected( $review_status, 'strict_pending_review' ); ?>><?php esc_html_e( 'Pendiente de revisión', 'agrocampo-post-venta' ); ?></option>
-                    <option value="reviewed" <?php selected( $review_status, 'reviewed' ); ?>><?php esc_html_e( 'Revisado', 'agrocampo-post-venta' ); ?></option>
-                    <option value="overdue_pending" <?php selected( $review_status, 'overdue_pending' ); ?>><?php esc_html_e( 'Pendiente vencida', 'agrocampo-post-venta' ); ?></option>
-                </select>
-            </label>
-            <label class="agp-pv-days-field <?php echo esc_attr( $range_active ? 'is-inactive' : '' ); ?>">
-                <span><?php esc_html_e( 'Últimos días', 'agrocampo-post-venta' ); ?></span>
-                <input type="number" name="days" min="1" max="3650" value="<?php echo esc_attr( (string) $days ); ?>" aria-describedby="agp-pv-days-help">
-                <?php if ( $range_active ) : ?>
-                    <small id="agp-pv-days-help" class="agp-pv-field-hint"><?php esc_html_e( 'Sin efecto mientras haya rango activo.', 'agrocampo-post-venta' ); ?></small>
-                <?php endif; ?>
-            </label>
-            <label>
-                <span><?php esc_html_e( 'Desde', 'agrocampo-post-venta' ); ?></span>
-                <input type="date" name="from" value="<?php echo esc_attr( $date_from ); ?>">
-            </label>
-            <label>
-                <span><?php esc_html_e( 'Hasta', 'agrocampo-post-venta' ); ?></span>
-                <input type="date" name="to" value="<?php echo esc_attr( $date_to ); ?>">
-            </label>
-            <div class="agp-pv-filters-actions">
-                <button type="submit"><?php esc_html_e( 'Filtrar', 'agrocampo-post-venta' ); ?></button>
-                <a class="agp-pv-secondary-link" href="<?php echo esc_url( $base_url ); ?>"><?php esc_html_e( 'Limpiar', 'agrocampo-post-venta' ); ?></a>
-                <?php if ( ! $is_public_read_only ) : ?>
-                    <a class="agp-pv-secondary-link agp-pv-report-link" href="<?php echo esc_url( $export_report_url ); ?>"><?php esc_html_e( 'Descargar reporte', 'agrocampo-post-venta' ); ?></a>
-                <?php endif; ?>
-            </div>
-        </form>
-        <div class="agp-pv-filters-help"><?php esc_html_e( 'Si completas Desde/Hasta, el rango tiene prioridad sobre Últimos días. Pendientes y Vencidas filtran por fecha de creación; Resueltas por fecha de revisión. Limpiar restablece todos los filtros.', 'agrocampo-post-venta' ); ?></div>
-    </section>
-
     <nav class="agp-pv-status-tabs" aria-label="<?php esc_attr_e( 'Filtros rápidos por estado', 'agrocampo-post-venta' ); ?>">
         <?php foreach ( $status_tabs as $tab_status => $tab ) : ?>
             <?php
@@ -478,6 +465,55 @@ if ( $range_active ) {
         <?php endforeach; ?>
     </nav>
 
+    <section class="agp-pv-panel agp-pv-filters-panel">
+        <div class="agp-pv-panel__heading"><?php esc_html_e( 'Filtros', 'agrocampo-post-venta' ); ?></div>
+
+        <div class="agp-pv-period-presets" aria-label="<?php esc_attr_e( 'Períodos rápidos', 'agrocampo-post-venta' ); ?>">
+            <?php foreach ( $preset_links as $preset_key => $preset ) : ?>
+                <?php $preset_class = 'agp-pv-period-preset' . ( $current_preset === $preset_key ? ' is-active' : '' ); ?>
+                <a class="<?php echo esc_attr( $preset_class ); ?>" href="<?php echo esc_url( $build_url( $preset['args'] ) ); ?>"><?php echo esc_html( $preset['label'] ); ?></a>
+            <?php endforeach; ?>
+            <span class="agp-pv-period-preset is-custom <?php echo esc_attr( 'custom' === $current_preset ? 'is-active' : '' ); ?>"><?php esc_html_e( 'Personalizado', 'agrocampo-post-venta' ); ?></span>
+        </div>
+
+        <?php $filters_form_classes = array( 'agp-pv-observations-filters' );
+        if ( $range_active ) {
+            $filters_form_classes[] = 'has-active-range';
+        }
+        ?>
+        <form method="get" class="<?php echo esc_attr( implode( ' ', $filters_form_classes ) ); ?>">
+            <label>
+                <span><?php esc_html_e( 'Buscar', 'agrocampo-post-venta' ); ?></span>
+                <input type="text" name="s" value="<?php echo esc_attr( $search ); ?>" placeholder="cliente, técnico, serie...">
+            </label>
+            <input type="hidden" name="days" value="<?php echo esc_attr( (string) $days ); ?>">
+            <?php if ( '' !== $review_status_raw ) : ?>
+                <input type="hidden" name="review_status" value="<?php echo esc_attr( $review_status_raw ); ?>">
+            <?php endif; ?>
+            <details class="agp-pv-advanced-filters">
+                <summary><?php esc_html_e( 'Avanzado: Desde/Hasta', 'agrocampo-post-venta' ); ?></summary>
+                <div class="agp-pv-advanced-filters__grid">
+                    <label>
+                        <span><?php esc_html_e( 'Desde', 'agrocampo-post-venta' ); ?></span>
+                        <input type="date" name="from" value="<?php echo esc_attr( $date_from ); ?>">
+                    </label>
+                    <label>
+                        <span><?php esc_html_e( 'Hasta', 'agrocampo-post-venta' ); ?></span>
+                        <input type="date" name="to" value="<?php echo esc_attr( $date_to ); ?>">
+                    </label>
+                </div>
+            </details>
+            <div class="agp-pv-filters-actions">
+                <button type="submit"><?php esc_html_e( 'Filtrar', 'agrocampo-post-venta' ); ?></button>
+                <a class="agp-pv-secondary-link" href="<?php echo esc_url( $base_url ); ?>"><?php esc_html_e( 'Limpiar', 'agrocampo-post-venta' ); ?></a>
+                <?php if ( ! $is_public_read_only ) : ?>
+                    <a class="agp-pv-secondary-link agp-pv-report-link" href="<?php echo esc_url( $export_report_url ); ?>"><?php esc_html_e( 'Descargar reporte', 'agrocampo-post-venta' ); ?></a>
+                <?php endif; ?>
+            </div>
+        </form>
+        <div class="agp-pv-filters-help"><?php esc_html_e( 'Los chips rápidos aplican período. En Avanzado puedes definir Desde/Hasta. Pendientes y Vencidas filtran por fecha de creación; Resueltas por fecha de revisión.', 'agrocampo-post-venta' ); ?></div>
+    </section>
+
     <section class="agp-pv-panel agp-pv-table-panel">
         <div class="agp-pv-observations-table-scroll" role="region" aria-label="<?php esc_attr_e( 'Tabla de informes con observaciones', 'agrocampo-post-venta' ); ?>" tabindex="0">
             <table class="agp-pv-observations-table">
@@ -488,6 +524,7 @@ if ( $range_active ) {
                     <th><?php esc_html_e( 'Técnico', 'agrocampo-post-venta' ); ?></th>
                     <th><?php esc_html_e( 'Observación', 'agrocampo-post-venta' ); ?></th>
                     <th><?php esc_html_e( 'Estado', 'agrocampo-post-venta' ); ?></th>
+                    <th><?php esc_html_e( 'Antigüedad', 'agrocampo-post-venta' ); ?></th>
                     <th><?php esc_html_e( 'Revisado por', 'agrocampo-post-venta' ); ?></th>
                     <th><?php esc_html_e( 'Fecha revisión', 'agrocampo-post-venta' ); ?></th>
                     <th><?php esc_html_e( 'PDF', 'agrocampo-post-venta' ); ?></th>
@@ -497,7 +534,7 @@ if ( $range_active ) {
                 <tbody>
                 <?php if ( empty( $rows ) ) : ?>
                     <tr>
-                        <td colspan="9" class="agp-pv-empty-cell">
+                        <td colspan="10" class="agp-pv-empty-cell">
                             <div class="agp-pv-empty-state">
                                 <strong><?php esc_html_e( 'No hay observaciones para esta búsqueda.', 'agrocampo-post-venta' ); ?></strong>
                                 <span><?php esc_html_e( 'Prueba con otro estado o cambia el período.', 'agrocampo-post-venta' ); ?></span>
@@ -527,7 +564,7 @@ if ( $range_active ) {
                         $is_reviewed      = AGP_PV_Plugin::is_reviewed_observation_status( $status );
                         $is_overdue       = AGP_PV_Plugin::is_overdue_observation_row( $row );
                         $has_history_note = $is_reviewed && AGP_PV_Plugin::has_appended_observation_notes( (string) ( $row['observaciones'] ?? '' ) );
-                        $status_label     = $is_reviewed ? __( 'Resuelta', 'agrocampo-post-venta' ) : ( $is_overdue ? __( 'Vencida', 'agrocampo-post-venta' ) : __( 'Pendiente', 'agrocampo-post-venta' ) );
+                        $status_label     = $is_reviewed ? __( 'Revisada', 'agrocampo-post-venta' ) : ( $is_overdue ? __( 'Vencida', 'agrocampo-post-venta' ) : __( 'Pendiente', 'agrocampo-post-venta' ) );
                         $status_class     = $is_reviewed ? 'is-reviewed' : ( $is_overdue ? 'is-overdue' : 'is-pending' );
                         $row_classes      = array( 'agp-pv-table-row', $status_class );
                         if ( $has_history_note ) {
@@ -535,6 +572,9 @@ if ( $range_active ) {
                         }
 
                         $observaciones = AGP_PV_Plugin::normalize_observation_text( (string) ( $row['observaciones'] ?? '' ) );
+                        $created_at_raw = (string) ( $row['created_at'] ?? '' );
+                        $created_at_ts  = '' !== $created_at_raw ? strtotime( $created_at_raw ) : false;
+                        $age_label      = $created_at_ts ? sprintf( __( 'hace %s', 'agrocampo-post-venta' ), human_time_diff( $created_at_ts, current_time( 'timestamp' ) ) ) : '—';
 
                         $view_pdf_url = wp_nonce_url(
                             admin_url( 'admin.php?page=agp-pv-observations&view=' . $submission_id ),
@@ -547,7 +587,11 @@ if ( $range_active ) {
                             <td data-label="<?php esc_attr_e( 'Técnico', 'agrocampo-post-venta' ); ?>"><?php echo esc_html( (string) ( $row['tecnico'] ?? '' ) ); ?></td>
                             <td data-label="<?php esc_attr_e( 'Observación', 'agrocampo-post-venta' ); ?>">
                                 <?php if ( '' !== $observaciones ) : ?>
-                                    <div class="agp-pv-observation-full"><?php echo nl2br( esc_html( $observaciones ) ); ?></div>
+                                    <details class="agp-pv-observation-more">
+                                        <summary><?php esc_html_e( 'Ver detalle', 'agrocampo-post-venta' ); ?></summary>
+                                        <div class="agp-pv-observation-preview"><?php echo nl2br( esc_html( $observaciones ) ); ?></div>
+                                        <div class="agp-pv-observation-full"><?php echo nl2br( esc_html( $observaciones ) ); ?></div>
+                                    </details>
                                 <?php else : ?>
                                     <span class="agp-pv-empty-action">—</span>
                                 <?php endif; ?>
@@ -560,6 +604,9 @@ if ( $range_active ) {
                                     <?php endif; ?>
                                 </div>
                             </td>
+                            <td data-label="<?php esc_attr_e( 'Antigüedad', 'agrocampo-post-venta' ); ?>">
+                                <span class="agp-pv-age-pill"><?php echo esc_html( $age_label ); ?></span>
+                            </td>
                             <td data-label="<?php esc_attr_e( 'Revisado por', 'agrocampo-post-venta' ); ?>"><?php echo esc_html( (string) $reviewer ); ?></td>
                             <td data-label="<?php esc_attr_e( 'Fecha revisión', 'agrocampo-post-venta' ); ?>"><?php echo esc_html( $reviewed_at ); ?></td>
                             <td data-label="<?php esc_attr_e( 'PDF', 'agrocampo-post-venta' ); ?>">
@@ -571,7 +618,7 @@ if ( $range_active ) {
                             </td>
                             <td data-label="<?php esc_attr_e( 'Acción', 'agrocampo-post-venta' ); ?>">
                                 <?php if ( $is_public_read_only ) : ?>
-                                    <span class="agp-pv-empty-action"><?php esc_html_e( 'Solo lectura', 'agrocampo-post-venta' ); ?></span>
+                                    <span class="agp-pv-empty-action">—</span>
                                 <?php elseif ( $submission_id > 0 ) : ?>
                                     <div class="agp-pv-action-stack">
                                         <?php if ( ! $is_reviewed ) : ?>
@@ -618,6 +665,66 @@ if ( $range_active ) {
                 <?php endif; ?>
                 </tbody>
             </table>
+        </div>
+        <div class="agp-pv-observation-cards" aria-label="<?php esc_attr_e( 'Listado de observaciones', 'agrocampo-post-venta' ); ?>">
+            <?php if ( empty( $rows ) ) : ?>
+                <div class="agp-pv-empty-state">
+                    <strong><?php esc_html_e( 'No hay observaciones para esta búsqueda.', 'agrocampo-post-venta' ); ?></strong>
+                    <span><?php esc_html_e( 'Prueba con otro estado o cambia el período.', 'agrocampo-post-venta' ); ?></span>
+                </div>
+            <?php else : ?>
+                <?php foreach ( $rows as $row ) : ?>
+                    <?php
+                    $submission_id = absint( $row['id'] ?? 0 );
+                    $visible_id    = AGP_PV_DB::get_visible_report_id( $row );
+                    $user_id       = absint( $row['reviewed_by'] ?? 0 );
+                    $reviewer      = '—';
+                    if ( $user_id > 0 ) {
+                        $user     = get_user_by( 'id', $user_id );
+                        $reviewer = $user ? $user->display_name : '#' . $user_id;
+                    }
+                    $reviewed_at = (string) ( $row['reviewed_at'] ?? '' );
+                    if ( '' !== $reviewed_at && '0000-00-00 00:00:00' !== $reviewed_at ) {
+                        $reviewed_at = mysql2date( 'd/m/Y H:i', $reviewed_at );
+                    } else {
+                        $reviewed_at = '—';
+                    }
+                    $status           = (string) ( $row['review_status'] ?? '' );
+                    $is_reviewed      = AGP_PV_Plugin::is_reviewed_observation_status( $status );
+                    $is_overdue       = AGP_PV_Plugin::is_overdue_observation_row( $row );
+                    $has_history_note = $is_reviewed && AGP_PV_Plugin::has_appended_observation_notes( (string) ( $row['observaciones'] ?? '' ) );
+                    $status_label     = $is_reviewed ? __( 'Revisada', 'agrocampo-post-venta' ) : ( $is_overdue ? __( 'Vencida', 'agrocampo-post-venta' ) : __( 'Pendiente', 'agrocampo-post-venta' ) );
+                    $status_class     = $is_reviewed ? 'is-reviewed' : ( $is_overdue ? 'is-overdue' : 'is-pending' );
+                    $observaciones    = AGP_PV_Plugin::normalize_observation_text( (string) ( $row['observaciones'] ?? '' ) );
+                    $created_at_raw   = (string) ( $row['created_at'] ?? '' );
+                    $created_at_ts    = '' !== $created_at_raw ? strtotime( $created_at_raw ) : false;
+                    $age_label        = $created_at_ts ? sprintf( __( 'hace %s', 'agrocampo-post-venta' ), human_time_diff( $created_at_ts, current_time( 'timestamp' ) ) ) : '—';
+                    ?>
+                    <article class="agp-pv-observation-card <?php echo esc_attr( $status_class ); ?>">
+                        <header class="agp-pv-observation-card__head">
+                            <span class="agp-pv-id-chip">#<?php echo esc_html( (string) $visible_id ); ?></span>
+                            <span class="agp-pv-status-pill <?php echo esc_attr( $status_class ); ?>"><?php echo esc_html( $status_label ); ?></span>
+                            <span class="agp-pv-age-pill"><?php echo esc_html( $age_label ); ?></span>
+                        </header>
+                        <div class="agp-pv-observation-card__meta">
+                            <strong><?php echo esc_html( (string) ( $row['cliente'] ?? '' ) ); ?></strong>
+                            <span><?php echo esc_html( (string) ( $row['tecnico'] ?? '' ) ); ?></span>
+                            <span><?php echo esc_html( sprintf( __( 'Revisado por: %s', 'agrocampo-post-venta' ), $reviewer ) ); ?></span>
+                            <span><?php echo esc_html( sprintf( __( 'Fecha revisión: %s', 'agrocampo-post-venta' ), $reviewed_at ) ); ?></span>
+                        </div>
+                        <?php if ( '' !== $observaciones ) : ?>
+                            <details class="agp-pv-observation-more">
+                                <summary><?php esc_html_e( 'Ver detalle', 'agrocampo-post-venta' ); ?></summary>
+                                <div class="agp-pv-observation-preview"><?php echo nl2br( esc_html( $observaciones ) ); ?></div>
+                                <div class="agp-pv-observation-full"><?php echo nl2br( esc_html( $observaciones ) ); ?></div>
+                            </details>
+                        <?php endif; ?>
+                        <?php if ( $has_history_note ) : ?>
+                            <span class="agp-pv-status-pill is-note-update"><?php esc_html_e( 'Nueva observación', 'agrocampo-post-venta' ); ?></span>
+                        <?php endif; ?>
+                    </article>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
 
         <div class="agp-pv-table-footer">

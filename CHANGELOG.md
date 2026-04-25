@@ -1,3 +1,12 @@
+## [1.26.0] - 2026-04-25
+- `/post-venta-observaciones/`: header reestructurado con título `Observaciones Post Venta`, subtítulo compacto de contexto y detalle largo de período movido a bloque colapsable.
+- acceso temporal público: aviso global de solo lectura ahora más compacto y se elimina texto repetido `Solo lectura` por fila en columna de acción.
+- jerarquía de navegación: tabs `Todas/Pendientes/Resueltas/Vencidas` quedan como bloque principal y filtros se muestran debajo.
+- filtros fecha: se mantiene lógica actual y se consolida UX con chips rápidos + fechas `Desde/Hasta` dentro de bloque `Avanzado`.
+- tabla/listado: observación con vista previa truncada (3 líneas) + `Ver detalle`, nueva antigüedad `hace X días` y orden visual por prioridad `vencidas > pendientes > resueltas`.
+- badges estado: ajuste visual a paleta suave (pendiente ámbar suave, vencida rojo suave, revisada verde suave).
+- móvil: listado de observaciones en cards (sin tabla apretada), preservando filtros/permisos/comportamiento de solo lectura.
+
 ## [1.25.6] - 2026-04-25
 - observaciones standalone (`/post-venta-observaciones/`): nuevo acceso temporal público con token por query param `agp_public_token`, validado contra hash + expiración y habilitado solo en modo GET de solo lectura.
 - seguridad acceso temporal: se bloquea cualquier POST desde sesión pública sin `manage_options`, manteniendo intacto el acceso normal autenticado de administrador.
