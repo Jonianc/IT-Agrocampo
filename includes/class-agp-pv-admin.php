@@ -35,6 +35,7 @@ class AGP_PV_Admin {
         add_action( 'admin_post_agp_pv_validate_lubricants_catalog', array( $this, 'handle_validate_lubricants_catalog' ) );
         add_action( 'admin_post_agp_pv_export_lubricants_catalog', array( $this, 'handle_export_lubricants_catalog' ) );
         add_action( 'admin_post_agp_pv_export_lubricants_catalog_template', array( $this, 'handle_export_lubricants_catalog_template' ) );
+        add_action( 'admin_post_agp_pv_restore_lubricants_catalog_base', array( $this, 'handle_restore_lubricants_catalog_base' ) );
         add_action( 'admin_post_agp_pv_export_legacy_csv', array( $this, 'handle_export_legacy_csv' ) );
         add_action( 'admin_post_agp_pv_export_observations_report', array( $this, 'handle_export_observations_report' ) );
         add_action( 'admin_post_agp_pv_delete_all_submissions', array( $this, 'handle_delete_all_submissions' ) );
@@ -342,6 +343,7 @@ class AGP_PV_Admin {
             $quick_types_lines[] = $line;
         }
         $lubricants_catalog_count = count( AGP_PV_Plugin::get_lubricants_catalog() );
+        $lubricants_catalog_status = AGP_PV_Plugin::get_lubricants_catalog_status();
 
         echo '<section class="card agp-pv-card">';
         echo '<h2>' . esc_html__( 'Lubricantes', 'agrocampo-post-venta' ) . '</h2>';
@@ -440,7 +442,13 @@ class AGP_PV_Admin {
         echo '<div class="agp-pv-lubricants-catalog-box">';
         echo '<h3>' . esc_html__( 'Catálogo', 'agrocampo-post-venta' ) . '</h3>';
         echo '<p class="description">' . esc_html__( 'Gestiona catálogo: importar, exportar, validar y descargar plantilla.', 'agrocampo-post-venta' ) . '</p>';
-        echo '<p><span class="agp-pv-status ' . ( $lubricants_catalog_count > 0 ? 'agp-pv-status-ready' : 'agp-pv-status-pending' ) . '">' . ( $lubricants_catalog_count > 0 ? esc_html__( 'Catálogo cargado', 'agrocampo-post-venta' ) : esc_html__( 'Catálogo vacío', 'agrocampo-post-venta' ) ) . '</span> ' . sprintf( esc_html__( '%d ítems', 'agrocampo-post-venta' ), (int) $lubricants_catalog_count ) . '</p>';
+        $is_persistent_source = 'persistent' === (string) $lubricants_catalog_status['source'];
+        $catalog_status_label = $is_persistent_source ? __( 'Catálogo persistente cargado', 'agrocampo-post-venta' ) : __( 'Catálogo base en uso (fallback)', 'agrocampo-post-venta' );
+        echo '<p><span class="agp-pv-status ' . ( $lubricants_catalog_count > 0 ? 'agp-pv-status-ready' : 'agp-pv-status-pending' ) . '">' . esc_html( $catalog_status_label ) . '</span> ' . sprintf( esc_html__( '%d ítems', 'agrocampo-post-venta' ), (int) $lubricants_catalog_count ) . '</p>';
+        echo '<p class="description">' . esc_html__( 'Ruta activa:', 'agrocampo-post-venta' ) . ' <code>' . esc_html( (string) $lubricants_catalog_status['path'] ) . '</code></p>';
+        if ( '' !== (string) $lubricants_catalog_status['modified_gmt'] ) {
+            echo '<p class="description">' . sprintf( esc_html__( 'Modificado (UTC): %s', 'agrocampo-post-venta' ), esc_html( (string) $lubricants_catalog_status['modified_gmt'] ) ) . '</p>';
+        }
         echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" enctype="multipart/form-data">';
         echo '<input type="hidden" name="action" value="agp_pv_import_lubricants_catalog">';
         wp_nonce_field( 'agp_pv_import_lubricants_catalog' );
@@ -464,6 +472,13 @@ class AGP_PV_Admin {
         echo '<a class="button button-secondary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=agp_pv_export_lubricants_catalog' ), 'agp_pv_export_lubricants_catalog' ) ) . '">' . esc_html__( 'Exportar catálogo actual', 'agrocampo-post-venta' ) . '</a> ';
         echo '<a class="button button-secondary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=agp_pv_export_lubricants_catalog_template' ), 'agp_pv_export_lubricants_catalog_template' ) ) . '">' . esc_html__( 'Descargar plantilla JSON', 'agrocampo-post-venta' ) . '</a>';
         echo '</p>';
+        echo '<div class="agp-pv-inline-form" style="margin-top:10px;">';
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+        echo '<input type="hidden" name="action" value="agp_pv_restore_lubricants_catalog_base">';
+        wp_nonce_field( 'agp_pv_restore_lubricants_catalog_base' );
+        echo '<button type="submit" class="button button-secondary">' . esc_html__( 'Restaurar catálogo base', 'agrocampo-post-venta' ) . '</button>';
+        echo '</form>';
+        echo '</div>';
         echo '</div>';
         echo '</section>';
 
@@ -700,6 +715,13 @@ class AGP_PV_Admin {
             if ( $skipped > 0 ) {
                 $class = 'notice-warning';
             }
+        }
+        if ( 'restore_catalog_completed' === $notice ) {
+            $message = __( 'Catálogo base restaurado en ruta persistente.', 'agrocampo-post-venta' );
+        }
+        if ( 'restore_catalog_failed' === $notice ) {
+            $message = sanitize_text_field( wp_unslash( $_GET['agp_pv_notice_message'] ?? __( 'No se pudo restaurar el catálogo base.', 'agrocampo-post-venta' ) ) );
+            $class = 'notice-error';
         }
         if ( 'import_completed' === $notice ) {
             $imported = isset( $_GET['agp_pv_imported'] ) ? absint( $_GET['agp_pv_imported'] ) : 0;
@@ -2194,6 +2216,76 @@ class AGP_PV_Admin {
         exit;
     }
 
+    public function handle_restore_lubricants_catalog_base(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ) );
+        }
+
+        check_admin_referer( 'agp_pv_restore_lubricants_catalog_base' );
+
+        $base_path = AGP_PV_Plugin::get_lubricants_base_catalog_path();
+        if ( ! file_exists( $base_path ) ) {
+            wp_safe_redirect(
+                admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=restore_catalog_failed&agp_pv_notice_message=' . rawurlencode( __( 'No existe el catálogo base del plugin.', 'agrocampo-post-venta' ) ) )
+            );
+            exit;
+        }
+
+        $base_contents = file_get_contents( $base_path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+        if ( false === $base_contents || '' === trim( $base_contents ) ) {
+            wp_safe_redirect(
+                admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=restore_catalog_failed&agp_pv_notice_message=' . rawurlencode( __( 'No se pudo leer el catálogo base.', 'agrocampo-post-venta' ) ) )
+            );
+            exit;
+        }
+
+        $decoded = json_decode( $base_contents, true );
+        if ( ! is_array( $decoded ) ) {
+            wp_safe_redirect(
+                admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=restore_catalog_failed&agp_pv_notice_message=' . rawurlencode( __( 'El catálogo base del plugin es inválido.', 'agrocampo-post-venta' ) ) )
+            );
+            exit;
+        }
+
+        $items = array();
+        foreach ( $decoded as $row ) {
+            if ( ! is_array( $row ) ) {
+                continue;
+            }
+            $type = sanitize_text_field( (string) ( $row['type'] ?? '' ) );
+            $product = sanitize_text_field( (string) ( $row['product'] ?? '' ) );
+            if ( '' === $type || '' === $product ) {
+                continue;
+            }
+            $items[] = array(
+                'type' => $type,
+                'product' => $product,
+                'code' => sanitize_text_field( (string) ( $row['code'] ?? '' ) ),
+                'presentation' => sanitize_text_field( (string) ( $row['presentation'] ?? '' ) ),
+                'description' => sanitize_text_field( (string) ( $row['description'] ?? '' ) ),
+                'unit' => sanitize_text_field( (string) ( $row['unit'] ?? '' ) ),
+            );
+        }
+
+        if ( empty( $items ) ) {
+            wp_safe_redirect(
+                admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=restore_catalog_failed&agp_pv_notice_message=' . rawurlencode( __( 'El catálogo base del plugin es inválido.', 'agrocampo-post-venta' ) ) )
+            );
+            exit;
+        }
+
+        $write = $this->write_lubricants_catalog_file( $items );
+        if ( '' !== $write['error'] ) {
+            wp_safe_redirect(
+                admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=restore_catalog_failed&agp_pv_notice_message=' . rawurlencode( $write['error'] ) )
+            );
+            exit;
+        }
+
+        wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=restore_catalog_completed' ) );
+        exit;
+    }
+
     /**
      * @return array{items: array<int, array<string, string>>, skipped: int, error: string}
      */
@@ -2300,13 +2392,29 @@ class AGP_PV_Admin {
             );
         }
 
-        $path = AGP_PV_PLUGIN_DIR . 'data/aceites-catalog.json';
+        $catalog_info = AGP_PV_Plugin::get_lubricants_persistent_catalog_path();
+        $path = (string) $catalog_info['path'];
+        if ( '' === $path ) {
+            return array(
+                'error' => __( 'No se pudo resolver la ruta persistente del catálogo.', 'agrocampo-post-venta' ),
+            );
+        }
+
+        $dir = dirname( $path );
+        if ( ! wp_mkdir_p( $dir ) ) {
+            return array(
+                'error' => __( 'No se pudo crear la carpeta persistente del catálogo.', 'agrocampo-post-venta' ),
+            );
+        }
+
         $written = file_put_contents( $path, $encoded . "\n" ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
         if ( false === $written ) {
             return array(
                 'error' => __( 'No se pudo escribir el archivo de catálogo.', 'agrocampo-post-venta' ),
             );
         }
+
+        AGP_PV_Plugin::clear_lubricants_catalog_cache();
 
         return array(
             'error' => '',

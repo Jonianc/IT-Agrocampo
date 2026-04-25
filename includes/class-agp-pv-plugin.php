@@ -11,6 +11,9 @@ class AGP_PV_Plugin {
     private const VERSION_OPTION_KEY = 'agp_pv_plugin_version';
     private const REWRITE_VERSION_OPTION_KEY = 'agp_pv_rewrite_version';
     private const REWRITE_VERSION = '2';
+    private const LUBRICANTS_BASE_CATALOG_RELATIVE_PATH = 'data/aceites-catalog.json';
+    private const LUBRICANTS_PERSISTENT_DIR = 'agrocampo-postventa';
+    private const LUBRICANTS_PERSISTENT_FILENAME = 'catalogo.json';
 
     private function __construct() {
         add_action( 'init', array( $this, 'register_rewrite' ), 5 );
@@ -154,22 +157,166 @@ class AGP_PV_Plugin {
             return self::$lubricants_catalog;
         }
 
-        $path = AGP_PV_PLUGIN_DIR . 'data/aceites-catalog.json';
-        if ( ! file_exists( $path ) ) {
-            self::$lubricants_catalog = array();
-            return self::$lubricants_catalog;
+        $persist_info = self::get_lubricants_persistent_catalog_path();
+        $catalog      = self::read_lubricants_catalog_file( $persist_info['path'] );
+
+        if ( empty( $catalog ) ) {
+            $catalog = self::read_lubricants_catalog_file( self::get_lubricants_base_catalog_path() );
+        }
+
+        self::$lubricants_catalog = $catalog;
+        return self::$lubricants_catalog;
+    }
+
+    public static function clear_lubricants_catalog_cache(): void {
+        self::$lubricants_catalog = null;
+    }
+
+    /**
+     * @return array{path:string,exists:bool,writable:bool,base_dir:string}
+     */
+    public static function get_lubricants_persistent_catalog_path(): array {
+        $uploads = wp_upload_dir();
+        $base_dir = (string) ( $uploads['basedir'] ?? '' );
+        if ( '' === $base_dir ) {
+            return array(
+                'path' => '',
+                'exists' => false,
+                'writable' => false,
+                'base_dir' => '',
+            );
+        }
+
+        $dir = trailingslashit( $base_dir ) . self::LUBRICANTS_PERSISTENT_DIR;
+        $path = trailingslashit( $dir ) . self::LUBRICANTS_PERSISTENT_FILENAME;
+
+        return array(
+            'path' => $path,
+            'exists' => file_exists( $path ),
+            'writable' => file_exists( $dir ) ? is_writable( $dir ) : is_writable( $base_dir ),
+            'base_dir' => $base_dir,
+        );
+    }
+
+    public static function get_lubricants_base_catalog_path(): string {
+        return AGP_PV_PLUGIN_DIR . self::LUBRICANTS_BASE_CATALOG_RELATIVE_PATH;
+    }
+
+    /**
+     * @return array{created:bool,error:string}
+     */
+    public static function ensure_persistent_lubricants_catalog(): array {
+        $info = self::get_lubricants_persistent_catalog_path();
+        $path = $info['path'];
+        if ( '' === $path ) {
+            return array(
+                'created' => false,
+                'error' => __( 'No se pudo resolver la ruta de uploads para el catálogo persistente.', 'agrocampo-post-venta' ),
+            );
+        }
+
+        if ( file_exists( $path ) ) {
+            return array(
+                'created' => false,
+                'error' => '',
+            );
+        }
+
+        $dir = dirname( $path );
+        if ( ! wp_mkdir_p( $dir ) ) {
+            return array(
+                'created' => false,
+                'error' => __( 'No se pudo crear la carpeta persistente del catálogo en uploads.', 'agrocampo-post-venta' ),
+            );
+        }
+
+        $base_path = self::get_lubricants_base_catalog_path();
+        if ( ! file_exists( $base_path ) ) {
+            return array(
+                'created' => false,
+                'error' => __( 'No existe catálogo base del plugin para inicializar el persistente.', 'agrocampo-post-venta' ),
+            );
+        }
+
+        $base_contents = file_get_contents( $base_path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+        if ( false === $base_contents || '' === trim( $base_contents ) ) {
+            return array(
+                'created' => false,
+                'error' => __( 'El catálogo base del plugin está vacío o no se pudo leer.', 'agrocampo-post-venta' ),
+            );
+        }
+
+        $catalog = self::read_lubricants_catalog_file( $base_path );
+        if ( empty( $catalog ) ) {
+            return array(
+                'created' => false,
+                'error' => __( 'El catálogo base del plugin es inválido.', 'agrocampo-post-venta' ),
+            );
+        }
+
+        $written = file_put_contents( $path, $base_contents ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+        if ( false === $written ) {
+            return array(
+                'created' => false,
+                'error' => __( 'No se pudo crear el catálogo persistente en uploads.', 'agrocampo-post-venta' ),
+            );
+        }
+
+        self::clear_lubricants_catalog_cache();
+
+        return array(
+            'created' => true,
+            'error' => '',
+        );
+    }
+
+    /**
+     * @return array{source:string,path:string,exists:bool,valid:bool,item_count:int,modified_gmt:string}
+     */
+    public static function get_lubricants_catalog_status(): array {
+        $persist_info = self::get_lubricants_persistent_catalog_path();
+        $persist_path = (string) $persist_info['path'];
+        $persist_catalog = self::read_lubricants_catalog_file( $persist_path );
+        if ( ! empty( $persist_catalog ) ) {
+            return array(
+                'source' => 'persistent',
+                'path' => $persist_path,
+                'exists' => file_exists( $persist_path ),
+                'valid' => true,
+                'item_count' => count( $persist_catalog ),
+                'modified_gmt' => self::format_file_modified_gmt( $persist_path ),
+            );
+        }
+
+        $base_path = self::get_lubricants_base_catalog_path();
+        $base_catalog = self::read_lubricants_catalog_file( $base_path );
+
+        return array(
+            'source' => 'base',
+            'path' => $base_path,
+            'exists' => file_exists( $base_path ),
+            'valid' => ! empty( $base_catalog ),
+            'item_count' => count( $base_catalog ),
+            'modified_gmt' => self::format_file_modified_gmt( $base_path ),
+        );
+    }
+
+    /**
+     * @return array<int,array<string,string>>
+     */
+    private static function read_lubricants_catalog_file( string $path ): array {
+        if ( '' === $path || ! file_exists( $path ) ) {
+            return array();
         }
 
         $contents = file_get_contents( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
         if ( false === $contents || '' === trim( $contents ) ) {
-            self::$lubricants_catalog = array();
-            return self::$lubricants_catalog;
+            return array();
         }
 
         $decoded = json_decode( $contents, true );
         if ( ! is_array( $decoded ) ) {
-            self::$lubricants_catalog = array();
-            return self::$lubricants_catalog;
+            return array();
         }
 
         $catalog = array();
@@ -194,8 +341,20 @@ class AGP_PV_Plugin {
             );
         }
 
-        self::$lubricants_catalog = $catalog;
-        return self::$lubricants_catalog;
+        return $catalog;
+    }
+
+    private static function format_file_modified_gmt( string $path ): string {
+        if ( '' === $path || ! file_exists( $path ) ) {
+            return '';
+        }
+
+        $timestamp = filemtime( $path );
+        if ( false === $timestamp ) {
+            return '';
+        }
+
+        return gmdate( 'Y-m-d H:i:s', (int) $timestamp );
     }
 
     /**
@@ -763,6 +922,7 @@ class AGP_PV_Plugin {
 
     public static function activate(): void {
         AGP_PV_DB::maybe_upgrade();
+        self::ensure_persistent_lubricants_catalog();
         self::schedule_notification_events();
         self::register_rewrite_rules();
         flush_rewrite_rules();
@@ -777,6 +937,7 @@ class AGP_PV_Plugin {
 
     public function maybe_upgrade(): void {
         AGP_PV_DB::maybe_upgrade();
+        self::ensure_persistent_lubricants_catalog();
 
         $installed_version = (string) get_option( self::VERSION_OPTION_KEY, '' );
         if ( '' === $installed_version || version_compare( $installed_version, AGP_PV_VERSION, '<' ) ) {

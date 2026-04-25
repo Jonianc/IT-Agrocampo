@@ -1,3 +1,12 @@
+## [1.25.5] - 2026-04-25
+- catálogo de lubricantes: nueva ruta persistente en uploads usando `wp_upload_dir()` (`/wp-content/uploads/agrocampo-postventa/catalogo.json`) como fuente principal.
+- activación/upgrade del plugin: si no existe catálogo persistente, se inicializa copiando el JSON base incluido en el plugin; si ya existe, no se sobrescribe.
+- frontend/formulario: `lubricantsCatalog` ahora prioriza el catálogo persistente; si no existe o es inválido, aplica fallback automático al catálogo base del plugin.
+- ajustes > lubricantes > catálogo: importación/reemplazo ahora escribe en la ruta persistente (manteniendo validación JSON previa y handlers/nonces existentes).
+- ajustes > lubricantes > catálogo: se muestra estado con fuente activa (persistente/fallback), ruta, fecha de modificación UTC y cantidad de ítems.
+- ajustes > lubricantes > catálogo: nuevo botón opcional `Restaurar catálogo base` para reescribir el persistente desde el JSON base del plugin.
+- alcance acotado: no se elimina catálogo persistente al desactivar; sin opción de desinstalación explícita activa, tampoco se borra automáticamente.
+
 ## [1.25.4] - 2026-04-21
 - ajustes (`Ajustes > Branding del PDF`): nuevo campo `Firma fija Jefe de Taller` con Media Library (seleccionar/reemplazar/quitar), persistido en option `agp_pv_jefe_taller_firma_attachment_id`.
 - validación submit AJAX (Garantía): `firma_jefe_taller` ahora se acepta por firma enviada en el informe o por firma fija configurada; solo falla si no existe ninguna.
