@@ -28,6 +28,9 @@ class AGP_PV_Admin {
         add_action( 'admin_post_agp_pv_send_summary_now', array( $this, 'handle_send_summary_now' ) );
         add_action( 'admin_post_agp_pv_save_recipients', array( $this, 'handle_save_recipients' ) );
         add_action( 'admin_post_agp_pv_save_notifications_settings', array( $this, 'handle_save_notifications_settings' ) );
+        add_action( 'admin_post_agp_pv_save_public_observations_access', array( $this, 'handle_save_public_observations_access' ) );
+        add_action( 'admin_post_agp_pv_generate_public_observations_token', array( $this, 'handle_generate_public_observations_token' ) );
+        add_action( 'admin_post_agp_pv_revoke_public_observations_token', array( $this, 'handle_revoke_public_observations_token' ) );
         add_action( 'admin_post_agp_pv_save_technicians', array( $this, 'handle_save_technicians' ) );
         add_action( 'admin_post_agp_pv_save_logo', array( $this, 'handle_save_logo' ) );
         add_action( 'admin_post_agp_pv_import_legacy_csv', array( $this, 'handle_import_legacy_csv' ) );
@@ -231,6 +234,26 @@ class AGP_PV_Admin {
         $recipients = AGP_PV_Email::get_configured_recipients();
         $recipients_value = implode( ', ', $recipients );
         $technicians_value = implode( "\n", AGP_PV_Plugin::get_technicians() );
+        $public_observations_access = AGP_PV_Plugin::get_public_observations_access_settings();
+        $public_access_enabled = ! empty( $public_observations_access['enabled'] );
+        $public_access_expires_at = (string) ( $public_observations_access['expires_at_gmt'] ?? '' );
+        $public_access_expires_ts = '' !== $public_access_expires_at ? strtotime( $public_access_expires_at . ' UTC' ) : false;
+        $public_access_is_expired = false === $public_access_expires_ts || $public_access_expires_ts < time();
+        $public_access_token_plain = isset( $_GET['agp_pv_public_token_plain'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['agp_pv_public_token_plain'] ) ) : '';
+        $public_access_duration_minutes = isset( $_GET['agp_pv_public_duration'] ) ? absint( wp_unslash( (string) $_GET['agp_pv_public_duration'] ) ) : 60;
+        if ( $public_access_duration_minutes < 5 ) {
+            $public_access_duration_minutes = 60;
+        }
+        $public_access_duration_minutes = min( 10080, $public_access_duration_minutes );
+        $public_access_link = '';
+        if ( '' !== $public_access_token_plain ) {
+            $public_access_link = add_query_arg(
+                array(
+                    'agp_public_token' => $public_access_token_plain,
+                ),
+                AGP_PV_Plugin::observations_standalone_url()
+            );
+        }
 
         echo '<div class="wrap agp-pv-admin">';
         echo '<h1>' . esc_html__( 'Ajustes Informe Técnico', 'agrocampo-post-venta' ) . '</h1>';
@@ -569,6 +592,40 @@ class AGP_PV_Admin {
         echo '</section>';
 
         echo '<section class="card agp-pv-card">';
+        echo '<h2>' . esc_html__( 'Acceso temporal público', 'agrocampo-post-venta' ) . '</h2>';
+        echo '<p class="description">' . esc_html__( 'Genera un enlace temporal de solo lectura para revisar la vista de observaciones sin login.', 'agrocampo-post-venta' ) . '</p>';
+        echo '<p><span class="agp-pv-status ' . ( $public_access_enabled && ! $public_access_is_expired ? 'agp-pv-status-ready' : 'agp-pv-status-pending' ) . '">' . ( $public_access_enabled && ! $public_access_is_expired ? esc_html__( 'Acceso temporal activo', 'agrocampo-post-venta' ) : esc_html__( 'Acceso temporal inactivo', 'agrocampo-post-venta' ) ) . '</span></p>';
+        if ( '' !== $public_access_expires_at ) {
+            echo '<p class="description">' . sprintf( esc_html__( 'Vence (UTC): %s', 'agrocampo-post-venta' ), esc_html( $public_access_expires_at ) ) . '</p>';
+        }
+
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="agp-pv-inline-form">';
+        echo '<input type="hidden" name="action" value="agp_pv_save_public_observations_access">';
+        wp_nonce_field( 'agp_pv_save_public_observations_access' );
+        echo '<p><label><input type="checkbox" name="agp_pv_public_access_enabled" value="1" ' . checked( $public_access_enabled, true, false ) . '> ' . esc_html__( 'Activar acceso temporal público', 'agrocampo-post-venta' ) . '</label></p>';
+        echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Guardar estado', 'agrocampo-post-venta' ) . '</button></p>';
+        echo '</form>';
+
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="agp-pv-inline-form">';
+        echo '<input type="hidden" name="action" value="agp_pv_generate_public_observations_token">';
+        wp_nonce_field( 'agp_pv_generate_public_observations_token' );
+        echo '<p><label for="agp-pv-public-access-duration"><strong>' . esc_html__( 'Duración del enlace (minutos)', 'agrocampo-post-venta' ) . '</strong></label><br>';
+        echo '<input type="number" min="5" max="10080" id="agp-pv-public-access-duration" name="agp_pv_public_access_duration" value="' . esc_attr( (string) $public_access_duration_minutes ) . '"></p>';
+        echo '<p><button type="submit" class="button button-secondary">' . esc_html__( 'Generar nuevo token', 'agrocampo-post-venta' ) . '</button></p>';
+        echo '</form>';
+
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="agp-pv-inline-form">';
+        echo '<input type="hidden" name="action" value="agp_pv_revoke_public_observations_token">';
+        wp_nonce_field( 'agp_pv_revoke_public_observations_token' );
+        echo '<p><button type="submit" class="button button-secondary">' . esc_html__( 'Revocar token actual', 'agrocampo-post-venta' ) . '</button></p>';
+        echo '</form>';
+
+        echo '<p><label for="agp-pv-public-access-link"><strong>' . esc_html__( 'Enlace copiable', 'agrocampo-post-venta' ) . '</strong></label><br>';
+        echo '<input type="text" readonly class="large-text code" id="agp-pv-public-access-link" value="' . esc_attr( $public_access_link ) . '" placeholder="' . esc_attr__( 'Genera un nuevo token para obtener el enlace.', 'agrocampo-post-venta' ) . '"></p>';
+        echo '<p class="description">' . esc_html__( 'El token solo se muestra al generarlo; se guarda únicamente su hash.', 'agrocampo-post-venta' ) . '</p>';
+        echo '</section>';
+
+        echo '<section class="card agp-pv-card">';
         echo '<h2>' . esc_html__( 'Técnicos', 'agrocampo-post-venta' ) . '</h2>';
         echo '<p>' . esc_html__( 'Gestiona los técnicos disponibles en el selector del formulario (uno por línea).', 'agrocampo-post-venta' ) . '</p>';
         echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
@@ -650,6 +707,15 @@ class AGP_PV_Admin {
         if ( 'notifications_saved' === $notice ) {
             $message = __( 'Notificaciones e informes actualizados.', 'agrocampo-post-venta' );
         }
+        if ( 'public_access_saved' === $notice ) {
+            $message = __( 'Acceso temporal público actualizado.', 'agrocampo-post-venta' );
+        }
+        if ( 'public_access_generated' === $notice ) {
+            $message = __( 'Enlace temporal generado correctamente.', 'agrocampo-post-venta' );
+        }
+        if ( 'public_access_revoked' === $notice ) {
+            $message = __( 'Token temporal revocado.', 'agrocampo-post-venta' );
+        }
         if ( 'summary_sent' === $notice ) {
             $period = sanitize_key( wp_unslash( $_GET['agp_pv_notice_period'] ?? 'daily' ) );
             $message = 'weekly' === $period ? __( 'Resumen semanal enviado manualmente.', 'agrocampo-post-venta' ) : __( 'Resumen diario enviado manualmente.', 'agrocampo-post-venta' );
@@ -699,6 +765,10 @@ class AGP_PV_Admin {
         }
         if ( 'import_catalog_failed' === $notice ) {
             $message = sanitize_text_field( wp_unslash( $_GET['agp_pv_notice_message'] ?? '' ) );
+            $class = 'notice-error';
+        }
+        if ( 'public_access_failed' === $notice ) {
+            $message = sanitize_text_field( wp_unslash( $_GET['agp_pv_notice_message'] ?? __( 'No se pudo actualizar el acceso temporal público.', 'agrocampo-post-venta' ) ) );
             $class = 'notice-error';
         }
         if ( 'import_catalog_completed' === $notice ) {
@@ -2013,6 +2083,85 @@ class AGP_PV_Admin {
         AGP_PV_Plugin::schedule_notification_events();
 
         wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=notifications_saved' ) );
+        exit;
+    }
+
+    public function handle_save_public_observations_access(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ) );
+        }
+
+        check_admin_referer( 'agp_pv_save_public_observations_access' );
+
+        $enabled = ! empty( $_POST['agp_pv_public_access_enabled'] ) ? 1 : 0;
+        $settings = AGP_PV_Plugin::get_public_observations_access_settings();
+        AGP_PV_Plugin::update_public_observations_access_settings(
+            array(
+                'enabled' => $enabled,
+                'token_hash' => (string) ( $settings['token_hash'] ?? '' ),
+                'expires_at_gmt' => (string) ( $settings['expires_at_gmt'] ?? '' ),
+            )
+        );
+
+        wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=public_access_saved' ) );
+        exit;
+    }
+
+    public function handle_generate_public_observations_token(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ) );
+        }
+
+        check_admin_referer( 'agp_pv_generate_public_observations_token' );
+
+        $duration_minutes = absint( wp_unslash( (string) ( $_POST['agp_pv_public_access_duration'] ?? 60 ) ) );
+        if ( $duration_minutes < 5 ) {
+            $duration_minutes = 5;
+        }
+        $duration_minutes = min( 10080, $duration_minutes );
+
+        try {
+            $token = bin2hex( random_bytes( 32 ) );
+        } catch ( Exception $exception ) {
+            wp_safe_redirect(
+                admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=public_access_failed&agp_pv_notice_message=' . rawurlencode( __( 'No se pudo generar un token seguro.', 'agrocampo-post-venta' ) ) )
+            );
+            exit;
+        }
+
+        $expires_at_gmt = gmdate( 'Y-m-d H:i:s', time() + ( $duration_minutes * MINUTE_IN_SECONDS ) );
+        AGP_PV_Plugin::update_public_observations_access_settings(
+            array(
+                'enabled' => 1,
+                'token_hash' => wp_hash_password( $token ),
+                'expires_at_gmt' => $expires_at_gmt,
+            )
+        );
+
+        wp_safe_redirect(
+            admin_url(
+                'admin.php?page=agp-pv-settings&agp_pv_notice=public_access_generated&agp_pv_public_token_plain=' . rawurlencode( $token ) . '&agp_pv_public_duration=' . $duration_minutes
+            )
+        );
+        exit;
+    }
+
+    public function handle_revoke_public_observations_token(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ) );
+        }
+
+        check_admin_referer( 'agp_pv_revoke_public_observations_token' );
+
+        AGP_PV_Plugin::update_public_observations_access_settings(
+            array(
+                'enabled' => 0,
+                'token_hash' => '',
+                'expires_at_gmt' => '',
+            )
+        );
+
+        wp_safe_redirect( admin_url( 'admin.php?page=agp-pv-settings&agp_pv_notice=public_access_revoked' ) );
         exit;
     }
 

@@ -196,6 +196,12 @@ body.agp-pv-observations-standalone {
     border: 1px solid #f3c3be;
 }
 
+.agp-pv-notice-public {
+    background: #eef4ff;
+    color: #1f3f8f;
+    border: 1px solid #cad9ff;
+}
+
 .agp-pv-filters-panel {
     margin-bottom: 20px;
 }

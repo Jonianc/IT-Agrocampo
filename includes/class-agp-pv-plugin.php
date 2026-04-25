@@ -11,6 +11,7 @@ class AGP_PV_Plugin {
     private const VERSION_OPTION_KEY = 'agp_pv_plugin_version';
     private const REWRITE_VERSION_OPTION_KEY = 'agp_pv_rewrite_version';
     private const REWRITE_VERSION = '2';
+    private const PUBLIC_OBSERVATIONS_ACCESS_OPTION_KEY = 'agp_pv_public_observations_access';
     private const LUBRICANTS_BASE_CATALOG_RELATIVE_PATH = 'data/aceites-catalog.json';
     private const LUBRICANTS_PERSISTENT_DIR = 'agrocampo-postventa';
     private const LUBRICANTS_PERSISTENT_FILENAME = 'catalogo.json';
@@ -989,6 +990,94 @@ class AGP_PV_Plugin {
         return home_url( '/post-venta-observaciones/' );
     }
 
+    /**
+     * @return array{enabled:int,token_hash:string,expires_at_gmt:string}
+     */
+    public static function get_public_observations_access_settings(): array {
+        $stored = get_option( self::PUBLIC_OBSERVATIONS_ACCESS_OPTION_KEY, array() );
+        if ( ! is_array( $stored ) ) {
+            $stored = array();
+        }
+
+        $enabled = ! empty( $stored['enabled'] ) ? 1 : 0;
+        $token_hash = isset( $stored['token_hash'] ) ? (string) $stored['token_hash'] : '';
+        $expires_at_gmt = isset( $stored['expires_at_gmt'] ) ? (string) $stored['expires_at_gmt'] : '';
+
+        if ( '' !== $expires_at_gmt ) {
+            $expires_ts = strtotime( $expires_at_gmt . ' UTC' );
+            if ( false === $expires_ts ) {
+                $expires_at_gmt = '';
+            } else {
+                $expires_at_gmt = gmdate( 'Y-m-d H:i:s', (int) $expires_ts );
+            }
+        }
+
+        return array(
+            'enabled' => $enabled,
+            'token_hash' => $token_hash,
+            'expires_at_gmt' => $expires_at_gmt,
+        );
+    }
+
+    /**
+     * @param array{enabled?:int,token_hash?:string,expires_at_gmt?:string} $settings
+     */
+    public static function update_public_observations_access_settings( array $settings ): void {
+        $current = self::get_public_observations_access_settings();
+        $normalized = array(
+            'enabled' => ! empty( $settings['enabled'] ) ? 1 : 0,
+            'token_hash' => isset( $settings['token_hash'] ) ? (string) $settings['token_hash'] : (string) $current['token_hash'],
+            'expires_at_gmt' => isset( $settings['expires_at_gmt'] ) ? (string) $settings['expires_at_gmt'] : (string) $current['expires_at_gmt'],
+        );
+        update_option( self::PUBLIC_OBSERVATIONS_ACCESS_OPTION_KEY, $normalized );
+    }
+
+    public static function verify_public_observations_token( string $token ): bool {
+        $token = trim( $token );
+        if ( '' === $token ) {
+            return false;
+        }
+
+        $settings = self::get_public_observations_access_settings();
+        if ( 1 !== (int) $settings['enabled'] || '' === (string) $settings['token_hash'] || '' === (string) $settings['expires_at_gmt'] ) {
+            return false;
+        }
+
+        $expires_ts = strtotime( (string) $settings['expires_at_gmt'] . ' UTC' );
+        if ( false === $expires_ts || $expires_ts < time() ) {
+            return false;
+        }
+
+        return wp_check_password( $token, (string) $settings['token_hash'] );
+    }
+
+    /**
+     * @return array{is_public_read_only:bool,enabled:bool,expires_at_gmt:string,expires_in_human:string}
+     */
+    public static function get_public_observations_request_access_context(): array {
+        $token = isset( $_GET['agp_public_token'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['agp_public_token'] ) ) : '';
+        $is_public_read_only = self::verify_public_observations_token( $token ) && ( ! is_user_logged_in() || ! current_user_can( 'manage_options' ) );
+        $settings = self::get_public_observations_access_settings();
+
+        $expires_in_human = '';
+        if ( $is_public_read_only && '' !== (string) $settings['expires_at_gmt'] ) {
+            $expires_ts = strtotime( (string) $settings['expires_at_gmt'] . ' UTC' );
+            if ( false !== $expires_ts ) {
+                $remaining = $expires_ts - time();
+                if ( $remaining > 0 ) {
+                    $expires_in_human = human_time_diff( time(), $expires_ts );
+                }
+            }
+        }
+
+        return array(
+            'is_public_read_only' => $is_public_read_only,
+            'enabled' => 1 === (int) $settings['enabled'],
+            'expires_at_gmt' => (string) $settings['expires_at_gmt'],
+            'expires_in_human' => $expires_in_human,
+        );
+    }
+
     public static function get_observations_report_window_days(): int {
         $days = absint( get_option( 'agp_pv_observations_report_window_days', 30 ) );
         if ( $days < 1 ) {
@@ -1230,16 +1319,33 @@ class AGP_PV_Plugin {
                 return;
             }
 
-            if ( ! is_user_logged_in() || ! current_user_can( 'manage_options' ) ) {
+            $is_admin_session = is_user_logged_in() && current_user_can( 'manage_options' );
+            $public_access_context = $this->is_observations_standalone() ? self::get_public_observations_request_access_context() : array(
+                'is_public_read_only' => false,
+                'enabled' => false,
+                'expires_at_gmt' => '',
+                'expires_in_human' => '',
+            );
+            $is_public_read_only = ! $is_admin_session && ! empty( $public_access_context['is_public_read_only'] );
+
+            if ( ! $is_admin_session && ! $is_public_read_only ) {
                 wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ), esc_html__( 'Acceso denegado', 'agrocampo-post-venta' ), array( 'response' => 403 ) );
             }
 
-            if ( $this->is_observations_standalone() && 'POST' === strtoupper( sanitize_text_field( wp_unslash( (string) ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) ) ) ) {
+            $request_method = strtoupper( sanitize_text_field( wp_unslash( (string) ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) ) );
+            if ( $is_public_read_only && 'GET' !== $request_method ) {
+                wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ), esc_html__( 'Acceso denegado', 'agrocampo-post-venta' ), array( 'response' => 403 ) );
+            }
+
+            if ( $this->is_observations_standalone() && 'POST' === $request_method ) {
                 $this->process_observations_review_action();
             }
 
             status_header( 200 );
             nocache_headers();
+            if ( $is_public_read_only ) {
+                header( 'X-Robots-Tag: noindex, nofollow', true );
+            }
 
             if ( $this->is_reports_standalone() ) {
                 $template = AGP_PV_PLUGIN_DIR . 'templates/reports-standalone.php';

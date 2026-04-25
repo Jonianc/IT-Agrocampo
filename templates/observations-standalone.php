@@ -5,6 +5,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 global $wpdb;
 $table = AGP_PV_DB::table_name();
+$public_access_context = AGP_PV_Plugin::get_public_observations_request_access_context();
+$is_public_read_only = ! empty( $public_access_context['is_public_read_only'] );
 
 $search            = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
 $review_status_raw = isset( $_GET['review_status'] ) ? sanitize_key( wp_unslash( $_GET['review_status'] ) ) : '';
@@ -334,10 +336,23 @@ if ( $range_active ) {
 <head>
     <meta charset="<?php bloginfo( 'charset' ); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?php if ( $is_public_read_only ) : ?>
+        <meta name="robots" content="noindex,nofollow">
+    <?php endif; ?>
     <?php wp_head(); ?>
 </head>
 <body class="agp-pv-observations-standalone">
 <main class="agp-pv-observations-wrap">
+    <?php if ( $is_public_read_only ) : ?>
+        <?php
+        $public_notice = __( 'Acceso temporal público activo — solo lectura.', 'agrocampo-post-venta' );
+        if ( '' !== (string) $public_access_context['expires_in_human'] ) {
+            $public_notice .= ' ' . sprintf( __( 'Vence en %s.', 'agrocampo-post-venta' ), (string) $public_access_context['expires_in_human'] );
+        }
+        ?>
+        <div class="agp-pv-notice agp-pv-notice-public"><?php echo esc_html( $public_notice ); ?></div>
+    <?php endif; ?>
+
     <section class="agp-pv-shell-header">
         <div class="agp-pv-shell-header__title">
             <span class="agp-pv-shell-header__eyebrow"><?php esc_html_e( 'Post venta', 'agrocampo-post-venta' ); ?></span>
@@ -364,7 +379,9 @@ if ( $range_active ) {
                     <strong class="agp-pv-summary-card__value"><?php echo esc_html( (string) $overdue_count ); ?></strong>
                 </article>
             </div>
-            <a class="agp-pv-tertiary-link" href="<?php echo esc_url( $admin_observations_url ); ?>"><?php esc_html_e( 'Gestor interno', 'agrocampo-post-venta' ); ?></a>
+            <?php if ( ! $is_public_read_only ) : ?>
+                <a class="agp-pv-tertiary-link" href="<?php echo esc_url( $admin_observations_url ); ?>"><?php esc_html_e( 'Gestor interno', 'agrocampo-post-venta' ); ?></a>
+            <?php endif; ?>
         </div>
     </section>
 
@@ -429,7 +446,9 @@ if ( $range_active ) {
             <div class="agp-pv-filters-actions">
                 <button type="submit"><?php esc_html_e( 'Filtrar', 'agrocampo-post-venta' ); ?></button>
                 <a class="agp-pv-secondary-link" href="<?php echo esc_url( $base_url ); ?>"><?php esc_html_e( 'Limpiar', 'agrocampo-post-venta' ); ?></a>
-                <a class="agp-pv-secondary-link agp-pv-report-link" href="<?php echo esc_url( $export_report_url ); ?>"><?php esc_html_e( 'Descargar reporte', 'agrocampo-post-venta' ); ?></a>
+                <?php if ( ! $is_public_read_only ) : ?>
+                    <a class="agp-pv-secondary-link agp-pv-report-link" href="<?php echo esc_url( $export_report_url ); ?>"><?php esc_html_e( 'Descargar reporte', 'agrocampo-post-venta' ); ?></a>
+                <?php endif; ?>
             </div>
         </form>
         <div class="agp-pv-filters-help"><?php esc_html_e( 'Si completas Desde/Hasta, el rango tiene prioridad sobre Últimos días. Pendientes y Vencidas filtran por fecha de creación; Resueltas por fecha de revisión. Limpiar restablece todos los filtros.', 'agrocampo-post-venta' ); ?></div>
@@ -543,9 +562,17 @@ if ( $range_active ) {
                             </td>
                             <td data-label="<?php esc_attr_e( 'Revisado por', 'agrocampo-post-venta' ); ?>"><?php echo esc_html( (string) $reviewer ); ?></td>
                             <td data-label="<?php esc_attr_e( 'Fecha revisión', 'agrocampo-post-venta' ); ?>"><?php echo esc_html( $reviewed_at ); ?></td>
-                            <td data-label="<?php esc_attr_e( 'PDF', 'agrocampo-post-venta' ); ?>"><a class="agp-pv-icon-link" href="<?php echo esc_url( $view_pdf_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Ver PDF', 'agrocampo-post-venta' ); ?></a></td>
+                            <td data-label="<?php esc_attr_e( 'PDF', 'agrocampo-post-venta' ); ?>">
+                                <?php if ( ! $is_public_read_only ) : ?>
+                                    <a class="agp-pv-icon-link" href="<?php echo esc_url( $view_pdf_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Ver PDF', 'agrocampo-post-venta' ); ?></a>
+                                <?php else : ?>
+                                    <span class="agp-pv-empty-action">—</span>
+                                <?php endif; ?>
+                            </td>
                             <td data-label="<?php esc_attr_e( 'Acción', 'agrocampo-post-venta' ); ?>">
-                                <?php if ( $submission_id > 0 ) : ?>
+                                <?php if ( $is_public_read_only ) : ?>
+                                    <span class="agp-pv-empty-action"><?php esc_html_e( 'Solo lectura', 'agrocampo-post-venta' ); ?></span>
+                                <?php elseif ( $submission_id > 0 ) : ?>
                                     <div class="agp-pv-action-stack">
                                         <?php if ( ! $is_reviewed ) : ?>
                                             <form method="post" class="agp-pv-inline-action agp-pv-inline-action--row">

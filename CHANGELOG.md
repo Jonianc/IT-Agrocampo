@@ -1,3 +1,11 @@
+## [1.25.6] - 2026-04-25
+- observaciones standalone (`/post-venta-observaciones/`): nuevo acceso temporal público con token por query param `agp_public_token`, validado contra hash + expiración y habilitado solo en modo GET de solo lectura.
+- seguridad acceso temporal: se bloquea cualquier POST desde sesión pública sin `manage_options`, manteniendo intacto el acceso normal autenticado de administrador.
+- ajustes (`Ajustes Informe Técnico`): nueva sección `Acceso temporal público` para activar/desactivar, definir duración en minutos, generar nuevo token, revocar token y mostrar enlace copiable al momento de generación.
+- persistencia token: se guarda únicamente estado activo, `token_hash` y `expires_at_gmt` (UTC); no se persiste token en claro.
+- modo temporal público: se fuerza `nocache_headers`, cabecera `X-Robots-Tag: noindex, nofollow` y aviso visual en la vista (`solo lectura` + vencimiento restante).
+- vista observaciones en modo temporal: se ocultan/inhabilitan acciones de escritura y exportación para mantener lectura segura.
+
 ## [1.25.5] - 2026-04-25
 - catálogo de lubricantes: nueva ruta persistente en uploads usando `wp_upload_dir()` (`/wp-content/uploads/agrocampo-postventa/catalogo.json`) como fuente principal.
 - activación/upgrade del plugin: si no existe catálogo persistente, se inicializa copiando el JSON base incluido en el plugin; si ya existe, no se sobrescribe.
