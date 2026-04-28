@@ -233,16 +233,42 @@ class AGP_PV_Admin {
                 AGP_PV_Plugin::observations_standalone_url()
             );
         }
+        $lubricants_catalog_count  = count( AGP_PV_Plugin::get_lubricants_catalog() );
+        $lubricants_catalog_status = AGP_PV_Plugin::get_lubricants_catalog_status();
+        $is_persistent_source      = 'persistent' === (string) $lubricants_catalog_status['source'];
+        $catalog_status_label      = $is_persistent_source ? __( 'Catálogo persistente cargado', 'agrocampo-post-venta' ) : __( 'Catálogo base en uso (fallback)', 'agrocampo-post-venta' );
 
         echo '<div class="wrap agp-pv-admin">';
         echo '<h1>' . esc_html__( 'Ajustes Informe Técnico', 'agrocampo-post-venta' ) . '</h1>';
-        echo '<p class="description">' . esc_html__( 'Configura envío de correos, logo PDF y accesos rápidos.', 'agrocampo-post-venta' ) . '</p>';
+        echo '<p class="description">' . esc_html__( 'Configura operación, branding PDF, lubricantes, correos y herramientas técnicas.', 'agrocampo-post-venta' ) . '</p>';
 
         $this->render_admin_notice();
 
+        echo '<nav class="agp-pv-settings-nav" aria-label="' . esc_attr__( 'Navegación de ajustes', 'agrocampo-post-venta' ) . '">';
+        echo '<a class="agp-pv-settings-nav__link" href="#agp-pv-section-resumen">' . esc_html__( 'Resumen', 'agrocampo-post-venta' ) . '</a>';
+        echo '<a class="agp-pv-settings-nav__link" href="#agp-pv-section-accesos">' . esc_html__( 'Accesos', 'agrocampo-post-venta' ) . '</a>';
+        echo '<a class="agp-pv-settings-nav__link" href="#agp-pv-section-pdf">' . esc_html__( 'PDF y firmas', 'agrocampo-post-venta' ) . '</a>';
+        echo '<a class="agp-pv-settings-nav__link" href="#agp-pv-section-lubricantes">' . esc_html__( 'Lubricantes', 'agrocampo-post-venta' ) . '</a>';
+        echo '<a class="agp-pv-settings-nav__link" href="#agp-pv-section-correos">' . esc_html__( 'Correos', 'agrocampo-post-venta' ) . '</a>';
+        echo '<a class="agp-pv-settings-nav__link" href="#agp-pv-section-observaciones">' . esc_html__( 'Observaciones', 'agrocampo-post-venta' ) . '</a>';
+        echo '<a class="agp-pv-settings-nav__link" href="#agp-pv-section-tecnicos">' . esc_html__( 'Técnicos', 'agrocampo-post-venta' ) . '</a>';
+        echo '<a class="agp-pv-settings-nav__link" href="#agp-pv-section-datos">' . esc_html__( 'Datos', 'agrocampo-post-venta' ) . '</a>';
+        echo '<a class="agp-pv-settings-nav__link" href="#agp-pv-section-herramientas">' . esc_html__( 'Herramientas', 'agrocampo-post-venta' ) . '</a>';
+        echo '</nav>';
+
         echo '<div class="agp-pv-settings-grid">';
 
-        echo '<section class="card agp-pv-card">';
+        echo '<section id="agp-pv-section-resumen" class="card agp-pv-card">';
+        echo '<h2>' . esc_html__( 'Resumen', 'agrocampo-post-venta' ) . '</h2>';
+        echo '<p><strong>' . esc_html__( 'Versión del plugin:', 'agrocampo-post-venta' ) . '</strong> ' . esc_html( AGP_PV_VERSION ) . '</p>';
+        echo '<p><a class="button button-primary" target="_blank" rel="noopener noreferrer" href="' . esc_url( AGP_PV_Plugin::form_standalone_url() ) . '">' . esc_html__( 'Abrir formulario Informe Técnico', 'agrocampo-post-venta' ) . '</a></p>';
+        echo '<p><a class="button button-secondary" target="_blank" rel="noopener noreferrer" href="' . esc_url( AGP_PV_Plugin::reports_standalone_url() ) . '">' . esc_html__( 'Abrir gestor de informes', 'agrocampo-post-venta' ) . '</a></p>';
+        echo '<p><a class="button button-secondary" target="_blank" rel="noopener noreferrer" href="' . esc_url( AGP_PV_Plugin::observations_standalone_url() ) . '">' . esc_html__( 'Abrir gestor de observaciones', 'agrocampo-post-venta' ) . '</a></p>';
+        echo '<p><span class="agp-pv-status ' . ( $lubricants_catalog_count > 0 ? 'agp-pv-status-ready' : 'agp-pv-status-pending' ) . '">' . esc_html( $catalog_status_label ) . '</span> ' . sprintf( esc_html__( '%d ítems en catálogo', 'agrocampo-post-venta' ), (int) $lubricants_catalog_count ) . '</p>';
+        echo '<p><span class="agp-pv-status ' . ( $public_access_enabled && ! $public_access_is_expired ? 'agp-pv-status-ready' : 'agp-pv-status-pending' ) . '">' . ( $public_access_enabled && ! $public_access_is_expired ? esc_html__( 'Acceso temporal público activo', 'agrocampo-post-venta' ) : esc_html__( 'Acceso temporal público inactivo', 'agrocampo-post-venta' ) ) . '</span></p>';
+        echo '</section>';
+
+        echo '<section id="agp-pv-section-accesos" class="card agp-pv-card">';
         echo '<h2>' . esc_html__( 'Accesos operativos', 'agrocampo-post-venta' ) . '</h2>';
         echo '<p>' . esc_html__( 'Los gestores requieren sesión de administrador. El acceso público temporal solo aplica a Observaciones en modo lectura.', 'agrocampo-post-venta' ) . '</p>';
         echo '<p><a class="button button-primary" target="_blank" rel="noopener noreferrer" href="' . esc_url( AGP_PV_Plugin::form_standalone_url() ) . '">' . esc_html__( 'Abrir formulario Informe Técnico', 'agrocampo-post-venta' ) . '</a></p>';
@@ -250,18 +276,8 @@ class AGP_PV_Admin {
         echo '<p><a class="button button-secondary" target="_blank" rel="noopener noreferrer" href="' . esc_url( AGP_PV_Plugin::observations_standalone_url() ) . '">' . esc_html__( 'Abrir gestor de observaciones', 'agrocampo-post-venta' ) . '</a></p>';
         echo '</section>';
 
-        echo '<section class="card agp-pv-card">';
-        echo '<h2>' . esc_html__( 'Herramientas técnicas', 'agrocampo-post-venta' ) . '</h2>';
-        echo '<p>' . esc_html__( 'Regenera los PDF de todos los informes históricos en lotes para evitar timeouts.', 'agrocampo-post-venta' ) . '</p>';
-        echo '<p><button type="button" class="button button-primary" id="agp-pv-regenerate-all-pdf">' . esc_html__( 'Regenerar todos los PDF', 'agrocampo-post-venta' ) . '</button></p>';
-        echo '<div id="agp-pv-regenerate-progress" class="agp-pv-regenerate-progress" hidden>';
-        echo '<progress id="agp-pv-regenerate-progress-bar" max="100" value="0"></progress>';
-        echo '<p id="agp-pv-regenerate-progress-text" aria-live="polite"></p>';
-        echo '</div>';
-        echo '</section>';
-
-        echo '<section class="card agp-pv-card">';
-        echo '<h2>' . esc_html__( 'Branding del PDF', 'agrocampo-post-venta' ) . '</h2>';
+        echo '<section id="agp-pv-section-pdf" class="card agp-pv-card">';
+        echo '<h2>' . esc_html__( 'PDF y firmas', 'agrocampo-post-venta' ) . '</h2>';
         echo '<p>' . esc_html__( 'Configura logo y textos de cabecera/pie del PDF generado.', 'agrocampo-post-venta' ) . '</p>';
         echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
         echo '<input type="hidden" name="action" value="agp_pv_save_logo">';
@@ -356,10 +372,7 @@ class AGP_PV_Admin {
             }
             $quick_types_lines[] = $line;
         }
-        $lubricants_catalog_count = count( AGP_PV_Plugin::get_lubricants_catalog() );
-        $lubricants_catalog_status = AGP_PV_Plugin::get_lubricants_catalog_status();
-
-        echo '<section class="card agp-pv-card">';
+        echo '<section id="agp-pv-section-lubricantes" class="card agp-pv-card">';
         echo '<h2>' . esc_html__( 'Lubricantes', 'agrocampo-post-venta' ) . '</h2>';
         echo '<p class="description">' . esc_html__( 'Configura modo de uso, visibilidad por campo, fallback y gestión del catálogo.', 'agrocampo-post-venta' ) . '</p>';
         echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
@@ -456,8 +469,6 @@ class AGP_PV_Admin {
         echo '<div class="agp-pv-lubricants-catalog-box">';
         echo '<h3>' . esc_html__( 'Catálogo', 'agrocampo-post-venta' ) . '</h3>';
         echo '<p class="description">' . esc_html__( 'Gestiona catálogo: importar, exportar, validar y descargar plantilla.', 'agrocampo-post-venta' ) . '</p>';
-        $is_persistent_source = 'persistent' === (string) $lubricants_catalog_status['source'];
-        $catalog_status_label = $is_persistent_source ? __( 'Catálogo persistente cargado', 'agrocampo-post-venta' ) : __( 'Catálogo base en uso (fallback)', 'agrocampo-post-venta' );
         echo '<p><span class="agp-pv-status ' . ( $lubricants_catalog_count > 0 ? 'agp-pv-status-ready' : 'agp-pv-status-pending' ) . '">' . esc_html( $catalog_status_label ) . '</span> ' . sprintf( esc_html__( '%d ítems', 'agrocampo-post-venta' ), (int) $lubricants_catalog_count ) . '</p>';
         echo '<p class="description">' . esc_html__( 'Ruta activa:', 'agrocampo-post-venta' ) . ' <code>' . esc_html( (string) $lubricants_catalog_status['path'] ) . '</code></p>';
         if ( '' !== (string) $lubricants_catalog_status['modified_gmt'] ) {
@@ -496,7 +507,7 @@ class AGP_PV_Admin {
         echo '</div>';
         echo '</section>';
 
-        echo '<section class="card agp-pv-card">';
+        echo '<section id="agp-pv-section-correos" class="card agp-pv-card">';
         echo '<h2>' . esc_html__( 'Destinatarios de correo', 'agrocampo-post-venta' ) . '</h2>';
         echo '<p>' . esc_html__( 'Define los correos que recibirán el informe. Sepáralos por coma.', 'agrocampo-post-venta' ) . '</p>';
         echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
@@ -512,7 +523,7 @@ class AGP_PV_Admin {
         $report_window_days = AGP_PV_Plugin::get_observations_report_window_days();
         $notification_tokens = AGP_PV_Email::get_notification_template_tokens();
 
-        echo '<section class="card agp-pv-card agp-pv-notifications-card">';
+        echo '<section id="agp-pv-section-observaciones" class="card agp-pv-card agp-pv-notifications-card">';
         echo '<h2>' . esc_html__( 'Notificaciones e informes con observaciones', 'agrocampo-post-venta' ) . '</h2>';
         echo '<p>' . esc_html__( 'Configura avisos automáticos solo para admin y el rango global de informes con observaciones.', 'agrocampo-post-venta' ) . '</p>';
         echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
@@ -616,7 +627,7 @@ class AGP_PV_Admin {
         echo '<p class="description">' . esc_html__( 'El token solo se muestra al generarlo; se guarda únicamente su hash.', 'agrocampo-post-venta' ) . '</p>';
         echo '</section>';
 
-        echo '<section class="card agp-pv-card">';
+        echo '<section id="agp-pv-section-tecnicos" class="card agp-pv-card">';
         echo '<h2>' . esc_html__( 'Técnicos', 'agrocampo-post-venta' ) . '</h2>';
         echo '<p>' . esc_html__( 'Gestiona los técnicos disponibles en el selector del formulario (uno por línea).', 'agrocampo-post-venta' ) . '</p>';
         echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
@@ -639,7 +650,7 @@ class AGP_PV_Admin {
         echo '</form>';
         echo '</section>';
 
-        echo '<section class="card agp-pv-card">';
+        echo '<section id="agp-pv-section-datos" class="card agp-pv-card">';
         echo '<h2>' . esc_html__( 'Importador de informes', 'agrocampo-post-venta' ) . '</h2>';
         echo '<p>' . esc_html__( 'Importa informes históricos exportados desde Forminator del plugin anterior (CSV).', 'agrocampo-post-venta' ) . '</p>';
         echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" enctype="multipart/form-data">';
@@ -652,8 +663,15 @@ class AGP_PV_Admin {
         echo '<p><a class="button button-secondary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=agp_pv_export_legacy_csv' ), 'agp_pv_export_legacy_csv' ) ) . '">' . esc_html__( 'Exportar informes (CSV compatible)', 'agrocampo-post-venta' ) . '</a></p>';
         echo '</section>';
 
-        echo '<section class="card agp-pv-card">';
-        echo '<h2>' . esc_html__( 'Zona peligrosa', 'agrocampo-post-venta' ) . '</h2>';
+        echo '<section id="agp-pv-section-herramientas" class="card agp-pv-card">';
+        echo '<h2>' . esc_html__( 'Herramientas técnicas', 'agrocampo-post-venta' ) . '</h2>';
+        echo '<p>' . esc_html__( 'Regenera los PDF de todos los informes históricos en lotes para evitar timeouts.', 'agrocampo-post-venta' ) . '</p>';
+        echo '<p><button type="button" class="button button-primary" id="agp-pv-regenerate-all-pdf">' . esc_html__( 'Regenerar todos los PDF', 'agrocampo-post-venta' ) . '</button></p>';
+        echo '<div id="agp-pv-regenerate-progress" class="agp-pv-regenerate-progress" hidden>';
+        echo '<progress id="agp-pv-regenerate-progress-bar" max="100" value="0"></progress>';
+        echo '<p id="agp-pv-regenerate-progress-text" aria-live="polite"></p>';
+        echo '</div>';
+        echo '<h3>' . esc_html__( 'Zona peligrosa', 'agrocampo-post-venta' ) . '</h3>';
         echo '<p>' . esc_html__( 'Elimina permanentemente todos los informes almacenados en este plugin.', 'agrocampo-post-venta' ) . '</p>';
         echo "<form method=\"post\" action=\"" . esc_url( admin_url( 'admin-post.php' ) ) . "\" onsubmit=\"return confirm('" . esc_js( __( '¿Estás seguro? Esta acción eliminará todos los informes y no se puede deshacer.', 'agrocampo-post-venta' ) ) . "');\">";
         echo '<input type="hidden" name="action" value="agp_pv_delete_all_submissions">';

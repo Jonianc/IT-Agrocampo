@@ -13,6 +13,43 @@
     margin-top: 0;
 }
 
+.agp-pv-admin .agp-pv-settings-nav {
+    position: sticky;
+    top: 32px;
+    z-index: 20;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+    margin-bottom: 12px;
+    padding: 10px;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.agp-pv-admin .agp-pv-settings-nav__link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 30px;
+    padding: 0 10px;
+    border: 1px solid #dcdcde;
+    border-radius: 999px;
+    background: #f6f7f7;
+    color: #1d2327;
+    text-decoration: none;
+    font-size: 12px;
+    line-height: 1.2;
+}
+
+.agp-pv-admin .agp-pv-settings-nav__link:hover,
+.agp-pv-admin .agp-pv-settings-nav__link:focus {
+    background: #fff;
+    border-color: #bfc3c8;
+    color: #1d2327;
+}
+
 .agp-pv-admin .agp-pv-toolbar {
     margin: 14px 0;
     padding: 12px;
@@ -30,6 +67,12 @@
 .agp-pv-admin .agp-pv-filter-row input,
 .agp-pv-admin .agp-pv-filter-row select {
     min-width: 140px;
+}
+
+@media (max-width: 782px) {
+    .agp-pv-admin .agp-pv-settings-nav {
+        position: static;
+    }
 }
 
 .agp-pv-admin .wp-list-table th,

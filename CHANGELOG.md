@@ -1,3 +1,6 @@
+## [1.25.9] - 2026-04-28
+- Se reorganiza la pantalla de Ajustes con navegación interna por secciones, mejor jerarquía operativa y herramientas técnicas al final, manteniendo ocultos los gestores admin.
+
 ## [1.25.8] - 2026-04-28
 - Se agregan accesos operativos a formulario, gestor de informes y gestor de observaciones desde Ajustes; se ajustan redirects fallback hacia vistas frontend y se conserva la regeneración masiva de PDF como herramienta técnica.
 
