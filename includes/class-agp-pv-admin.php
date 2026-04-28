@@ -272,9 +272,32 @@ class AGP_PV_Admin {
         echo '<section id="agp-pv-section-accesos" class="card agp-pv-card">';
         echo '<h2>' . esc_html__( 'Accesos operativos', 'agrocampo-post-venta' ) . '</h2>';
         echo '<p>' . esc_html__( 'Los gestores requieren sesión de administrador. El acceso público temporal solo aplica a Observaciones en modo lectura.', 'agrocampo-post-venta' ) . '</p>';
-        echo '<p><a class="button button-primary" target="_blank" rel="noopener noreferrer" href="' . esc_url( AGP_PV_Plugin::form_standalone_url() ) . '">' . esc_html__( 'Abrir formulario Informe Técnico', 'agrocampo-post-venta' ) . '</a></p>';
-        echo '<p><a class="button button-secondary" target="_blank" rel="noopener noreferrer" href="' . esc_url( AGP_PV_Plugin::reports_standalone_url() ) . '">' . esc_html__( 'Abrir gestor de informes', 'agrocampo-post-venta' ) . '</a></p>';
-        echo '<p><a class="button button-secondary" target="_blank" rel="noopener noreferrer" href="' . esc_url( AGP_PV_Plugin::observations_standalone_url() ) . '">' . esc_html__( 'Abrir gestor de observaciones', 'agrocampo-post-venta' ) . '</a></p>';
+        echo '<div class="agp-pv-access-list">';
+        echo '<article class="agp-pv-access-item">';
+        echo '<h3>' . esc_html__( 'Formulario Informe Técnico', 'agrocampo-post-venta' ) . '</h3>';
+        echo '<p class="description"><code>' . esc_html( AGP_PV_Plugin::form_standalone_url() ) . '</code></p>';
+        echo '<p class="agp-pv-access-item__actions">';
+        echo '<a class="button button-primary" target="_blank" rel="noopener noreferrer" href="' . esc_url( AGP_PV_Plugin::form_standalone_url() ) . '">' . esc_html__( 'Abrir', 'agrocampo-post-venta' ) . '</a> ';
+        echo '<button type="button" class="button button-secondary agp-pv-copy-url" data-copy-url="' . esc_attr( AGP_PV_Plugin::form_standalone_url() ) . '" data-label-default="' . esc_attr__( 'Copiar URL', 'agrocampo-post-venta' ) . '" data-label-success="' . esc_attr__( 'Copiado', 'agrocampo-post-venta' ) . '">' . esc_html__( 'Copiar URL', 'agrocampo-post-venta' ) . '</button>';
+        echo '</p>';
+        echo '</article>';
+        echo '<article class="agp-pv-access-item">';
+        echo '<h3>' . esc_html__( 'Gestor de informes', 'agrocampo-post-venta' ) . '</h3>';
+        echo '<p class="description"><code>' . esc_html( AGP_PV_Plugin::reports_standalone_url() ) . '</code></p>';
+        echo '<p class="agp-pv-access-item__actions">';
+        echo '<a class="button button-secondary" target="_blank" rel="noopener noreferrer" href="' . esc_url( AGP_PV_Plugin::reports_standalone_url() ) . '">' . esc_html__( 'Abrir', 'agrocampo-post-venta' ) . '</a> ';
+        echo '<button type="button" class="button button-secondary agp-pv-copy-url" data-copy-url="' . esc_attr( AGP_PV_Plugin::reports_standalone_url() ) . '" data-label-default="' . esc_attr__( 'Copiar URL', 'agrocampo-post-venta' ) . '" data-label-success="' . esc_attr__( 'Copiado', 'agrocampo-post-venta' ) . '">' . esc_html__( 'Copiar URL', 'agrocampo-post-venta' ) . '</button>';
+        echo '</p>';
+        echo '</article>';
+        echo '<article class="agp-pv-access-item">';
+        echo '<h3>' . esc_html__( 'Gestor de observaciones', 'agrocampo-post-venta' ) . '</h3>';
+        echo '<p class="description"><code>' . esc_html( AGP_PV_Plugin::observations_standalone_url() ) . '</code></p>';
+        echo '<p class="agp-pv-access-item__actions">';
+        echo '<a class="button button-secondary" target="_blank" rel="noopener noreferrer" href="' . esc_url( AGP_PV_Plugin::observations_standalone_url() ) . '">' . esc_html__( 'Abrir', 'agrocampo-post-venta' ) . '</a> ';
+        echo '<button type="button" class="button button-secondary agp-pv-copy-url" data-copy-url="' . esc_attr( AGP_PV_Plugin::observations_standalone_url() ) . '" data-label-default="' . esc_attr__( 'Copiar URL', 'agrocampo-post-venta' ) . '" data-label-success="' . esc_attr__( 'Copiado', 'agrocampo-post-venta' ) . '">' . esc_html__( 'Copiar URL', 'agrocampo-post-venta' ) . '</button>';
+        echo '</p>';
+        echo '</article>';
+        echo '</div>';
         echo '</section>';
 
         echo '<section id="agp-pv-section-pdf" class="card agp-pv-card">';
@@ -557,7 +580,7 @@ class AGP_PV_Admin {
 
         echo '<p><label for="agp-pv-observations-report-window"><strong>' . esc_html__( 'Mostrar informes con observaciones de los últimos X días', 'agrocampo-post-venta' ) . '</strong></label><br>';
         echo '<input type="number" min="1" max="3650" id="agp-pv-observations-report-window" name="agp_pv_observations_report_window_days" value="' . esc_attr( (string) $report_window_days ) . '"><br>';
-        echo '<span class="description">' . esc_html__( 'Se aplica al gestor admin, la vista standalone de observaciones y la exportación desde la vista filtrada.', 'agrocampo-post-venta' ) . '</span></p>';
+        echo '<span class="description">' . esc_html__( 'Se aplica a la vista standalone de observaciones y la exportación desde la vista filtrada.', 'agrocampo-post-venta' ) . '</span></p>';
 
         echo '<p class="description">' . esc_html__( 'Horarios automáticos: resumen diario a las 09:00 y resumen semanal los lunes a las 09:00 mediante WP-Cron.', 'agrocampo-post-venta' ) . '</p>';
 

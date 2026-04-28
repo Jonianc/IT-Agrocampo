@@ -1,3 +1,6 @@
+## [1.25.12] - 2026-04-28
+- Se mejoran los accesos operativos en Ajustes con filas compactas y botones `Abrir` + `Copiar URL`; se actualiza texto a `vista standalone de observaciones` y se agrega soporte JS de copiado con fallback.
+
 ## [1.25.11] - 2026-04-28
 - Se ajusta la jerarquía visual de Ajustes: Resumen queda solo con estados generales, Correos integra Destinatarios + Prueba de correo y Observaciones mantiene junto el bloque de Acceso temporal público, sin cambios en lógica de negocio.
 

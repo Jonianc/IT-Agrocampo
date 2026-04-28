@@ -13,6 +13,40 @@
     margin-top: 0;
 }
 
+.agp-pv-admin .agp-pv-access-list {
+    display: grid;
+    gap: 10px;
+}
+
+.agp-pv-admin .agp-pv-access-item {
+    padding: 10px 12px;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.agp-pv-admin .agp-pv-access-item h3 {
+    margin: 0 0 6px;
+    font-size: 14px;
+}
+
+.agp-pv-admin .agp-pv-access-item .description {
+    margin: 0 0 8px;
+}
+
+.agp-pv-admin .agp-pv-access-item .description code {
+    display: inline-block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+.agp-pv-admin .agp-pv-access-item__actions {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
 .agp-pv-admin .agp-pv-settings-nav {
     position: sticky;
     top: 32px;

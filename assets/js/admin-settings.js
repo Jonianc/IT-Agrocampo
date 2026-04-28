@@ -145,8 +145,67 @@
         updatePreview();
     }
 
+    function fallbackCopyText(text) {
+        var $temp = $('<textarea readonly aria-hidden="true"></textarea>');
+        $temp.css({
+            position: 'absolute',
+            left: '-9999px',
+            top: '0',
+        });
+        $temp.val(text);
+        $('body').append($temp);
+        $temp[0].focus();
+        $temp[0].select();
+        var copied = false;
+        try {
+            copied = document.execCommand('copy');
+        } catch (e) {
+            copied = false;
+        }
+        $temp.remove();
+        return copied;
+    }
+
+    function initCopyUrlButtons() {
+        $(document).on('click', '.agp-pv-copy-url', function (e) {
+            e.preventDefault();
+            var $button = $(this);
+            var text = $.trim($button.attr('data-copy-url') || '');
+            if (!text) {
+                return;
+            }
+
+            var defaultLabel = $button.attr('data-label-default') || 'Copiar URL';
+            var successLabel = $button.attr('data-label-success') || 'Copiado';
+            var resetLabel = function () {
+                window.setTimeout(function () {
+                    $button.text(defaultLabel);
+                }, 1400);
+            };
+
+            var onSuccess = function () {
+                $button.text(successLabel);
+                resetLabel();
+            };
+
+            if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                navigator.clipboard.writeText(text).then(onSuccess).catch(function () {
+                    if (fallbackCopyText(text)) {
+                        onSuccess();
+                    }
+                });
+                return;
+            }
+
+            if (fallbackCopyText(text)) {
+                onSuccess();
+            }
+        });
+    }
+
     $(function () {
         initSelectors();
         initLubricantsSettingsUi();
+        initCopyUrlButtons();
     });
 })(jQuery);
