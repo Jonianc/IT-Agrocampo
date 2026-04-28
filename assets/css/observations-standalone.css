@@ -1504,6 +1504,10 @@ body.agp-pv-observations-standalone {
     margin-bottom: 14px;
 }
 
+.agp-pv-reports-wrap .agp-pv-filters {
+    padding: 20px 26px 24px;
+}
+
 @media (max-width: 1200px) {
     .agp-pv-reports-wrap .agp-pv-shell-header__aside .agp-pv-summary-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1511,6 +1515,30 @@ body.agp-pv-observations-standalone {
 }
 
 @media (min-width: 1025px) {
+    .agp-pv-reports-wrap .agp-pv-shell-header {
+        align-items: flex-start;
+        gap: 18px;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-shell-header h1 {
+        font-size: clamp(26px, 2.5vw, 36px);
+    }
+
+    .agp-pv-reports-wrap .agp-pv-shell-header__aside {
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-tertiary-link {
+        min-height: 38px;
+        padding: 0 14px;
+        border-radius: 10px;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
     .agp-pv-reports-wrap .agp-pv-filter-row {
         gap: 10px;
     }
@@ -1537,6 +1565,64 @@ body.agp-pv-observations-standalone {
 
     .agp-pv-reports-wrap .agp-pv-field--actions {
         grid-column: span 4 !important;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-filter-actions {
+        gap: 10px;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-filter-actions .button {
+        min-height: 42px;
+        padding: 0 18px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-filter-actions .button-primary {
+        border: 1px solid #1f63c7;
+        background: #1f63c7;
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(31, 99, 199, 0.2);
+    }
+
+    .agp-pv-reports-wrap .agp-pv-filter-actions .button-secondary {
+        border: 1px solid var(--agp-line-strong);
+        background: #fff;
+        color: var(--agp-text);
+        box-shadow: none;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-status-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 6px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.86);
+    }
+
+    .agp-pv-reports-wrap .agp-pv-status-tab {
+        min-height: 40px;
+        padding: 0 12px;
+        border: 1px solid var(--agp-line-strong);
+        border-radius: 999px;
+        background: #fff;
+        gap: 0;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-status-tab span {
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-status-tab strong {
+        display: none;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-status-tab.is-active {
+        transform: none;
+        box-shadow: none;
     }
 
     .agp-pv-reports-wrap .agp-pv-field--search input {
