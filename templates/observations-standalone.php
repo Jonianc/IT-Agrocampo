@@ -536,7 +536,7 @@ if ( $range_active ) {
                         $observaciones = AGP_PV_Plugin::normalize_observation_text( (string) ( $row['observaciones'] ?? '' ) );
 
                         $view_pdf_url = wp_nonce_url(
-                            admin_url( 'admin.php?page=agp-pv-observations&view=' . $submission_id ),
+                            admin_url( 'admin-post.php?action=agp_pv_view_pdf&submission_id=' . $submission_id ),
                             'agp_pv_view_pdf_' . $submission_id
                         );
                         ?>

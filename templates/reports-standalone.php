@@ -519,7 +519,7 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                                     )
                                 );
                                 $view_pdf_url  = wp_nonce_url(
-                                    admin_url( 'admin.php?page=agp-pv-submissions&view=' . $submission_id ),
+                                    admin_url( 'admin-post.php?action=agp_pv_view_pdf&submission_id=' . $submission_id ),
                                     'agp_pv_view_pdf_' . $submission_id
                                 );
                                 $resend_url    = wp_nonce_url(
@@ -573,7 +573,7 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                         )
                     );
                     $view_pdf_url  = wp_nonce_url(
-                        admin_url( 'admin.php?page=agp-pv-submissions&view=' . $submission_id ),
+                        admin_url( 'admin-post.php?action=agp_pv_view_pdf&submission_id=' . $submission_id ),
                         'agp_pv_view_pdf_' . $submission_id
                     );
                     $resend_url    = wp_nonce_url(
