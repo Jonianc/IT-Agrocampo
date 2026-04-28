@@ -1492,51 +1492,22 @@ body.agp-pv-observations-standalone {
     white-space: nowrap;
 }
 
-.agp-pv-reports-wrap .agp-pv-observations-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px 24px;
-    margin-bottom: 22px;
-    padding: 0 0 18px;
-    border-bottom: 1px solid #dfe7f1;
+.agp-pv-reports-wrap .agp-pv-shell-header {
+    margin-bottom: 18px;
 }
 
-.agp-pv-reports-wrap .agp-pv-observations-header__main {
-    max-width: 760px;
+.agp-pv-reports-wrap .agp-pv-shell-header__aside .agp-pv-summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.agp-pv-reports-wrap .agp-pv-observations-header__main h1 {
-    margin: 0;
-    color: #1d385a;
-    font-size: clamp(24px, 3vw, 32px);
-    line-height: 1.15;
+.agp-pv-reports-wrap .agp-pv-reports-filters-panel {
+    margin-bottom: 14px;
 }
 
-.agp-pv-reports-wrap .agp-pv-observations-header__main p {
-    margin: 8px 0 0;
-    color: var(--agp-text-soft);
-    font-size: 14px;
-}
-
-.agp-pv-reports-wrap .agp-pv-observations-header__actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.agp-pv-reports-wrap .agp-pv-observations-header__actions .button {
-    min-height: 36px;
-    padding: 0 12px;
-    border-color: #c6d2df;
-    color: #2d4866;
-    background: #fff;
-    font-weight: 600;
-}
-
-.agp-pv-reports-wrap .agp-pv-observations-panel {
-    padding-top: 4px;
+@media (max-width: 1200px) {
+    .agp-pv-reports-wrap .agp-pv-shell-header__aside .agp-pv-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 .agp-pv-reports-wrap .agp-pv-status-badge--pending {
@@ -1653,24 +1624,6 @@ body.agp-pv-observations-standalone {
 }
 
 @media (max-width: 782px) {
-    .agp-pv-reports-wrap .agp-pv-observations-header {
-        display: grid;
-        gap: 12px;
-        margin-bottom: 16px;
-        padding-bottom: 14px;
-    }
-
-    .agp-pv-reports-wrap .agp-pv-observations-header__actions {
-        width: 100%;
-        display: grid;
-        grid-template-columns: 1fr;
-    }
-
-    .agp-pv-reports-wrap .agp-pv-observations-header__actions .button {
-        width: 100%;
-        justify-content: center;
-    }
-
     .agp-pv-reports-wrap .agp-pv-filter-row {
         grid-template-columns: 1fr;
     }
@@ -1685,64 +1638,6 @@ body.agp-pv-observations-standalone {
     .agp-pv-reports-wrap .agp-pv-field--actions {
         grid-column: 1 / -1;
     }
-}
-
-.agp-pv-reports-wrap .agp-pv-reports-table-wrap .wp-list-table {
-    table-layout: fixed;
-    border-collapse: separate;
-    border-spacing: 0;
-    border: 1px solid var(--agp-line);
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.agp-pv-reports-wrap .agp-pv-reports-table-wrap .wp-list-table th {
-    padding: 12px 10px;
-    font-size: 11px;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: #526983;
-    background: linear-gradient(180deg, #f8fafc 0%, #eef3f8 100%);
-}
-
-.agp-pv-reports-wrap .agp-pv-reports-table-wrap .wp-list-table td {
-    padding: 10px;
-    font-size: 13px;
-    line-height: 1.35;
-    vertical-align: middle;
-    border-bottom: 1px solid #ebf0f6;
-}
-
-.agp-pv-reports-wrap .agp-pv-reports-table-wrap .wp-list-table td:nth-child(2),
-.agp-pv-reports-wrap .agp-pv-reports-table-wrap .wp-list-table td:nth-child(3),
-.agp-pv-reports-wrap .agp-pv-reports-table-wrap .wp-list-table td:nth-child(4),
-.agp-pv-reports-wrap .agp-pv-reports-table-wrap .wp-list-table td:nth-child(5) {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.agp-pv-reports-wrap .agp-pv-reports-table-wrap .wp-list-table td:nth-child(1) {
-    width: 70px;
-    font-weight: 700;
-}
-
-.agp-pv-reports-wrap .agp-pv-reports-table-wrap .wp-list-table td:nth-child(6) {
-    width: 130px;
-}
-
-.agp-pv-reports-wrap .agp-pv-reports-table-wrap .wp-list-table td:nth-child(7),
-.agp-pv-reports-wrap .agp-pv-reports-table-wrap .wp-list-table td:nth-child(8) {
-    width: 110px;
-}
-
-.agp-pv-reports-wrap .agp-pv-reports-table-wrap .wp-list-table td:nth-child(9) {
-    width: 130px;
-    white-space: nowrap;
-}
-
-.agp-pv-reports-wrap .agp-pv-reports-table-wrap .wp-list-table td:nth-child(10) {
-    width: 320px;
 }
 
 .agp-pv-reports-wrap .agp-pv-reports-row-actions {
@@ -1784,7 +1679,8 @@ body.agp-pv-observations-standalone {
 }
 
 @media (max-width: 1024px) {
-    .agp-pv-reports-wrap .agp-pv-reports-table-wrap {
+    .agp-pv-reports-wrap .agp-pv-table-panel .agp-pv-observations-table-scroll,
+    .agp-pv-reports-wrap .agp-pv-table-panel .agp-pv-table-footer {
         display: none;
     }
 
@@ -1893,42 +1789,6 @@ body.agp-pv-observations-standalone {
 
 .agp-pv-reports-wrap .agp-pv-reports-cards {
     display: none;
-}
-
-.agp-pv-reports-wrap .agp-pv-reports-kpi {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    margin: 14px 0 10px;
-}
-
-.agp-pv-reports-wrap .agp-pv-reports-kpi__item {
-    padding: 10px 12px;
-    border: 1px solid var(--agp-line);
-    border-radius: 10px;
-    background: #f8fafc;
-}
-
-.agp-pv-reports-wrap .agp-pv-reports-kpi__label {
-    display: block;
-    margin-bottom: 4px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--agp-text-soft);
-}
-
-.agp-pv-reports-wrap .agp-pv-reports-kpi__value {
-    font-size: 20px;
-    line-height: 1;
-    color: var(--agp-text);
-}
-
-@media (max-width: 782px) {
-    .agp-pv-reports-wrap .agp-pv-reports-kpi {
-        grid-template-columns: 1fr;
-    }
 }
 
 .agp-pv-reports-wrap .agp-pv-reports-empty {

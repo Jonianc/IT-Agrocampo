@@ -1,3 +1,6 @@
+## [1.25.13] - 2026-04-28
+- Se unifica la experiencia visual del Gestor de informes con el Gestor de observaciones, incorporando header tipo dashboard, resumen superior, filtros rápidos y tabla standalone consistente.
+
 ## [1.25.12] - 2026-04-28
 - Se mejoran los accesos operativos en Ajustes con filas compactas y botones `Abrir` + `Copiar URL`; se actualiza texto a `vista standalone de observaciones` y se agrega soporte JS de copiado con fallback.
 
