@@ -491,8 +491,8 @@ if ( $range_active ) {
                     <th><?php esc_html_e( 'Técnico', 'agrocampo-post-venta' ); ?></th>
                     <th><?php esc_html_e( 'Observación', 'agrocampo-post-venta' ); ?></th>
                     <th><?php esc_html_e( 'Estado', 'agrocampo-post-venta' ); ?></th>
-                    <th><?php esc_html_e( 'Revisado por', 'agrocampo-post-venta' ); ?></th>
-                    <th><?php esc_html_e( 'Fecha revisión', 'agrocampo-post-venta' ); ?></th>
+                    <th><?php esc_html_e( 'Resuelto por', 'agrocampo-post-venta' ); ?></th>
+                    <th><?php esc_html_e( 'Fecha resolución', 'agrocampo-post-venta' ); ?></th>
                     <th><?php esc_html_e( 'PDF', 'agrocampo-post-venta' ); ?></th>
                     <th><?php esc_html_e( 'Acción', 'agrocampo-post-venta' ); ?></th>
                 </tr>
@@ -563,8 +563,8 @@ if ( $range_active ) {
                                     <?php endif; ?>
                                 </div>
                             </td>
-                            <td data-label="<?php esc_attr_e( 'Revisado por', 'agrocampo-post-venta' ); ?>"><?php echo esc_html( (string) $reviewer ); ?></td>
-                            <td data-label="<?php esc_attr_e( 'Fecha revisión', 'agrocampo-post-venta' ); ?>"><?php echo esc_html( $reviewed_at ); ?></td>
+                            <td data-label="<?php esc_attr_e( 'Resuelto por', 'agrocampo-post-venta' ); ?>"><?php echo esc_html( (string) $reviewer ); ?></td>
+                            <td data-label="<?php esc_attr_e( 'Fecha resolución', 'agrocampo-post-venta' ); ?>"><?php echo esc_html( $reviewed_at ); ?></td>
                             <td data-label="<?php esc_attr_e( 'PDF', 'agrocampo-post-venta' ); ?>">
                                 <?php if ( ! $is_public_read_only ) : ?>
                                     <a class="agp-pv-icon-link" href="<?php echo esc_url( $view_pdf_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Ver PDF', 'agrocampo-post-venta' ); ?></a>
@@ -583,7 +583,7 @@ if ( $range_active ) {
                                                 <input type="hidden" name="agp_pv_front_action" value="mark_reviewed">
                                                 <input type="hidden" name="submission_id" value="<?php echo esc_attr( (string) $submission_id ); ?>">
                                                 <input type="hidden" name="redirect_to" value="<?php echo esc_attr( $current_view_url ); ?>">
-                                                <button type="submit"><?php esc_html_e( 'Marcar revisado', 'agrocampo-post-venta' ); ?></button>
+                                                <button type="submit"><?php esc_html_e( 'Marcar resuelto', 'agrocampo-post-venta' ); ?></button>
                                             </form>
                                         <?php else : ?>
                                             <form method="post" class="agp-pv-inline-action agp-pv-inline-action--row" data-agp-confirm-pending>

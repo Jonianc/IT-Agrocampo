@@ -1,3 +1,6 @@
+## [1.25.19] - 2026-04-28
+- Se actualizan textos visibles en el Gestor de observaciones: `Marcar revisado` pasa a `Marcar resuelto`, `Revisado por` a `Resuelto por` y `Fecha revisión` a `Fecha resolución`, sin cambios en lógica interna.
+
 ## [1.25.18] - 2026-04-28
 - Se ordenan los botones de acción del Gestor de observaciones en una misma columna apilada para mejorar legibilidad en desktop.
 
