@@ -386,8 +386,12 @@ if ( $range_active ) {
 
     <?php if ( 'review_marked' === $notice ) : ?>
         <div class="agp-pv-notice agp-pv-notice-success"><?php esc_html_e( 'Informe marcado como revisado.', 'agrocampo-post-venta' ); ?></div>
+    <?php elseif ( 'review_unmarked' === $notice ) : ?>
+        <div class="agp-pv-notice agp-pv-notice-success"><?php esc_html_e( 'La observación volvió a pendiente.', 'agrocampo-post-venta' ); ?></div>
     <?php elseif ( 'review_failed' === $notice ) : ?>
         <div class="agp-pv-notice agp-pv-notice-error"><?php esc_html_e( 'No se pudo actualizar el estado de revisión.', 'agrocampo-post-venta' ); ?></div>
+    <?php elseif ( 'review_unmark_failed' === $notice ) : ?>
+        <div class="agp-pv-notice agp-pv-notice-error"><?php esc_html_e( 'No se pudo actualizar la observación.', 'agrocampo-post-venta' ); ?></div>
     <?php elseif ( 'observation_appended' === $notice ) : ?>
         <div class="agp-pv-notice agp-pv-notice-success"><?php esc_html_e( 'Observación agregada correctamente al informe revisado.', 'agrocampo-post-venta' ); ?></div>
     <?php elseif ( 'observation_append_failed' === $notice ) : ?>
@@ -582,6 +586,13 @@ if ( $range_active ) {
                                                 <button type="submit"><?php esc_html_e( 'Marcar revisado', 'agrocampo-post-venta' ); ?></button>
                                             </form>
                                         <?php else : ?>
+                                            <form method="post" class="agp-pv-inline-action agp-pv-inline-action--row" data-agp-confirm-pending>
+                                                <?php wp_nonce_field( 'agp_pv_front_unmark_reviewed' ); ?>
+                                                <input type="hidden" name="agp_pv_front_action" value="unmark_reviewed">
+                                                <input type="hidden" name="submission_id" value="<?php echo esc_attr( (string) $submission_id ); ?>">
+                                                <input type="hidden" name="redirect_to" value="<?php echo esc_attr( $current_view_url ); ?>">
+                                                <button type="submit"><?php esc_html_e( 'Desmarcar resuelto', 'agrocampo-post-venta' ); ?></button>
+                                            </form>
                                             <?php $note_dialog_id = 'agp-pv-note-dialog-' . $submission_id; ?>
                                             <button type="button" class="agp-pv-action-button agp-pv-action-button--secondary" data-agp-dialog-open="<?php echo esc_attr( $note_dialog_id ); ?>"><?php esc_html_e( 'Agregar observación', 'agrocampo-post-venta' ); ?></button>
                                             <dialog id="<?php echo esc_attr( $note_dialog_id ); ?>" class="agp-pv-dialog agp-pv-dialog--note" aria-labelledby="<?php echo esc_attr( $note_dialog_id . '-title' ); ?>">
@@ -680,6 +691,14 @@ if ( $range_active ) {
 </main>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-agp-confirm-pending]').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!window.confirm('<?php echo esc_js( __( '¿Seguro que quieres volver esta observación a pendiente?', 'agrocampo-post-venta' ) ); ?>')) {
+                event.preventDefault();
+            }
+        });
+    });
+
     var openers = document.querySelectorAll('[data-agp-dialog-open]');
     var closeDialog = function (dialog) {
         if (!dialog) { return; }

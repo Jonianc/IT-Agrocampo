@@ -1,3 +1,6 @@
+## [1.25.17] - 2026-04-28
+- Se agrega opción para desmarcar observaciones resueltas y volverlas a estado pendiente desde el Gestor de observaciones.
+
 ## [1.25.16] - 2026-04-28
 - Se corrige la visualización de PDF desde los gestores frontend usando un endpoint admin-post dedicado, evitando enlaces a páginas admin retiradas.
 

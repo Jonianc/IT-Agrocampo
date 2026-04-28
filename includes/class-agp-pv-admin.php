@@ -23,6 +23,7 @@ class AGP_PV_Admin {
         add_action( 'admin_post_agp_pv_resend_email', array( $this, 'handle_resend_email' ) );
         add_action( 'admin_post_agp_pv_regenerate_pdf', array( $this, 'handle_regenerate_pdf' ) );
         add_action( 'admin_post_agp_pv_mark_reviewed', array( $this, 'handle_mark_reviewed' ) );
+        add_action( 'admin_post_agp_pv_unmark_reviewed', array( $this, 'handle_unmark_reviewed' ) );
         add_action( 'admin_post_agp_pv_send_test_email', array( $this, 'handle_send_test_email' ) );
         add_action( 'admin_post_agp_pv_send_overdue_test_email', array( $this, 'handle_send_overdue_test_email' ) );
         add_action( 'admin_post_agp_pv_send_summary_now', array( $this, 'handle_send_summary_now' ) );
@@ -1719,6 +1720,52 @@ class AGP_PV_Admin {
         }
 
         wp_safe_redirect( $this->action_redirect_url( $manager_page, 'review_marked' ) );
+        exit;
+    }
+
+    public function handle_unmark_reviewed(): void {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( esc_html__( 'No autorizado.', 'agrocampo-post-venta' ) );
+        }
+
+        $submission_id = isset( $_GET['submission_id'] ) ? absint( $_GET['submission_id'] ) : 0;
+        $manager_page  = $this->get_manager_page_from_request();
+
+        if ( ! $submission_id ) {
+            wp_safe_redirect( $this->action_redirect_url( $manager_page, 'review_unmark_failed', __( 'Informe inválido.', 'agrocampo-post-venta' ) ) );
+            exit;
+        }
+
+        if ( ! $this->verify_submission_action_nonce( 'agp_pv_unmark_reviewed', $submission_id ) ) {
+            wp_die( esc_html__( 'Enlace inválido o expirado.', 'agrocampo-post-venta' ), esc_html__( 'Acceso denegado', 'agrocampo-post-venta' ), array( 'response' => 403 ) );
+        }
+
+        $submission = AGP_PV_Email::get_submission( $submission_id );
+        if ( ! $submission ) {
+            wp_safe_redirect( $this->action_redirect_url( $manager_page, 'review_unmark_failed', __( 'No se pudo actualizar la observación.', 'agrocampo-post-venta' ) ) );
+            exit;
+        }
+
+        global $wpdb;
+        $updated = $wpdb->update(
+            AGP_PV_DB::table_name(),
+            array(
+                'review_status' => AGP_PV_Plugin::resolve_review_status_for_observation( (string) ( $submission['observaciones'] ?? '' ), '' ),
+                'reviewed_by'   => 0,
+                'reviewed_at'   => null,
+                'updated_at'    => current_time( 'mysql' ),
+            ),
+            array( 'id' => $submission_id ),
+            array( '%s', '%d', '%s', '%s' ),
+            array( '%d' )
+        );
+
+        if ( false === $updated ) {
+            wp_safe_redirect( $this->action_redirect_url( $manager_page, 'review_unmark_failed', __( 'No se pudo actualizar la observación.', 'agrocampo-post-venta' ) ) );
+            exit;
+        }
+
+        wp_safe_redirect( $this->action_redirect_url( $manager_page, 'review_unmarked' ) );
         exit;
     }
 

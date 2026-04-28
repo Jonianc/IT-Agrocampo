@@ -1236,7 +1236,7 @@ class AGP_PV_Plugin {
         }
 
         $action = sanitize_key( wp_unslash( $_POST['agp_pv_front_action'] ) );
-        if ( ! in_array( $action, array( 'mark_reviewed', 'append_observation' ), true ) ) {
+        if ( ! in_array( $action, array( 'mark_reviewed', 'unmark_reviewed', 'append_observation' ), true ) ) {
             return;
         }
 
@@ -1272,6 +1272,39 @@ class AGP_PV_Plugin {
             }
 
             wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'review_marked', self::get_observations_front_redirect_url() ) );
+            exit;
+        }
+
+        if ( 'unmark_reviewed' === $action ) {
+            if ( ! check_admin_referer( 'agp_pv_front_unmark_reviewed' ) ) {
+                wp_die( esc_html__( 'Solicitud inválida.', 'agrocampo-post-venta' ), esc_html__( 'Acceso denegado', 'agrocampo-post-venta' ), array( 'response' => 403 ) );
+            }
+
+            $submission = AGP_PV_Email::get_submission( $submission_id );
+            if ( ! $submission ) {
+                wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'review_unmark_failed', self::get_observations_front_redirect_url() ) );
+                exit;
+            }
+
+            $updated = $wpdb->update(
+                AGP_PV_DB::table_name(),
+                array(
+                    'review_status' => self::resolve_review_status_for_observation( (string) ( $submission['observaciones'] ?? '' ), '' ),
+                    'reviewed_by' => 0,
+                    'reviewed_at' => null,
+                    'updated_at' => current_time( 'mysql' ),
+                ),
+                array( 'id' => $submission_id ),
+                array( '%s', '%d', '%s', '%s' ),
+                array( '%d' )
+            );
+
+            if ( false === $updated ) {
+                wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'review_unmark_failed', self::get_observations_front_redirect_url() ) );
+                exit;
+            }
+
+            wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'review_unmarked', self::get_observations_front_redirect_url() ) );
             exit;
         }
 
