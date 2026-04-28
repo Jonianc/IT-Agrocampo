@@ -212,6 +212,7 @@ class AGP_PV_Admin {
         $lubricants_field_states = $lubricants_settings['field_states'];
         $recipients = AGP_PV_Email::get_configured_recipients();
         $recipients_value = implode( ', ', $recipients );
+        $recipients_count = count( array_filter( $recipients, 'strlen' ) );
         $technicians_value = implode( "\n", AGP_PV_Plugin::get_technicians() );
         $public_observations_access = AGP_PV_Plugin::get_public_observations_access_settings();
         $public_access_enabled = ! empty( $public_observations_access['enabled'] );
@@ -237,6 +238,7 @@ class AGP_PV_Admin {
         $lubricants_catalog_status = AGP_PV_Plugin::get_lubricants_catalog_status();
         $is_persistent_source      = 'persistent' === (string) $lubricants_catalog_status['source'];
         $catalog_status_label      = $is_persistent_source ? __( 'Catálogo persistente cargado', 'agrocampo-post-venta' ) : __( 'Catálogo base en uso (fallback)', 'agrocampo-post-venta' );
+        $has_jefe_taller_name      = '' !== trim( $pdf_jefe_taller_nombre );
 
         echo '<div class="wrap agp-pv-admin">';
         echo '<h1>' . esc_html__( 'Ajustes Informe Técnico', 'agrocampo-post-venta' ) . '</h1>';
@@ -261,11 +263,10 @@ class AGP_PV_Admin {
         echo '<section id="agp-pv-section-resumen" class="card agp-pv-card">';
         echo '<h2>' . esc_html__( 'Resumen', 'agrocampo-post-venta' ) . '</h2>';
         echo '<p><strong>' . esc_html__( 'Versión del plugin:', 'agrocampo-post-venta' ) . '</strong> ' . esc_html( AGP_PV_VERSION ) . '</p>';
-        echo '<p><a class="button button-primary" target="_blank" rel="noopener noreferrer" href="' . esc_url( AGP_PV_Plugin::form_standalone_url() ) . '">' . esc_html__( 'Abrir formulario Informe Técnico', 'agrocampo-post-venta' ) . '</a></p>';
-        echo '<p><a class="button button-secondary" target="_blank" rel="noopener noreferrer" href="' . esc_url( AGP_PV_Plugin::reports_standalone_url() ) . '">' . esc_html__( 'Abrir gestor de informes', 'agrocampo-post-venta' ) . '</a></p>';
-        echo '<p><a class="button button-secondary" target="_blank" rel="noopener noreferrer" href="' . esc_url( AGP_PV_Plugin::observations_standalone_url() ) . '">' . esc_html__( 'Abrir gestor de observaciones', 'agrocampo-post-venta' ) . '</a></p>';
         echo '<p><span class="agp-pv-status ' . ( $lubricants_catalog_count > 0 ? 'agp-pv-status-ready' : 'agp-pv-status-pending' ) . '">' . esc_html( $catalog_status_label ) . '</span> ' . sprintf( esc_html__( '%d ítems en catálogo', 'agrocampo-post-venta' ), (int) $lubricants_catalog_count ) . '</p>';
         echo '<p><span class="agp-pv-status ' . ( $public_access_enabled && ! $public_access_is_expired ? 'agp-pv-status-ready' : 'agp-pv-status-pending' ) . '">' . ( $public_access_enabled && ! $public_access_is_expired ? esc_html__( 'Acceso temporal público activo', 'agrocampo-post-venta' ) : esc_html__( 'Acceso temporal público inactivo', 'agrocampo-post-venta' ) ) . '</span></p>';
+        echo '<p><strong>' . esc_html__( 'Destinatarios configurados:', 'agrocampo-post-venta' ) . '</strong> ' . esc_html( (string) $recipients_count ) . '</p>';
+        echo '<p><span class="agp-pv-status ' . ( $has_jefe_taller_name ? 'agp-pv-status-ready' : 'agp-pv-status-pending' ) . '">' . ( $has_jefe_taller_name ? esc_html__( 'Jefe de Taller configurado', 'agrocampo-post-venta' ) : esc_html__( 'Jefe de Taller faltante', 'agrocampo-post-venta' ) ) . '</span></p>';
         echo '</section>';
 
         echo '<section id="agp-pv-section-accesos" class="card agp-pv-card">';
@@ -516,6 +517,16 @@ class AGP_PV_Admin {
         echo '<textarea name="agp_pv_recipients" rows="4" class="large-text">' . esc_textarea( $recipients_value ) . '</textarea>';
         echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Guardar destinatarios', 'agrocampo-post-venta' ) . '</button></p>';
         echo '</form>';
+        echo '<hr>';
+        echo '<h3>' . esc_html__( 'Prueba de correo', 'agrocampo-post-venta' ) . '</h3>';
+        echo '<p>' . esc_html__( 'Si tu hosting no tiene habilitada la función mail(), configura SMTP con un plugin como WP Mail SMTP.', 'agrocampo-post-venta' ) . '</p>';
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+        echo '<input type="hidden" name="action" value="agp_pv_send_test_email">';
+        wp_nonce_field( 'agp_pv_send_test_email' );
+        echo '<p><label for="agp-pv-test-email"><strong>' . esc_html__( 'Enviar correo de prueba a', 'agrocampo-post-venta' ) . '</strong></label><br>';
+        echo '<input type="email" id="agp-pv-test-email" name="test_email" class="regular-text" required></p>';
+        echo '<p><button type="submit" class="button button-secondary">' . esc_html__( 'Enviar correo de prueba', 'agrocampo-post-venta' ) . '</button></p>';
+        echo '</form>';
 
         echo '</section>';
 
@@ -635,18 +646,6 @@ class AGP_PV_Admin {
         wp_nonce_field( 'agp_pv_save_technicians' );
         echo '<textarea name="agp_pv_technicians" rows="8" class="large-text code" placeholder="Nombre Apellido">' . esc_textarea( $technicians_value ) . '</textarea>';
         echo '<p><button type="submit" class="button button-primary">' . esc_html__( 'Guardar técnicos', 'agrocampo-post-venta' ) . '</button></p>';
-        echo '</form>';
-        echo '</section>';
-
-        echo '<section class="card agp-pv-card">';
-        echo '<h2>' . esc_html__( 'Prueba de correo', 'agrocampo-post-venta' ) . '</h2>';
-        echo '<p>' . esc_html__( 'Si tu hosting no tiene habilitada la función mail(), configura SMTP con un plugin como WP Mail SMTP.', 'agrocampo-post-venta' ) . '</p>';
-        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
-        echo '<input type="hidden" name="action" value="agp_pv_send_test_email">';
-        wp_nonce_field( 'agp_pv_send_test_email' );
-        echo '<p><label for="agp-pv-test-email"><strong>' . esc_html__( 'Enviar correo de prueba a', 'agrocampo-post-venta' ) . '</strong></label><br>';
-        echo '<input type="email" id="agp-pv-test-email" name="test_email" class="regular-text" required></p>';
-        echo '<p><button type="submit" class="button button-secondary">' . esc_html__( 'Enviar correo de prueba', 'agrocampo-post-venta' ) . '</button></p>';
         echo '</form>';
         echo '</section>';
 

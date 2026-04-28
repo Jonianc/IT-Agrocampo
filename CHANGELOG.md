@@ -1,3 +1,6 @@
+## [1.25.11] - 2026-04-28
+- Se ajusta la jerarquía visual de Ajustes: Resumen queda solo con estados generales, Correos integra Destinatarios + Prueba de correo y Observaciones mantiene junto el bloque de Acceso temporal público, sin cambios en lógica de negocio.
+
 ## [1.25.10] - 2026-04-28
 - Se eliminan enlaces operativos hacia gestores admin ocultos en vistas standalone y correos, redirigiendo a gestores frontend/standalone; se mantiene sin cambios el trigger técnico de `Ver PDF` basado en slugs admin.
 
