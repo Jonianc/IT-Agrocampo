@@ -492,8 +492,8 @@ class AGP_PV_Email {
             'fecha_fin' => self::format_datetime( $now->format( 'Y-m-d H:i:s' ) ),
             'rango_dias' => (string) AGP_PV_Plugin::get_observations_report_window_days(),
             'items_html' => self::build_summary_items_html( $rows ),
-            'gestor_url' => admin_url( 'admin.php?page=agp-pv-observations' ),
-            'gestor_link' => '<a href="' . esc_url( admin_url( 'admin.php?page=agp-pv-observations' ) ) . '">' . esc_html__( 'Abrir gestor', 'agrocampo-post-venta' ) . '</a>',
+            'gestor_url' => AGP_PV_Plugin::observations_standalone_url(),
+            'gestor_link' => '<a href="' . esc_url( AGP_PV_Plugin::observations_standalone_url() ) . '">' . esc_html__( 'Abrir gestor', 'agrocampo-post-venta' ) . '</a>',
         );
 
         $subject = self::render_notification_subject( $settings['summary_subject'], $context );
@@ -581,8 +581,8 @@ class AGP_PV_Email {
             'dias_abierta' => '10',
             'pdf_url' => '',
             'pdf_link' => __( 'Sin PDF de prueba', 'agrocampo-post-venta' ),
-            'gestor_url' => admin_url( 'admin.php?page=agp-pv-observations' ),
-            'gestor_link' => '<a href="' . esc_url( admin_url( 'admin.php?page=agp-pv-observations' ) ) . '">' . esc_html__( 'Abrir gestor', 'agrocampo-post-venta' ) . '</a>',
+            'gestor_url' => AGP_PV_Plugin::observations_standalone_url(),
+            'gestor_link' => '<a href="' . esc_url( AGP_PV_Plugin::observations_standalone_url() ) . '">' . esc_html__( 'Abrir gestor', 'agrocampo-post-venta' ) . '</a>',
         );
     }
 
@@ -607,7 +607,7 @@ class AGP_PV_Email {
             $pdf_url = (string) wp_get_attachment_url( (int) $submission['pdf_attachment_id'] );
         }
 
-        $admin_manager_url = admin_url( 'admin.php?page=agp-pv-observations' );
+        $admin_manager_url = AGP_PV_Plugin::observations_standalone_url();
         $created_at = (string) ( $submission['created_at'] ?? '' );
         $days_open = 0;
 

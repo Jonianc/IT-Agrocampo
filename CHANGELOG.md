@@ -1,3 +1,6 @@
+## [1.25.10] - 2026-04-28
+- Se eliminan enlaces operativos hacia gestores admin ocultos en vistas standalone y correos, redirigiendo a gestores frontend/standalone; se mantiene sin cambios el trigger técnico de `Ver PDF` basado en slugs admin.
+
 ## [1.25.9] - 2026-04-28
 - Se reorganiza la pantalla de Ajustes con navegación interna por secciones, mejor jerarquía operativa y herramientas técnicas al final, manteniendo ocultos los gestores admin.
 

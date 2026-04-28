@@ -188,7 +188,6 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
         </div>
         <div class="agp-pv-observations-header__actions" role="navigation" aria-label="<?php esc_attr_e( 'Acciones de navegación de informes', 'agrocampo-post-venta' ); ?>">
             <a class="button button-secondary" href="<?php echo esc_url( AGP_PV_Plugin::observations_standalone_url() ); ?>"><?php esc_html_e( 'Ir a observaciones', 'agrocampo-post-venta' ); ?></a>
-            <a class="button button-secondary" href="<?php echo esc_url( admin_url( 'admin.php?page=agp-pv-submissions' ) ); ?>"><?php esc_html_e( 'Abrir respaldo admin', 'agrocampo-post-venta' ); ?></a>
         </div>
     </header>
 

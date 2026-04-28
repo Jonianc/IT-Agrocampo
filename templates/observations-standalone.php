@@ -177,8 +177,7 @@ $status_tabs = array(
     ),
 );
 
-$base_url               = AGP_PV_Plugin::observations_standalone_url();
-$admin_observations_url = admin_url( 'admin.php?page=agp-pv-observations' );
+$base_url = AGP_PV_Plugin::observations_standalone_url();
 
 $build_url = static function ( array $args = array() ) use ( $base_url, $search, $review_status, $review_status_raw, $days, $date_from, $date_to ) {
     $query_args = array();
@@ -380,7 +379,7 @@ if ( $range_active ) {
                 </article>
             </div>
             <?php if ( ! $is_public_read_only ) : ?>
-                <a class="agp-pv-tertiary-link" href="<?php echo esc_url( $admin_observations_url ); ?>"><?php esc_html_e( 'Gestor interno', 'agrocampo-post-venta' ); ?></a>
+                <a class="agp-pv-tertiary-link" href="<?php echo esc_url( AGP_PV_Plugin::reports_standalone_url() ); ?>"><?php esc_html_e( 'Ir a informes', 'agrocampo-post-venta' ); ?></a>
             <?php endif; ?>
         </div>
     </section>
