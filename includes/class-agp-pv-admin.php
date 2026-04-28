@@ -49,30 +49,12 @@ class AGP_PV_Admin {
 
     public function register_menu(): void {
         add_menu_page(
-            __( 'Informe Técnico', 'agrocampo-post-venta' ),
-            __( 'Informe Técnico', 'agrocampo-post-venta' ),
-            'manage_options',
-            'agp-pv-submissions',
-            array( $this, 'render_list_page' ),
-            'dashicons-forms'
-        );
-
-        add_submenu_page(
-            'agp-pv-submissions',
-            __( 'Informes con observaciones', 'agrocampo-post-venta' ),
-            __( 'Con observaciones', 'agrocampo-post-venta' ),
-            'manage_options',
-            'agp-pv-observations',
-            array( $this, 'render_observations_page' )
-        );
-
-        add_submenu_page(
-            'agp-pv-submissions',
-            __( 'Ajustes', 'agrocampo-post-venta' ),
+            __( 'Ajustes Informe Técnico', 'agrocampo-post-venta' ),
             __( 'Ajustes', 'agrocampo-post-venta' ),
             'manage_options',
             'agp-pv-settings',
-            array( $this, 'render_settings_page' )
+            array( $this, 'render_settings_page' ),
+            'dashicons-forms'
         );
     }
 

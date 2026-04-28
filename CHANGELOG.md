@@ -1,3 +1,6 @@
+## [1.25.7] - 2026-04-28
+- Se simplifica el admin del plugin dejando visible solo Ajustes y retirando del menú los gestores internos de informes y observaciones.
+
 ## [1.25.6] - 2026-04-25
 - observaciones standalone (`/post-venta-observaciones/`): nuevo acceso temporal público con token por query param `agp_public_token`, validado contra hash + expiración y habilitado solo en modo GET de solo lectura.
 - seguridad acceso temporal: se bloquea cualquier POST desde sesión pública sin `manage_options`, manteniendo intacto el acceso normal autenticado de administrador.
