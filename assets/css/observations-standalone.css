@@ -1138,6 +1138,14 @@ body.agp-pv-observations-standalone {
     align-items: flex-start;
 }
 
+.agp-pv-observation-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    min-width: 180px;
+}
+
 .agp-pv-inline-link {
     display: inline-flex;
     align-items: center;
@@ -1167,6 +1175,11 @@ body.agp-pv-observations-standalone {
     display: inline-flex;
 }
 
+.agp-pv-observation-actions .agp-pv-inline-action--row {
+    display: flex;
+    width: 100%;
+}
+
 .agp-pv-inline-action--row button,
 .agp-pv-action-button {
     display: inline-flex;
@@ -1177,6 +1190,16 @@ body.agp-pv-observations-standalone {
     border-radius: 10px;
     font-size: 14px;
     font-weight: 700;
+    white-space: nowrap;
+}
+
+.agp-pv-observation-actions .agp-pv-inline-action--row button,
+.agp-pv-observation-actions .agp-pv-action-button,
+.agp-pv-observation-actions .button,
+.agp-pv-observation-actions .agp-pv-action-link {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
     white-space: nowrap;
 }
 
@@ -1329,6 +1352,7 @@ body.agp-pv-observations-standalone {
     }
 
     .agp-pv-action-stack,
+    .agp-pv-observation-actions,
     .agp-pv-inline-action--row {
         width: 100%;
     }

@@ -576,7 +576,7 @@ if ( $range_active ) {
                                 <?php if ( $is_public_read_only ) : ?>
                                     <span class="agp-pv-empty-action"><?php esc_html_e( 'Solo lectura', 'agrocampo-post-venta' ); ?></span>
                                 <?php elseif ( $submission_id > 0 ) : ?>
-                                    <div class="agp-pv-action-stack">
+                                    <div class="agp-pv-observation-actions">
                                         <?php if ( ! $is_reviewed ) : ?>
                                             <form method="post" class="agp-pv-inline-action agp-pv-inline-action--row">
                                                 <?php wp_nonce_field( 'agp_pv_front_mark_reviewed' ); ?>

@@ -1,3 +1,6 @@
+## [1.25.18] - 2026-04-28
+- Se ordenan los botones de acción del Gestor de observaciones en una misma columna apilada para mejorar legibilidad en desktop.
+
 ## [1.25.17] - 2026-04-28
 - Se agrega opción para desmarcar observaciones resueltas y volverlas a estado pendiente desde el Gestor de observaciones.
 
