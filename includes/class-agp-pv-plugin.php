@@ -975,6 +975,10 @@ class AGP_PV_Plugin {
         return home_url( '/post-venta-informes/' );
     }
 
+    public static function form_standalone_url(): string {
+        return home_url( '/post-venta/' );
+    }
+
     public function register_cron_schedules( array $schedules ): array {
         if ( ! isset( $schedules['weekly'] ) ) {
             $schedules['weekly'] = array(

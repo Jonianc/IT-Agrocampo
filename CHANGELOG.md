@@ -1,3 +1,6 @@
+## [1.25.8] - 2026-04-28
+- Se agregan accesos operativos a formulario, gestor de informes y gestor de observaciones desde Ajustes; se ajustan redirects fallback hacia vistas frontend y se conserva la regeneración masiva de PDF como herramienta técnica.
+
 ## [1.25.7] - 2026-04-28
 - Se simplifica el admin del plugin dejando visible solo Ajustes y retirando del menú los gestores internos de informes y observaciones.
 

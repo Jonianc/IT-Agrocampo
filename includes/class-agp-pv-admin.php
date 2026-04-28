@@ -50,7 +50,7 @@ class AGP_PV_Admin {
     public function register_menu(): void {
         add_menu_page(
             __( 'Ajustes Informe Técnico', 'agrocampo-post-venta' ),
-            __( 'Ajustes', 'agrocampo-post-venta' ),
+            __( 'Post Venta', 'agrocampo-post-venta' ),
             'manage_options',
             'agp-pv-settings',
             array( $this, 'render_settings_page' ),
@@ -88,7 +88,14 @@ class AGP_PV_Admin {
     }
 
     private function action_redirect_url( string $manager_page, string $notice, string $notice_message = '' ): string {
-        $fallback_url = admin_url( 'admin.php?page=' . $manager_page );
+        if ( 'agp-pv-observations' === $manager_page ) {
+            $fallback_url = AGP_PV_Plugin::observations_standalone_url();
+        } elseif ( 'agp-pv-submissions' === $manager_page ) {
+            $fallback_url = AGP_PV_Plugin::reports_standalone_url();
+        } else {
+            $fallback_url = admin_url( 'admin.php?page=' . $manager_page );
+        }
+
         $base_url     = $this->get_safe_redirect_url( $fallback_url );
 
         $args = array(
@@ -121,16 +128,6 @@ class AGP_PV_Admin {
         echo '<p><a class="button button-secondary" href="' . esc_url( AGP_PV_Plugin::observations_standalone_url() ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Abrir gestor frontend de observaciones', 'agrocampo-post-venta' ) . '</a></p>';
 
         $this->render_admin_notice();
-
-        echo '<section class="agp-pv-bulk-pdf card">';
-        echo '<h2>' . esc_html__( 'Regeneración masiva de PDF', 'agrocampo-post-venta' ) . '</h2>';
-        echo '<p>' . esc_html__( 'Regenera los PDF de todos los informes históricos en lotes para evitar timeouts.', 'agrocampo-post-venta' ) . '</p>';
-        echo '<p><button type="button" class="button button-primary" id="agp-pv-regenerate-all-pdf">' . esc_html__( 'Regenerar todos los PDF', 'agrocampo-post-venta' ) . '</button></p>';
-        echo '<div id="agp-pv-regenerate-progress" class="agp-pv-regenerate-progress" hidden>';
-        echo '<progress id="agp-pv-regenerate-progress-bar" max="100" value="0"></progress>';
-        echo '<p id="agp-pv-regenerate-progress-text" aria-live="polite"></p>';
-        echo '</div>';
-        echo '</section>';
 
         echo '<form method="get" class="agp-pv-filters">';
         echo '<input type="hidden" name="page" value="agp-pv-submissions">';
@@ -246,9 +243,21 @@ class AGP_PV_Admin {
         echo '<div class="agp-pv-settings-grid">';
 
         echo '<section class="card agp-pv-card">';
-        echo '<h2>' . esc_html__( 'Acceso rápido', 'agrocampo-post-venta' ) . '</h2>';
-        echo '<p>' . esc_html__( 'Abre el formulario público de Informe Técnico en una nueva pestaña.', 'agrocampo-post-venta' ) . '</p>';
-        echo '<p><a class="button button-primary" target="_blank" rel="noopener noreferrer" href="' . esc_url( home_url( '/post-venta/' ) ) . '">' . esc_html__( 'Abrir Informe Técnico', 'agrocampo-post-venta' ) . '</a></p>';
+        echo '<h2>' . esc_html__( 'Accesos operativos', 'agrocampo-post-venta' ) . '</h2>';
+        echo '<p>' . esc_html__( 'Los gestores requieren sesión de administrador. El acceso público temporal solo aplica a Observaciones en modo lectura.', 'agrocampo-post-venta' ) . '</p>';
+        echo '<p><a class="button button-primary" target="_blank" rel="noopener noreferrer" href="' . esc_url( AGP_PV_Plugin::form_standalone_url() ) . '">' . esc_html__( 'Abrir formulario Informe Técnico', 'agrocampo-post-venta' ) . '</a></p>';
+        echo '<p><a class="button button-secondary" target="_blank" rel="noopener noreferrer" href="' . esc_url( AGP_PV_Plugin::reports_standalone_url() ) . '">' . esc_html__( 'Abrir gestor de informes', 'agrocampo-post-venta' ) . '</a></p>';
+        echo '<p><a class="button button-secondary" target="_blank" rel="noopener noreferrer" href="' . esc_url( AGP_PV_Plugin::observations_standalone_url() ) . '">' . esc_html__( 'Abrir gestor de observaciones', 'agrocampo-post-venta' ) . '</a></p>';
+        echo '</section>';
+
+        echo '<section class="card agp-pv-card">';
+        echo '<h2>' . esc_html__( 'Herramientas técnicas', 'agrocampo-post-venta' ) . '</h2>';
+        echo '<p>' . esc_html__( 'Regenera los PDF de todos los informes históricos en lotes para evitar timeouts.', 'agrocampo-post-venta' ) . '</p>';
+        echo '<p><button type="button" class="button button-primary" id="agp-pv-regenerate-all-pdf">' . esc_html__( 'Regenerar todos los PDF', 'agrocampo-post-venta' ) . '</button></p>';
+        echo '<div id="agp-pv-regenerate-progress" class="agp-pv-regenerate-progress" hidden>';
+        echo '<progress id="agp-pv-regenerate-progress-bar" max="100" value="0"></progress>';
+        echo '<p id="agp-pv-regenerate-progress-text" aria-live="polite"></p>';
+        echo '</div>';
         echo '</section>';
 
         echo '<section class="card agp-pv-card">';
@@ -1639,7 +1648,7 @@ class AGP_PV_Admin {
         $manager_page = $this->get_manager_page_from_request();
 
         if ( ! $submission_id ) {
-            wp_safe_redirect( admin_url( 'admin.php?page=' . $manager_page ) );
+            wp_safe_redirect( $this->action_redirect_url( $manager_page, 'review_failed', __( 'Informe inválido.', 'agrocampo-post-venta' ) ) );
             exit;
         }
 
@@ -1664,13 +1673,11 @@ class AGP_PV_Admin {
         );
 
         if ( false === $updated ) {
-            wp_safe_redirect(
-                admin_url( 'admin.php?page=' . $manager_page . '&agp_pv_notice=review_failed&agp_pv_notice_message=' . rawurlencode( __( 'No se pudo actualizar el estado de revisión.', 'agrocampo-post-venta' ) ) )
-            );
+            wp_safe_redirect( $this->action_redirect_url( $manager_page, 'review_failed', __( 'No se pudo actualizar el estado de revisión.', 'agrocampo-post-venta' ) ) );
             exit;
         }
 
-        wp_safe_redirect( admin_url( 'admin.php?page=' . $manager_page . '&agp_pv_notice=review_marked' ) );
+        wp_safe_redirect( $this->action_redirect_url( $manager_page, 'review_marked' ) );
         exit;
     }
 
@@ -1683,7 +1690,7 @@ class AGP_PV_Admin {
         $manager_page  = $this->get_manager_page_from_request();
 
         if ( ! $submission_id ) {
-            wp_safe_redirect( admin_url( 'admin.php?page=' . $manager_page ) );
+            wp_safe_redirect( $this->action_redirect_url( $manager_page, 'observation_append_failed', __( 'Informe inválido.', 'agrocampo-post-venta' ) ) );
             exit;
         }
 
@@ -1695,9 +1702,7 @@ class AGP_PV_Admin {
         $new_note   = AGP_PV_Plugin::normalize_observation_text( sanitize_textarea_field( wp_unslash( $_POST['observation_note'] ?? '' ) ) );
 
         if ( ! $submission || '' === $new_note ) {
-            wp_safe_redirect(
-                admin_url( 'admin.php?page=' . $manager_page . '&agp_pv_notice=observation_append_failed&agp_pv_notice_message=' . rawurlencode( __( 'Debes ingresar una observación válida.', 'agrocampo-post-venta' ) ) )
-            );
+            wp_safe_redirect( $this->action_redirect_url( $manager_page, 'observation_append_failed', __( 'Debes ingresar una observación válida.', 'agrocampo-post-venta' ) ) );
             exit;
         }
 
@@ -1720,13 +1725,11 @@ class AGP_PV_Admin {
         );
 
         if ( false === $updated ) {
-            wp_safe_redirect(
-                admin_url( 'admin.php?page=' . $manager_page . '&agp_pv_notice=observation_append_failed&agp_pv_notice_message=' . rawurlencode( __( 'No se pudo guardar la observación.', 'agrocampo-post-venta' ) ) )
-            );
+            wp_safe_redirect( $this->action_redirect_url( $manager_page, 'observation_append_failed', __( 'No se pudo guardar la observación.', 'agrocampo-post-venta' ) ) );
             exit;
         }
 
-        wp_safe_redirect( admin_url( 'admin.php?page=' . $manager_page . '&agp_pv_notice=observation_appended&submission_id=' . $submission_id ) );
+        wp_safe_redirect( add_query_arg( 'submission_id', $submission_id, $this->action_redirect_url( $manager_page, 'observation_appended' ) ) );
         exit;
     }
 
@@ -3109,7 +3112,7 @@ class AGP_PV_Admin {
             AGP_PV_VERSION
         );
 
-        if ( 'agp-pv-submissions' === $page ) {
+        if ( in_array( $page, array( 'agp-pv-submissions', 'agp-pv-settings' ), true ) ) {
             wp_enqueue_script(
                 'agp-pv-admin-submissions',
                 AGP_PV_PLUGIN_URL . 'assets/js/admin-submissions.js',
