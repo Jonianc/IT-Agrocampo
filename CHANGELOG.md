@@ -1,3 +1,6 @@
+## [1.25.14] - 2026-04-28
+- Se pule la experiencia desktop del Gestor de informes: mayor densidad y alineación en tabla, mejor jerarquía visual de filtros (búsqueda y estados priorizados) y ajustes de resumen para evitar redundancia visual, sin cambios funcionales en acciones, filtros, permisos, rutas ni paginación.
+
 ## [1.25.13] - 2026-04-28
 - Se unifica la experiencia visual del Gestor de informes con el Gestor de observaciones, incorporando header tipo dashboard, resumen superior, filtros rápidos y tabla standalone consistente.
 

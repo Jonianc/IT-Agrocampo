@@ -1510,6 +1510,87 @@ body.agp-pv-observations-standalone {
     }
 }
 
+@media (min-width: 1025px) {
+    .agp-pv-reports-wrap .agp-pv-filter-row {
+        gap: 10px;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-field--search {
+        grid-column: span 4 !important;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-field--primary {
+        grid-column: span 2 !important;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-field--secondary.agp-pv-field--wide {
+        grid-column: span 3 !important;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-field--secondary.agp-pv-field--date {
+        grid-column: span 2 !important;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-field--secondary:not(.agp-pv-field--wide):not(.agp-pv-field--date) {
+        grid-column: span 3 !important;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-field--actions {
+        grid-column: span 4 !important;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-field--search input {
+        min-height: 44px;
+        font-weight: 600;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-field--search .agp-pv-field__label,
+    .agp-pv-reports-wrap .agp-pv-field--primary .agp-pv-field__label {
+        color: #2d4866;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-observations-table thead th {
+        padding: 12px 14px;
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        white-space: nowrap;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-observations-table tbody td {
+        padding: 10px 14px;
+        font-size: 13px;
+        line-height: 1.3;
+        vertical-align: middle;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-observations-table tbody td:nth-child(2),
+    .agp-pv-reports-wrap .agp-pv-observations-table tbody td:nth-child(3),
+    .agp-pv-reports-wrap .agp-pv-observations-table tbody td:nth-child(4),
+    .agp-pv-reports-wrap .agp-pv-observations-table tbody td:nth-child(5) {
+        max-width: 190px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-observations-table tbody td:nth-child(6),
+    .agp-pv-reports-wrap .agp-pv-observations-table tbody td:nth-child(7),
+    .agp-pv-reports-wrap .agp-pv-observations-table tbody td:nth-child(8) {
+        white-space: nowrap;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-reports-row-actions {
+        gap: 4px;
+        flex-wrap: nowrap;
+    }
+
+    .agp-pv-reports-wrap .agp-pv-report-action {
+        min-height: 26px;
+        padding: 0 7px;
+        font-size: 10.5px;
+    }
+}
+
 .agp-pv-reports-wrap .agp-pv-status-badge--pending {
     color: #8a5f00;
     background: #fff4cf;

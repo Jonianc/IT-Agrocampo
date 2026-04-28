@@ -364,7 +364,7 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                     <strong class="agp-pv-summary-card__value"><?php echo esc_html( (string) $summary_pending_pdf ); ?></strong>
                 </article>
                 <article class="agp-pv-summary-card is-reviewed">
-                    <span class="agp-pv-summary-card__label"><?php esc_html_e( 'PDFs listos o correos enviados', 'agrocampo-post-venta' ); ?></span>
+                    <span class="agp-pv-summary-card__label"><?php esc_html_e( 'Listos / enviados', 'agrocampo-post-venta' ); ?></span>
                     <strong class="agp-pv-summary-card__value"><?php echo esc_html( (string) $summary_ready_or_sent ); ?></strong>
                 </article>
             </div>
@@ -380,7 +380,11 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
         <form method="get" action="<?php echo esc_url( $base_url ); ?>" class="agp-pv-filters">
             <div class="agp-pv-toolbar">
                 <div class="agp-pv-filter-row">
-                    <label class="agp-pv-field" for="agp-pv-filter-mail"><span class="agp-pv-field__label"><?php esc_html_e( 'Estado correo', 'agrocampo-post-venta' ); ?></span>
+                    <label class="agp-pv-field agp-pv-field--search" for="agp-pv-search"><span class="agp-pv-field__label"><?php esc_html_e( 'Buscar', 'agrocampo-post-venta' ); ?></span>
+                        <input type="search" id="agp-pv-search" name="s" value="<?php echo esc_attr( $search ); ?>" placeholder="<?php esc_attr_e( 'Técnico, cliente, correo, serie o ID', 'agrocampo-post-venta' ); ?>">
+                    </label>
+
+                    <label class="agp-pv-field agp-pv-field--primary" for="agp-pv-filter-mail"><span class="agp-pv-field__label"><?php esc_html_e( 'Estado correo', 'agrocampo-post-venta' ); ?></span>
                         <select id="agp-pv-filter-mail" name="mail_status">
                             <option value=""><?php esc_html_e( 'Todos', 'agrocampo-post-venta' ); ?></option>
                             <option value="pending" <?php selected( $mail_status, 'pending' ); ?>><?php esc_html_e( 'Pendiente', 'agrocampo-post-venta' ); ?></option>
@@ -389,7 +393,7 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                         </select>
                     </label>
 
-                    <label class="agp-pv-field" for="agp-pv-filter-pdf"><span class="agp-pv-field__label"><?php esc_html_e( 'Estado PDF', 'agrocampo-post-venta' ); ?></span>
+                    <label class="agp-pv-field agp-pv-field--primary" for="agp-pv-filter-pdf"><span class="agp-pv-field__label"><?php esc_html_e( 'Estado PDF', 'agrocampo-post-venta' ); ?></span>
                         <select id="agp-pv-filter-pdf" name="pdf_status">
                             <option value=""><?php esc_html_e( 'Todos', 'agrocampo-post-venta' ); ?></option>
                             <option value="pending" <?php selected( $pdf_status, 'pending' ); ?>><?php esc_html_e( 'Pendiente', 'agrocampo-post-venta' ); ?></option>
@@ -398,7 +402,7 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                         </select>
                     </label>
 
-                    <label class="agp-pv-field" for="agp-pv-filter-service-type"><span class="agp-pv-field__label"><?php esc_html_e( 'Tipo de servicio', 'agrocampo-post-venta' ); ?></span>
+                    <label class="agp-pv-field agp-pv-field--secondary" for="agp-pv-filter-service-type"><span class="agp-pv-field__label"><?php esc_html_e( 'Tipo de servicio', 'agrocampo-post-venta' ); ?></span>
                         <select id="agp-pv-filter-service-type" name="service_type">
                             <option value=""><?php esc_html_e( 'Todos', 'agrocampo-post-venta' ); ?></option>
                             <option value="one" <?php selected( $service_type, 'one' ); ?>><?php esc_html_e( 'Factura Cliente', 'agrocampo-post-venta' ); ?></option>
@@ -410,20 +414,16 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                         </select>
                     </label>
 
-                    <label class="agp-pv-field agp-pv-field--wide" for="agp-pv-filter-email"><span class="agp-pv-field__label"><?php esc_html_e( 'Correo', 'agrocampo-post-venta' ); ?></span>
+                    <label class="agp-pv-field agp-pv-field--secondary agp-pv-field--wide" for="agp-pv-filter-email"><span class="agp-pv-field__label"><?php esc_html_e( 'Correo', 'agrocampo-post-venta' ); ?></span>
                         <input type="text" id="agp-pv-filter-email" name="email" value="<?php echo esc_attr( $email ); ?>" placeholder="cliente@correo.cl">
                     </label>
 
-                    <label class="agp-pv-field agp-pv-field--date" for="agp-pv-filter-date-from"><span class="agp-pv-field__label"><?php esc_html_e( 'Desde', 'agrocampo-post-venta' ); ?></span>
+                    <label class="agp-pv-field agp-pv-field--secondary agp-pv-field--date" for="agp-pv-filter-date-from"><span class="agp-pv-field__label"><?php esc_html_e( 'Desde', 'agrocampo-post-venta' ); ?></span>
                         <input type="date" id="agp-pv-filter-date-from" name="date_from" value="<?php echo esc_attr( $date_from ); ?>">
                     </label>
 
-                    <label class="agp-pv-field agp-pv-field--date" for="agp-pv-filter-date-to"><span class="agp-pv-field__label"><?php esc_html_e( 'Hasta', 'agrocampo-post-venta' ); ?></span>
+                    <label class="agp-pv-field agp-pv-field--secondary agp-pv-field--date" for="agp-pv-filter-date-to"><span class="agp-pv-field__label"><?php esc_html_e( 'Hasta', 'agrocampo-post-venta' ); ?></span>
                         <input type="date" id="agp-pv-filter-date-to" name="date_to" value="<?php echo esc_attr( $date_to ); ?>">
-                    </label>
-
-                    <label class="agp-pv-field agp-pv-field--wide" for="agp-pv-search"><span class="agp-pv-field__label"><?php esc_html_e( 'Buscar', 'agrocampo-post-venta' ); ?></span>
-                        <input type="search" id="agp-pv-search" name="s" value="<?php echo esc_attr( $search ); ?>" placeholder="<?php esc_attr_e( 'Técnico, cliente, correo, serie o ID', 'agrocampo-post-venta' ); ?>">
                     </label>
 
                     <div class="agp-pv-field agp-pv-field--actions">
