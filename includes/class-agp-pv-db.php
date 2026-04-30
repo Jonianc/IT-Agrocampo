@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class AGP_PV_DB {
-    public const VERSION = '1.9.0';
+    public const VERSION = '1.10.0';
     public const OPTION_KEY = 'agp_pv_db_version';
 
     public static function table_name(): string {
@@ -83,6 +83,114 @@ class AGP_PV_DB {
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta( $sql );
+
+        $notes_table = self::observation_notes_table_name();
+        $notes_sql   = "CREATE TABLE {$notes_table} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            submission_id BIGINT UNSIGNED NOT NULL,
+            note_text TEXT NOT NULL,
+            created_by BIGINT UNSIGNED DEFAULT 0,
+            created_at DATETIME NOT NULL,
+            updated_by BIGINT UNSIGNED DEFAULT 0,
+            updated_at DATETIME NULL,
+            deleted_by BIGINT UNSIGNED DEFAULT 0,
+            deleted_at DATETIME NULL,
+            PRIMARY KEY  (id),
+            KEY submission_id (submission_id)
+        ) {$charset};";
+
+        dbDelta( $notes_sql );
+    }
+
+    public static function observation_notes_table_name(): string {
+        global $wpdb;
+        return $wpdb->prefix . 'agp_pv_observation_notes';
+    }
+
+    public static function create_observation_note( int $submission_id, string $text ): int {
+        global $wpdb;
+        $table = self::observation_notes_table_name();
+        $now   = current_time( 'mysql' );
+
+        $inserted = $wpdb->insert(
+            $table,
+            array(
+                'submission_id' => $submission_id,
+                'note_text' => $text,
+                'created_by' => get_current_user_id(),
+                'created_at' => $now,
+                'updated_by' => 0,
+                'updated_at' => null,
+                'deleted_by' => 0,
+                'deleted_at' => null,
+            ),
+            array( '%d', '%s', '%d', '%s', '%d', '%s', '%d', '%s' )
+        );
+
+        if ( false === $inserted ) {
+            return 0;
+        }
+
+        return (int) $wpdb->insert_id;
+    }
+
+    public static function update_observation_note( int $note_id, string $text ): bool {
+        global $wpdb;
+        $table = self::observation_notes_table_name();
+
+        $updated = $wpdb->update(
+            $table,
+            array(
+                'note_text' => $text,
+                'updated_by' => get_current_user_id(),
+                'updated_at' => current_time( 'mysql' ),
+            ),
+            array(
+                'id' => $note_id,
+                'deleted_at' => null,
+            ),
+            array( '%s', '%d', '%s' ),
+            array( '%d', '%s' )
+        );
+
+        return false !== $updated;
+    }
+
+    public static function soft_delete_observation_note( int $note_id ): bool {
+        global $wpdb;
+        $table = self::observation_notes_table_name();
+
+        $updated = $wpdb->update(
+            $table,
+            array(
+                'deleted_by' => get_current_user_id(),
+                'deleted_at' => current_time( 'mysql' ),
+            ),
+            array(
+                'id' => $note_id,
+                'deleted_at' => null,
+            ),
+            array( '%d', '%s' ),
+            array( '%d', '%s' )
+        );
+
+        return false !== $updated;
+    }
+
+    /**
+     * @return array<int,array<string,mixed>>
+     */
+    public static function get_observation_notes( int $submission_id ): array {
+        global $wpdb;
+        $table = self::observation_notes_table_name();
+        $sql   = "SELECT id, submission_id, note_text, created_by, created_at, updated_by, updated_at
+            FROM {$table}
+            WHERE submission_id = %d AND deleted_at IS NULL
+            ORDER BY created_at ASC, id ASC";
+        $query = $wpdb->prepare( $sql, $submission_id );
+        $rows  = $wpdb->get_results( $query, ARRAY_A );
+
+        return is_array( $rows ) ? $rows : array();
     }
 
     public static function get_visible_report_id( array $submission ): int {

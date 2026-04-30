@@ -1,3 +1,8 @@
+## [1.25.20] - 2026-04-30
+- Gestor de observaciones (`/post-venta-observaciones/`): comentarios de observaciones resueltas migran a tabla dedicada `wp_agp_pv_observation_notes` (alta/edición/borrado lógico con trazabilidad de usuario y fecha), manteniendo intacto `submissions.observaciones`.
+- Seguridad frontend observaciones: acciones de comentarios con nonces separados (`add/edit/delete`), sanitización con `sanitize_textarea_field()`, escape seguro en render y bloqueo de acciones en acceso temporal público (solo lectura).
+- Compatibilidad backward: se mantiene soporte de observaciones históricas y no se elimina `append_observation_note()` para flujos legados.
+
 ## [1.25.19] - 2026-04-28
 - Se actualizan textos visibles en el Gestor de observaciones: `Marcar revisado` pasa a `Marcar resuelto`, `Revisado por` a `Resuelto por` y `Fecha revisión` a `Fecha resolución`, sin cambios en lógica interna.
 
