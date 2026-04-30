@@ -1,3 +1,8 @@
+## [1.25.21] - 2026-04-30
+- Comentarios en observaciones resueltas: se endurece validación backend para add/edit/delete exigiendo `submission_id` válido, informe existente en estado `reviewed`, y operación sobre nota perteneciente al informe (`id + submission_id + deleted_at IS NULL`).
+- Seguridad/UX en modal `Comentarios`: cards compactas con autor/fecha/texto, marca de edición (`Editado dd/mm/yyyy hh:mm`), edición oculta por defecto con toggle `Editar`, y confirmación de borrado.
+- Notices actualizados a flujo de comentarios (`observation_note_created|updated|deleted|failed`) y ajustes de textos visibles de `revisado` a `resuelto` en el gestor.
+
 ## [1.25.20] - 2026-04-30
 - Gestor de observaciones (`/post-venta-observaciones/`): comentarios de observaciones resueltas migran a tabla dedicada `wp_agp_pv_observation_notes` (alta/edición/borrado lógico con trazabilidad de usuario y fecha), manteniendo intacto `submissions.observaciones`.
 - Seguridad frontend observaciones: acciones de comentarios con nonces separados (`add/edit/delete`), sanitización con `sanitize_textarea_field()`, escape seguro en render y bloqueo de acciones en acceso temporal público (solo lectura).

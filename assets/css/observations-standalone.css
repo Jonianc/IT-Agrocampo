@@ -1330,6 +1330,39 @@ body.agp-pv-observations-standalone {
     gap: 10px;
 }
 
+.agp-pv-inline-note-list {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.agp-pv-inline-note-item {
+    border: 1px solid #d9e1f2;
+    border-radius: 10px;
+    padding: 10px;
+    background: #f8faff;
+}
+
+.agp-pv-inline-note-item__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12px;
+    color: #3d4a66;
+    margin-bottom: 6px;
+}
+
+.agp-pv-inline-note-item__text {
+    color: #1e2f52;
+    margin-bottom: 8px;
+}
+
+.agp-pv-inline-note-item__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .agp-pv-dialog__actions .agp-pv-secondary-link,
 .agp-pv-dialog__actions button {
     min-height: 44px;

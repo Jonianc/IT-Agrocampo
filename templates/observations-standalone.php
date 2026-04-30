@@ -385,17 +385,21 @@ if ( $range_active ) {
     </section>
 
     <?php if ( 'review_marked' === $notice ) : ?>
-        <div class="agp-pv-notice agp-pv-notice-success"><?php esc_html_e( 'Informe marcado como revisado.', 'agrocampo-post-venta' ); ?></div>
+        <div class="agp-pv-notice agp-pv-notice-success"><?php esc_html_e( 'Informe marcado como resuelto.', 'agrocampo-post-venta' ); ?></div>
     <?php elseif ( 'review_unmarked' === $notice ) : ?>
         <div class="agp-pv-notice agp-pv-notice-success"><?php esc_html_e( 'La observación volvió a pendiente.', 'agrocampo-post-venta' ); ?></div>
     <?php elseif ( 'review_failed' === $notice ) : ?>
         <div class="agp-pv-notice agp-pv-notice-error"><?php esc_html_e( 'No se pudo actualizar el estado de revisión.', 'agrocampo-post-venta' ); ?></div>
     <?php elseif ( 'review_unmark_failed' === $notice ) : ?>
         <div class="agp-pv-notice agp-pv-notice-error"><?php esc_html_e( 'No se pudo actualizar la observación.', 'agrocampo-post-venta' ); ?></div>
-    <?php elseif ( 'observation_appended' === $notice ) : ?>
-        <div class="agp-pv-notice agp-pv-notice-success"><?php esc_html_e( 'Observación agregada correctamente al informe revisado.', 'agrocampo-post-venta' ); ?></div>
-    <?php elseif ( 'observation_append_failed' === $notice ) : ?>
-        <div class="agp-pv-notice agp-pv-notice-error"><?php esc_html_e( 'No se pudo agregar la observación.', 'agrocampo-post-venta' ); ?></div>
+    <?php elseif ( 'observation_note_created' === $notice ) : ?>
+        <div class="agp-pv-notice agp-pv-notice-success"><?php esc_html_e( 'Comentario agregado correctamente.', 'agrocampo-post-venta' ); ?></div>
+    <?php elseif ( 'observation_note_updated' === $notice ) : ?>
+        <div class="agp-pv-notice agp-pv-notice-success"><?php esc_html_e( 'Comentario editado correctamente.', 'agrocampo-post-venta' ); ?></div>
+    <?php elseif ( 'observation_note_deleted' === $notice ) : ?>
+        <div class="agp-pv-notice agp-pv-notice-success"><?php esc_html_e( 'Comentario borrado correctamente.', 'agrocampo-post-venta' ); ?></div>
+    <?php elseif ( 'observation_note_failed' === $notice ) : ?>
+        <div class="agp-pv-notice agp-pv-notice-error"><?php esc_html_e( 'No se pudo actualizar el comentario.', 'agrocampo-post-venta' ); ?></div>
     <?php elseif ( 'export_observations_failed' === $notice ) : ?>
         <div class="agp-pv-notice agp-pv-notice-error"><?php echo esc_html( sanitize_text_field( wp_unslash( $_GET['agp_pv_notice_message'] ?? __( 'No se pudo generar el reporte XLSX.', 'agrocampo-post-venta' ) ) ) ); ?></div>
     <?php endif; ?>
@@ -617,26 +621,45 @@ if ( $range_active ) {
                                                                 $note_author     = $note_author_obj instanceof WP_User ? $note_author_obj->display_name : __( 'Usuario', 'agrocampo-post-venta' );
                                                                 $note_date_raw   = (string) ( $note_row['created_at'] ?? '' );
                                                                 $note_date       = '' !== $note_date_raw ? mysql2date( 'd/m/Y H:i', $note_date_raw ) : '—';
+                                                                $note_updated_at = (string) ( $note_row['updated_at'] ?? '' );
+                                                                $edited_label    = '';
+                                                                if ( '' !== $note_updated_at && '0000-00-00 00:00:00' !== $note_updated_at ) {
+                                                                    $edited_label = sprintf(
+                                                                        __( 'Editado %s', 'agrocampo-post-venta' ),
+                                                                        mysql2date( 'd/m/Y H:i', $note_updated_at )
+                                                                    );
+                                                                }
                                                                 ?>
                                                                 <div class="agp-pv-inline-note-item">
-                                                                    <div><strong><?php echo esc_html( (string) $note_author ); ?></strong> · <?php echo esc_html( (string) $note_date ); ?></div>
-                                                                    <div><?php echo nl2br( esc_html( (string) ( $note_row['note_text'] ?? '' ) ) ); ?></div>
-                                                                    <form method="post" class="agp-pv-inline-note-form agp-pv-dialog__form">
+                                                                    <div class="agp-pv-inline-note-item__meta">
+                                                                        <strong><?php echo esc_html( (string) $note_author ); ?></strong> · <?php echo esc_html( (string) $note_date ); ?>
+                                                                        <?php if ( '' !== $edited_label ) : ?>
+                                                                            <span><?php echo esc_html( $edited_label ); ?></span>
+                                                                        <?php endif; ?>
+                                                                    </div>
+                                                                    <div class="agp-pv-inline-note-item__text"><?php echo nl2br( esc_html( (string) ( $note_row['note_text'] ?? '' ) ) ); ?></div>
+                                                                    <div class="agp-pv-inline-note-item__actions">
+                                                                        <button type="button" class="agp-pv-action-button agp-pv-action-button--secondary" data-agp-note-edit-toggle="<?php echo esc_attr( (string) $note_id ); ?>"><?php esc_html_e( 'Editar', 'agrocampo-post-venta' ); ?></button>
+                                                                        <form method="post" class="agp-pv-inline-note-form agp-pv-dialog__form" onsubmit="return window.confirm('<?php echo esc_js( __( '¿Seguro que quieres borrar este comentario?', 'agrocampo-post-venta' ) ); ?>');">
+                                                                            <?php wp_nonce_field( 'agp_pv_front_delete_observation_note' ); ?>
+                                                                            <input type="hidden" name="agp_pv_front_action" value="delete_observation_note">
+                                                                            <input type="hidden" name="submission_id" value="<?php echo esc_attr( (string) $submission_id ); ?>">
+                                                                            <input type="hidden" name="note_id" value="<?php echo esc_attr( (string) $note_id ); ?>">
+                                                                            <input type="hidden" name="redirect_to" value="<?php echo esc_attr( $current_view_url ); ?>">
+                                                                            <button type="submit"><?php esc_html_e( 'Borrar', 'agrocampo-post-venta' ); ?></button>
+                                                                        </form>
+                                                                    </div>
+                                                                    <form method="post" class="agp-pv-inline-note-form agp-pv-dialog__form" data-agp-note-edit-form="<?php echo esc_attr( (string) $note_id ); ?>" hidden>
                                                                         <?php wp_nonce_field( 'agp_pv_front_edit_observation_note' ); ?>
                                                                         <input type="hidden" name="agp_pv_front_action" value="edit_observation_note">
                                                                         <input type="hidden" name="submission_id" value="<?php echo esc_attr( (string) $submission_id ); ?>">
                                                                         <input type="hidden" name="note_id" value="<?php echo esc_attr( (string) $note_id ); ?>">
                                                                         <input type="hidden" name="redirect_to" value="<?php echo esc_attr( $current_view_url ); ?>">
                                                                         <textarea name="observation_note" rows="3" required><?php echo esc_textarea( (string) ( $note_row['note_text'] ?? '' ) ); ?></textarea>
-                                                                        <button type="submit"><?php esc_html_e( 'Editar', 'agrocampo-post-venta' ); ?></button>
-                                                                    </form>
-                                                                    <form method="post" class="agp-pv-inline-note-form agp-pv-dialog__form" onsubmit="return window.confirm('<?php echo esc_js( __( '¿Seguro que quieres borrar este comentario?', 'agrocampo-post-venta' ) ); ?>');">
-                                                                        <?php wp_nonce_field( 'agp_pv_front_delete_observation_note' ); ?>
-                                                                        <input type="hidden" name="agp_pv_front_action" value="delete_observation_note">
-                                                                        <input type="hidden" name="submission_id" value="<?php echo esc_attr( (string) $submission_id ); ?>">
-                                                                        <input type="hidden" name="note_id" value="<?php echo esc_attr( (string) $note_id ); ?>">
-                                                                        <input type="hidden" name="redirect_to" value="<?php echo esc_attr( $current_view_url ); ?>">
-                                                                        <button type="submit"><?php esc_html_e( 'Borrar', 'agrocampo-post-venta' ); ?></button>
+                                                                        <div class="agp-pv-dialog__actions">
+                                                                            <button type="button" class="agp-pv-secondary-link" data-agp-note-edit-toggle="<?php echo esc_attr( (string) $note_id ); ?>"><?php esc_html_e( 'Cancelar', 'agrocampo-post-venta' ); ?></button>
+                                                                            <button type="submit"><?php esc_html_e( 'Guardar edición', 'agrocampo-post-venta' ); ?></button>
+                                                                        </div>
                                                                     </form>
                                                                 </div>
                                                             <?php endforeach; ?>
@@ -774,6 +797,20 @@ document.addEventListener('DOMContentLoaded', function () {
             var inside = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
             if (!inside) {
                 closeDialog(dialog);
+            }
+        });
+    });
+
+    document.querySelectorAll('[data-agp-note-edit-toggle]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var noteId = button.getAttribute('data-agp-note-edit-toggle');
+            var form = noteId ? document.querySelector('[data-agp-note-edit-form="' + noteId + '"]') : null;
+            if (!form) { return; }
+            var isHidden = form.hasAttribute('hidden');
+            if (isHidden) {
+                form.removeAttribute('hidden');
+            } else {
+                form.setAttribute('hidden', 'hidden');
             }
         });
     });

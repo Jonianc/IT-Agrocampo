@@ -134,7 +134,7 @@ class AGP_PV_DB {
         return (int) $wpdb->insert_id;
     }
 
-    public static function update_observation_note( int $note_id, string $text ): bool {
+    public static function update_observation_note( int $submission_id, int $note_id, string $text ): bool {
         global $wpdb;
         $table = self::observation_notes_table_name();
 
@@ -147,16 +147,17 @@ class AGP_PV_DB {
             ),
             array(
                 'id' => $note_id,
+                'submission_id' => $submission_id,
                 'deleted_at' => null,
             ),
             array( '%s', '%d', '%s' ),
-            array( '%d', '%s' )
+            array( '%d', '%d', '%s' )
         );
 
         return false !== $updated;
     }
 
-    public static function soft_delete_observation_note( int $note_id ): bool {
+    public static function soft_delete_observation_note( int $submission_id, int $note_id ): bool {
         global $wpdb;
         $table = self::observation_notes_table_name();
 
@@ -168,10 +169,11 @@ class AGP_PV_DB {
             ),
             array(
                 'id' => $note_id,
+                'submission_id' => $submission_id,
                 'deleted_at' => null,
             ),
             array( '%d', '%s' ),
-            array( '%d', '%s' )
+            array( '%d', '%d', '%s' )
         );
 
         return false !== $updated;
