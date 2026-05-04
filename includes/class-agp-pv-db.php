@@ -137,6 +137,9 @@ class AGP_PV_DB {
     public static function update_observation_note( int $submission_id, int $note_id, string $text ): bool {
         global $wpdb;
         $table = self::observation_notes_table_name();
+        if ( ! self::observation_note_exists( $submission_id, $note_id ) ) {
+            return false;
+        }
 
         $updated = $wpdb->update(
             $table,
@@ -160,6 +163,9 @@ class AGP_PV_DB {
     public static function soft_delete_observation_note( int $submission_id, int $note_id ): bool {
         global $wpdb;
         $table = self::observation_notes_table_name();
+        if ( ! self::observation_note_exists( $submission_id, $note_id ) ) {
+            return false;
+        }
 
         $updated = $wpdb->update(
             $table,
@@ -176,7 +182,17 @@ class AGP_PV_DB {
             array( '%d', '%d', '%s' )
         );
 
-        return false !== $updated;
+        return $updated > 0;
+    }
+
+    public static function observation_note_exists( int $submission_id, int $note_id ): bool {
+        global $wpdb;
+        $table = self::observation_notes_table_name();
+        $sql   = "SELECT id FROM {$table} WHERE id = %d AND submission_id = %d AND deleted_at IS NULL LIMIT 1";
+        $query = $wpdb->prepare( $sql, $note_id, $submission_id );
+        $found = $wpdb->get_var( $query );
+
+        return null !== $found;
     }
 
     /**

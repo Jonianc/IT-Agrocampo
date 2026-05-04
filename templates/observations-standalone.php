@@ -564,7 +564,7 @@ if ( $range_active ) {
                                 <div class="agp-pv-status-stack">
                                     <span class="agp-pv-status-pill <?php echo esc_attr( $status_class ); ?>"><?php echo esc_html( $status_label ); ?></span>
                                     <?php if ( $has_history_note || ! empty( $observation_notes ) ) : ?>
-                                        <span class="agp-pv-status-pill is-note-update"><?php esc_html_e( 'Nueva observación', 'agrocampo-post-venta' ); ?></span>
+                                        <span class="agp-pv-status-pill is-note-update"><?php esc_html_e( 'Con comentarios', 'agrocampo-post-venta' ); ?></span>
                                     <?php endif; ?>
                                 </div>
                             </td>
@@ -604,7 +604,7 @@ if ( $range_active ) {
                                                 <div class="agp-pv-dialog__surface">
                                                     <div class="agp-pv-dialog__header">
                                                         <div>
-                                                            <span class="agp-pv-dialog__eyebrow"><?php esc_html_e( 'Informe revisado', 'agrocampo-post-venta' ); ?></span>
+                                                            <span class="agp-pv-dialog__eyebrow"><?php esc_html_e( 'Informe resuelto', 'agrocampo-post-venta' ); ?></span>
                                                             <h2 id="<?php echo esc_attr( $note_dialog_id . '-title' ); ?>"><?php echo esc_html( sprintf( __( 'Comentarios de #%s', 'agrocampo-post-venta' ), $visible_id ) ); ?></h2>
                                                         </div>
                                                         <button type="button" class="agp-pv-dialog__close" data-agp-dialog-close><?php esc_html_e( 'Cerrar', 'agrocampo-post-venta' ); ?></button>

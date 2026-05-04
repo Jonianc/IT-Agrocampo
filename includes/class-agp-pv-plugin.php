@@ -1265,17 +1265,17 @@ class AGP_PV_Plugin {
             exit;
         }
 
-        global $wpdb;
-        $submission = AGP_PV_Email::get_submission( $submission_id );
-        if ( ! $submission || ! self::is_reviewed_observation_status( (string) ( $submission['review_status'] ?? '' ) ) ) {
-            wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'observation_note_failed', self::get_observations_front_redirect_url() ) );
-            exit;
-        }
-
         if ( 'mark_reviewed' === $action ) {
             if ( ! check_admin_referer( 'agp_pv_front_mark_reviewed' ) ) {
                 wp_die( esc_html__( 'Solicitud inválida.', 'agrocampo-post-venta' ), esc_html__( 'Acceso denegado', 'agrocampo-post-venta' ), array( 'response' => 403 ) );
             }
+            $submission = AGP_PV_Email::get_submission( $submission_id );
+            if ( ! $submission ) {
+                wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'review_failed', self::get_observations_front_redirect_url() ) );
+                exit;
+            }
+
+            global $wpdb;
 
             $updated = $wpdb->update(
                 AGP_PV_DB::table_name(),
@@ -1305,10 +1305,11 @@ class AGP_PV_Plugin {
             }
 
             $submission = AGP_PV_Email::get_submission( $submission_id );
-            if ( ! $submission ) {
+            if ( ! $submission || ! self::is_reviewed_observation_status( (string) ( $submission['review_status'] ?? '' ) ) ) {
                 wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'review_unmark_failed', self::get_observations_front_redirect_url() ) );
                 exit;
             }
+            global $wpdb;
 
             $updated = $wpdb->update(
                 AGP_PV_DB::table_name(),
@@ -1337,6 +1338,12 @@ class AGP_PV_Plugin {
                 wp_die( esc_html__( 'Solicitud inválida.', 'agrocampo-post-venta' ), esc_html__( 'Acceso denegado', 'agrocampo-post-venta' ), array( 'response' => 403 ) );
             }
 
+            $submission = AGP_PV_Email::get_submission( $submission_id );
+            if ( ! $submission || ! self::is_reviewed_observation_status( (string) ( $submission['review_status'] ?? '' ) ) ) {
+                wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'observation_note_failed', self::get_observations_front_redirect_url() ) );
+                exit;
+            }
+
             $note_id  = isset( $_POST['note_id'] ) ? absint( wp_unslash( $_POST['note_id'] ) ) : 0;
             $new_text = self::normalize_observation_text( sanitize_textarea_field( wp_unslash( $_POST['observation_note'] ?? '' ) ) );
 
@@ -1354,6 +1361,12 @@ class AGP_PV_Plugin {
                 wp_die( esc_html__( 'Solicitud inválida.', 'agrocampo-post-venta' ), esc_html__( 'Acceso denegado', 'agrocampo-post-venta' ), array( 'response' => 403 ) );
             }
 
+            $submission = AGP_PV_Email::get_submission( $submission_id );
+            if ( ! $submission || ! self::is_reviewed_observation_status( (string) ( $submission['review_status'] ?? '' ) ) ) {
+                wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'observation_note_failed', self::get_observations_front_redirect_url() ) );
+                exit;
+            }
+
             $note_id = isset( $_POST['note_id'] ) ? absint( wp_unslash( $_POST['note_id'] ) ) : 0;
             if ( $note_id <= 0 || ! self::soft_delete_observation_note( $submission_id, $note_id ) ) {
                 wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'observation_note_failed', self::get_observations_front_redirect_url() ) );
@@ -1366,6 +1379,12 @@ class AGP_PV_Plugin {
 
         if ( ! check_admin_referer( 'agp_pv_front_append_observation' ) ) {
             wp_die( esc_html__( 'Solicitud inválida.', 'agrocampo-post-venta' ), esc_html__( 'Acceso denegado', 'agrocampo-post-venta' ), array( 'response' => 403 ) );
+        }
+
+        $submission = AGP_PV_Email::get_submission( $submission_id );
+        if ( ! $submission || ! self::is_reviewed_observation_status( (string) ( $submission['review_status'] ?? '' ) ) ) {
+            wp_safe_redirect( add_query_arg( 'agp_pv_notice', 'observation_note_failed', self::get_observations_front_redirect_url() ) );
+            exit;
         }
 
         $new_note   = self::normalize_observation_text( sanitize_textarea_field( wp_unslash( $_POST['observation_note'] ?? '' ) ) );

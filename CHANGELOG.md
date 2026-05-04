@@ -1,3 +1,8 @@
+## [1.25.22] - 2026-04-30
+- Se corrige regresión en `Marcar resuelto`: la acción vuelve a permitir pasar observaciones pendientes a resueltas (valida existencia y nonce, sin exigir estado `reviewed` previo).
+- Se refuerza validación de comentarios: `update_observation_note()` y `soft_delete_observation_note()` validan existencia real de la nota por `id + submission_id + deleted_at IS NULL` antes de operar, evitando falsos positivos por `wpdb->update() = 0`.
+- Ajuste de textos en gestor: badge `Con comentarios` y encabezado de modal `Informe resuelto`.
+
 ## [1.25.21] - 2026-04-30
 - Comentarios en observaciones resueltas: se endurece validación backend para add/edit/delete exigiendo `submission_id` válido, informe existente en estado `reviewed`, y operación sobre nota perteneciente al informe (`id + submission_id + deleted_at IS NULL`).
 - Seguridad/UX en modal `Comentarios`: cards compactas con autor/fecha/texto, marca de edición (`Editado dd/mm/yyyy hh:mm`), edición oculta por defecto con toggle `Editar`, y confirmación de borrado.
