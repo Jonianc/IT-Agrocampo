@@ -1,3 +1,17 @@
+## [1.26.2] - 2026-05-04
+- Corrige validación condicional de contacto cliente en frontend: ahora exige correo o WhatsApp al avanzar desde el paso de datos y también al enviar.
+- Refuerza limpieza visual de errores de `email_cliente` y `whatsapp_cliente` al escribir.
+- Mantiene y reafirma validación backend para bloquear informes sin contacto cliente.
+
+## [1.26.1] - 2026-05-04
+- Se corrige exportación XLSX de observaciones agregando encabezado `WhatsApp cliente` y alineación de columnas con filas/ancho.
+- Formulario standalone: se agrega contenedor de error visual para `email_cliente`.
+- Gestor standalone de informes: se muestra bloque `Contacto` (correo + WhatsApp) en tabla y tarjetas responsive.
+- Filtro específico cambia a `Correo / WhatsApp` y busca por `email_cliente` o `whatsapp_cliente` en consulta principal y resumen.
+
+## [1.26.0] - 2026-05-04
+- Se agrega `whatsapp_cliente` como contacto alternativo de `email_cliente` en formulario standalone, validación frontend/backend, guardado, PDF, gestor, búsqueda, exportaciones e importación legacy opcional.
+
 ## [1.25.22] - 2026-04-30
 - Se corrige regresión en `Marcar resuelto`: la acción vuelve a permitir pasar observaciones pendientes a resueltas (valida existencia y nonce, sin exigir estado `reviewed` previo).
 - Se refuerza validación de comentarios: `update_observation_note()` y `soft_delete_observation_note()` validan existencia real de la nota por `id + submission_id + deleted_at IS NULL` antes de operar, evitando falsos positivos por `wpdb->update() = 0`.

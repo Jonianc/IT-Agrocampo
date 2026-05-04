@@ -161,6 +161,9 @@ class AGP_PV_Email {
         if ( ! empty( $submission['fecha_contacto'] ) ) {
             $body .= '<p><strong>' . esc_html__( 'Fecha a contactar:', 'agrocampo-post-venta' ) . '</strong> ' . esc_html( (string) $submission['fecha_contacto'] ) . '</p>';
         }
+        if ( ! empty( $submission['whatsapp_cliente'] ) ) {
+            $body .= '<p><strong>' . esc_html__( 'WhatsApp cliente:', 'agrocampo-post-venta' ) . '</strong> ' . esc_html( (string) $submission['whatsapp_cliente'] ) . '</p>';
+        }
         if ( ! empty( $submission['observaciones'] ) ) {
             $body .= '<p>' . nl2br( esc_html( $submission['observaciones'] ) ) . '</p>';
         }

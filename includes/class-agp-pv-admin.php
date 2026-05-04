@@ -1115,6 +1115,7 @@ class AGP_PV_Admin {
             __( 'Técnico', 'agrocampo-post-venta' ),
             __( 'Cliente', 'agrocampo-post-venta' ),
             __( 'Correo cliente', 'agrocampo-post-venta' ),
+            __( 'WhatsApp cliente', 'agrocampo-post-venta' ),
             __( 'Serie', 'agrocampo-post-venta' ),
             __( 'Observación', 'agrocampo-post-venta' ),
             __( 'Estado revisión', 'agrocampo-post-venta' ),
@@ -1163,6 +1164,7 @@ class AGP_PV_Admin {
                 array( 'value' => (string) ( $item['tecnico'] ?? '' ), 'style' => 4 ),
                 array( 'value' => (string) ( $item['cliente'] ?? '' ), 'style' => 4 ),
                 array( 'value' => (string) ( $item['email_cliente'] ?? '' ), 'style' => 4 ),
+                array( 'value' => (string) ( $item['whatsapp_cliente'] ?? '' ), 'style' => 4 ),
                 array( 'value' => (string) ( $item['serie'] ?? '' ), 'style' => 4 ),
                 array( 'value' => AGP_PV_Plugin::normalize_observation_text( (string) ( $item['observaciones'] ?? '' ) ), 'style' => 5 ),
                 array( 'value' => $this->format_export_status( (string) ( $item['review_status'] ?? '' ), $item, 'review' ), 'style' => 4 ),
@@ -1176,7 +1178,7 @@ class AGP_PV_Admin {
 
         $sheet_xml = $this->build_xlsx_worksheet_xml(
             $rows,
-            array( 12, 18, 20, 24, 28, 16, 70, 20, 12, 18, 18, 14, 16 ),
+            array( 12, 18, 20, 24, 28, 24, 16, 70, 20, 12, 18, 18, 14, 16 ),
             $header_row_index,
             count( $headers )
         );
@@ -2802,6 +2804,7 @@ class AGP_PV_Admin {
             'Técnico',
             'Cliente',
             'Correo cliente',
+            'WhatsApp cliente',
             'Address - Faena Lugar',
             'Máquina',
             'Modelo',
@@ -2851,6 +2854,7 @@ class AGP_PV_Admin {
             'Técnico' => sanitize_text_field( (string) ( $row['tecnico'] ?? '' ) ),
             'Cliente' => sanitize_text_field( (string) ( $row['cliente'] ?? '' ) ),
             'Correo cliente' => sanitize_email( (string) ( $row['email_cliente'] ?? '' ) ),
+            'WhatsApp cliente' => sanitize_text_field( (string) ( $row['whatsapp_cliente'] ?? '' ) ),
             'Address - Faena Lugar' => sanitize_text_field( (string) ( $row['faena_lugar'] ?? '' ) ),
             'Máquina' => sanitize_text_field( (string) ( $row['maquina'] ?? '' ) ),
             'Modelo' => sanitize_text_field( (string) ( $row['modelo'] ?? '' ) ),
@@ -2875,7 +2879,15 @@ class AGP_PV_Admin {
         );
     }
 
-    private function map_stored_tipo_servicio_to_legacy_label( string $value ): string {
+        private function sanitize_whatsapp_cliente( $value ): string {
+        $value = sanitize_text_field( (string) $value );
+        $value = preg_replace( '/[^0-9+ ]/', '', $value );
+        $value = preg_replace( '/\s+/', ' ', trim( (string) $value ) );
+
+        return substr( (string) $value, 0, 30 );
+    }
+
+private function map_stored_tipo_servicio_to_legacy_label( string $value ): string {
         $map = array(
             'one' => __( 'Factura Cliente', 'agrocampo-post-venta' ),
             'two' => __( 'Garantía', 'agrocampo-post-venta' ),
@@ -3049,6 +3061,7 @@ class AGP_PV_Admin {
             'tecnico' => sanitize_text_field( $this->legacy_value( $row, 'tecnico' ) ),
             'cliente' => sanitize_text_field( $this->legacy_value( $row, 'cliente' ) ),
             'email_cliente' => sanitize_email( $this->legacy_value( $row, 'correo cliente' ) ),
+            'whatsapp_cliente' => $this->sanitize_whatsapp_cliente( $this->legacy_value( $row, 'whatsapp cliente' ) ),
             'faena_lugar' => sanitize_text_field( $this->legacy_value( $row, 'address - faena lugar' ) ),
             'maquina' => sanitize_text_field( $this->legacy_value( $row, 'maquina' ) ),
             'modelo' => sanitize_text_field( $this->legacy_value( $row, 'modelo' ) ),
@@ -3098,6 +3111,7 @@ class AGP_PV_Admin {
             '%s', // tecnico
             '%s', // cliente
             '%s', // email_cliente
+            '%s', // whatsapp_cliente
             '%s', // faena_lugar
             '%s', // maquina
             '%s', // modelo
@@ -3539,7 +3553,8 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
 
         if ( '' !== $filters['email'] ) {
             $like = '%' . $wpdb->esc_like( $filters['email'] ) . '%';
-            $clauses[] = '(email_cliente LIKE %s OR correo_copia LIKE %s)';
+            $clauses[] = '(email_cliente LIKE %s OR whatsapp_cliente LIKE %s OR correo_copia LIKE %s)';
+            $values[] = $like;
             $values[] = $like;
             $values[] = $like;
         }
@@ -3729,6 +3744,7 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
             'Técnico',
             'Cliente',
             'Correo cliente',
+            'WhatsApp cliente',
             'Address - Faena Lugar',
             'Máquina',
             'Modelo',
@@ -3778,6 +3794,7 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
             'Técnico' => sanitize_text_field( (string) ( $row['tecnico'] ?? '' ) ),
             'Cliente' => sanitize_text_field( (string) ( $row['cliente'] ?? '' ) ),
             'Correo cliente' => sanitize_email( (string) ( $row['email_cliente'] ?? '' ) ),
+            'WhatsApp cliente' => sanitize_text_field( (string) ( $row['whatsapp_cliente'] ?? '' ) ),
             'Address - Faena Lugar' => sanitize_text_field( (string) ( $row['faena_lugar'] ?? '' ) ),
             'Máquina' => sanitize_text_field( (string) ( $row['maquina'] ?? '' ) ),
             'Modelo' => sanitize_text_field( (string) ( $row['modelo'] ?? '' ) ),
