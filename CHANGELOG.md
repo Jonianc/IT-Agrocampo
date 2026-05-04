@@ -1,3 +1,8 @@
+## [1.26.2] - 2026-05-04
+- Corrige validación condicional de contacto cliente en frontend: ahora exige correo o WhatsApp al avanzar desde el paso de datos y también al enviar.
+- Refuerza limpieza visual de errores de `email_cliente` y `whatsapp_cliente` al escribir.
+- Mantiene y reafirma validación backend para bloquear informes sin contacto cliente.
+
 ## [1.26.1] - 2026-05-04
 - Se corrige exportación XLSX de observaciones agregando encabezado `WhatsApp cliente` y alineación de columnas con filas/ancho.
 - Formulario standalone: se agrega contenedor de error visual para `email_cliente`.

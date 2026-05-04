@@ -91,6 +91,45 @@
         }
     }
 
+    function validateClientContact(showErrors) {
+        var emailCliente = $.trim(String($('#agp-pv-email-cliente').val() || ''));
+        var whatsappCliente = $.trim(String($('#agp-pv-whatsapp-cliente').val() || ''));
+        var whatsappPattern = /^\+?[0-9 ]{8,30}$/;
+        var errors = [];
+
+        $('.agp-pv-error[data-error-for="email_cliente"]').text('');
+        $('.agp-pv-error[data-error-for="whatsapp_cliente"]').text('');
+        $('#agp-pv-email-cliente, #agp-pv-whatsapp-cliente')
+            .removeClass('agp-pv-invalid')
+            .removeAttr('aria-invalid');
+
+        if (!emailCliente && !whatsappCliente) {
+            errors.push({ id: 'agp-pv-email-cliente', field: 'email_cliente', message: 'Ingresa correo o WhatsApp del cliente.' });
+            errors.push({ id: 'agp-pv-whatsapp-cliente', field: 'whatsapp_cliente', message: 'WhatsApp es obligatorio si no hay correo.' });
+        }
+
+        if (whatsappCliente && !whatsappPattern.test(whatsappCliente)) {
+            errors.push({ id: 'agp-pv-whatsapp-cliente', field: 'whatsapp_cliente', message: 'Ingresa un WhatsApp válido.' });
+        }
+
+        if (showErrors && errors.length) {
+            errors.forEach(function (error) {
+                $('.agp-pv-error[data-error-for="' + error.field + '"]').text(error.message);
+                $('#' + error.id).addClass('agp-pv-invalid').attr('aria-invalid', 'true');
+            });
+
+            renderErrorSummary(
+                errors.map(function (error) {
+                    return { id: error.id, message: error.message };
+                }),
+                getMessage('errorSummaryTitle', 'Revisa los siguientes campos antes de continuar:'),
+                true
+            );
+        }
+
+        return errors.length === 0;
+    }
+
     function ensureErrorIds() {
         $('.agp-pv-error').each(function () {
             var $el = $(this);
@@ -1187,6 +1226,13 @@ function initPhotos() {
                     valid = false;
                 }
             });
+
+            if (currentStep === 1 && !validateClientContact(true)) {
+                valid = false;
+                if (!firstInvalid) {
+                    firstInvalid = $('#agp-pv-whatsapp-cliente');
+                }
+            }
 
             if (currentStep === 2 && !syncDetalleMinimumConstraint(true)) {
                 valid = false;
@@ -2687,6 +2733,15 @@ function initPhotos() {
             }
         });
 
+        $('#agp-pv-email-cliente, #agp-pv-whatsapp-cliente').on('input change', function () {
+            $('.agp-pv-error[data-error-for="email_cliente"]').text('');
+            $('.agp-pv-error[data-error-for="whatsapp_cliente"]').text('');
+            $('#agp-pv-email-cliente, #agp-pv-whatsapp-cliente')
+                .removeClass('agp-pv-invalid')
+                .removeAttr('aria-invalid');
+            clearErrorSummary();
+        });
+
         $('#agp-pv-form').on('click', '.agp-pv-new-report', function () {
             var $form = $('#agp-pv-form');
             var setSubmittedState = $form.data('agpPvSetSubmittedState');
@@ -2821,23 +2876,7 @@ function initPhotos() {
                 return;
             }
 
-            var emailCliente = $.trim(String($('#agp-pv-email-cliente').val() || ''));
-            var whatsappCliente = $.trim(String($('#agp-pv-whatsapp-cliente').val() || ''));
-            var whatsappPattern = /^\+?[0-9 ]{8,30}$/;
-            var clientContactErrors = [];
-
-            if (!emailCliente && !whatsappCliente) {
-                $('.agp-pv-error[data-error-for="email_cliente"]').text('Ingresa correo o WhatsApp del cliente.');
-                $('.agp-pv-error[data-error-for="whatsapp_cliente"]').text('WhatsApp es obligatorio si no hay correo.');
-                clientContactErrors.push({ id: 'agp-pv-email-cliente', message: 'Ingresa correo o WhatsApp del cliente.' });
-                clientContactErrors.push({ id: 'agp-pv-whatsapp-cliente', message: 'WhatsApp es obligatorio si no hay correo.' });
-            } else if (whatsappCliente && !whatsappPattern.test(whatsappCliente)) {
-                $('.agp-pv-error[data-error-for="whatsapp_cliente"]').text('Ingresa un WhatsApp válido.');
-                clientContactErrors.push({ id: 'agp-pv-whatsapp-cliente', message: 'Ingresa un WhatsApp válido.' });
-            }
-
-            if (clientContactErrors.length) {
-                renderErrorSummary(clientContactErrors, getMessage('errorSummaryTitle', 'Revisa los siguientes campos antes de continuar:'), true);
+            if (!validateClientContact(true)) {
                 setStatusMessage(getMessage('statusReviewFields', 'Revisa los campos marcados.'), 'error');
                 unlockSubmitUi();
                 return;
