@@ -1,3 +1,9 @@
+## [1.26.1] - 2026-05-04
+- Se corrige exportación XLSX de observaciones agregando encabezado `WhatsApp cliente` y alineación de columnas con filas/ancho.
+- Formulario standalone: se agrega contenedor de error visual para `email_cliente`.
+- Gestor standalone de informes: se muestra bloque `Contacto` (correo + WhatsApp) en tabla y tarjetas responsive.
+- Filtro específico cambia a `Correo / WhatsApp` y busca por `email_cliente` o `whatsapp_cliente` en consulta principal y resumen.
+
 ## [1.26.0] - 2026-05-04
 - Se agrega `whatsapp_cliente` como contacto alternativo de `email_cliente` en formulario standalone, validación frontend/backend, guardado, PDF, gestor, búsqueda, exportaciones e importación legacy opcional.
 

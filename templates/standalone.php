@@ -102,6 +102,7 @@ $render_machine_status_block = static function () use ( $machine_status_options,
                 <div class="agp-pv-field">
                     <label for="agp-pv-email-cliente"><?php esc_html_e( 'Correo Cliente', 'agrocampo-post-venta' ); ?></label>
                     <input id="agp-pv-email-cliente" name="email_cliente" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false">
+                    <span class="agp-pv-error" data-error-for="email_cliente"></span>
                 </div>
                 <div class="agp-pv-field">
                     <label for="agp-pv-whatsapp-cliente"><?php esc_html_e( 'WhatsApp cliente', 'agrocampo-post-venta' ); ?></label>

@@ -1115,6 +1115,7 @@ class AGP_PV_Admin {
             __( 'Técnico', 'agrocampo-post-venta' ),
             __( 'Cliente', 'agrocampo-post-venta' ),
             __( 'Correo cliente', 'agrocampo-post-venta' ),
+            __( 'WhatsApp cliente', 'agrocampo-post-venta' ),
             __( 'Serie', 'agrocampo-post-venta' ),
             __( 'Observación', 'agrocampo-post-venta' ),
             __( 'Estado revisión', 'agrocampo-post-venta' ),

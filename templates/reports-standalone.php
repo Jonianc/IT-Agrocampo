@@ -87,7 +87,8 @@ if ( '' !== $service_type_normalized ) {
 }
 
 if ( '' !== $email ) {
-    $where_clauses[] = 'email_cliente LIKE %s';
+    $where_clauses[] = '(email_cliente LIKE %s OR whatsapp_cliente LIKE %s)';
+    $where_values[]  = '%' . $wpdb->esc_like( $email ) . '%';
     $where_values[]  = '%' . $wpdb->esc_like( $email ) . '%';
 }
 
@@ -126,7 +127,8 @@ if ( '' !== $service_type_normalized ) {
 }
 
 if ( '' !== $email ) {
-    $summary_where_clauses[] = 'email_cliente LIKE %s';
+    $summary_where_clauses[] = '(email_cliente LIKE %s OR whatsapp_cliente LIKE %s)';
+    $summary_where_values[]  = '%' . $wpdb->esc_like( $email ) . '%';
     $summary_where_values[]  = '%' . $wpdb->esc_like( $email ) . '%';
 }
 
@@ -414,7 +416,7 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                         </select>
                     </label>
 
-                    <label class="agp-pv-field agp-pv-field--secondary agp-pv-field--wide" for="agp-pv-filter-email"><span class="agp-pv-field__label"><?php esc_html_e( 'Correo', 'agrocampo-post-venta' ); ?></span>
+                    <label class="agp-pv-field agp-pv-field--secondary agp-pv-field--wide" for="agp-pv-filter-email"><span class="agp-pv-field__label"><?php esc_html_e( 'Correo / WhatsApp', 'agrocampo-post-venta' ); ?></span>
                         <input type="text" id="agp-pv-filter-email" name="email" value="<?php echo esc_attr( $email ); ?>" placeholder="cliente@correo.cl">
                     </label>
 
@@ -462,7 +464,7 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                     <th><?php esc_html_e( 'Técnico', 'agrocampo-post-venta' ); ?></th>
                     <th><?php esc_html_e( 'Serie', 'agrocampo-post-venta' ); ?></th>
                     <th><?php esc_html_e( 'Tipo de servicio', 'agrocampo-post-venta' ); ?></th>
-                    <th><?php esc_html_e( 'Correo', 'agrocampo-post-venta' ); ?></th>
+                    <th><?php esc_html_e( 'Contacto', 'agrocampo-post-venta' ); ?></th>
                     <th><?php esc_html_e( 'PDF', 'agrocampo-post-venta' ); ?></th>
                     <th><?php esc_html_e( 'Fecha', 'agrocampo-post-venta' ); ?></th>
                     <th><?php esc_html_e( 'Acciones', 'agrocampo-post-venta' ); ?></th>
@@ -491,14 +493,9 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                             <td data-label="<?php esc_attr_e( 'Tipo de servicio', 'agrocampo-post-venta' ); ?>">
                                 <?php echo esc_html( $resolve_service_type_label( $item ) ); ?>
                             </td>
-                            <td data-label="<?php esc_attr_e( 'Correo', 'agrocampo-post-venta' ); ?>">
-                                <?php
-                                $mail_state       = (string) $item['mail_status'];
-                                $mail_state_label = $mail_status_labels[ $mail_state ] ?? $mail_state;
-                                ?>
-                                <span class="agp-pv-status-badge agp-pv-status-badge--mail agp-pv-status-badge--<?php echo esc_attr( sanitize_html_class( $mail_state ) ); ?>">
-                                    <?php echo esc_html( $mail_state_label ); ?>
-                                </span>
+                            <td data-label="<?php esc_attr_e( 'Contacto', 'agrocampo-post-venta' ); ?>">
+                                <div><strong><?php esc_html_e( 'Correo:', 'agrocampo-post-venta' ); ?></strong> <?php echo esc_html( (string) ( $item['email_cliente'] ?: __( 'No informado', 'agrocampo-post-venta' ) ) ); ?></div>
+                                <div><strong><?php esc_html_e( 'WhatsApp:', 'agrocampo-post-venta' ); ?></strong> <?php echo esc_html( (string) ( $item['whatsapp_cliente'] ?: __( 'No informado', 'agrocampo-post-venta' ) ) ); ?></div>
                             </td>
                             <td data-label="<?php esc_attr_e( 'PDF', 'agrocampo-post-venta' ); ?>">
                                 <?php
@@ -611,6 +608,13 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                             <div class="agp-pv-report-card__meta-row">
                                 <dt><?php esc_html_e( 'Tipo de servicio', 'agrocampo-post-venta' ); ?></dt>
                                 <dd><?php echo esc_html( $resolve_service_type_label( $item ) ); ?></dd>
+                            </div>
+                            <div class="agp-pv-report-card__meta-row">
+                                <dt><?php esc_html_e( 'Contacto', 'agrocampo-post-venta' ); ?></dt>
+                                <dd>
+                                    <div><strong><?php esc_html_e( 'Correo:', 'agrocampo-post-venta' ); ?></strong> <?php echo esc_html( (string) ( $item['email_cliente'] ?: __( 'No informado', 'agrocampo-post-venta' ) ) ); ?></div>
+                                    <div><strong><?php esc_html_e( 'WhatsApp:', 'agrocampo-post-venta' ); ?></strong> <?php echo esc_html( (string) ( $item['whatsapp_cliente'] ?: __( 'No informado', 'agrocampo-post-venta' ) ) ); ?></div>
+                                </dd>
                             </div>
                             <div class="agp-pv-report-card__meta-row agp-pv-report-card__meta-row--status">
                                 <dt><?php esc_html_e( 'Estado correo', 'agrocampo-post-venta' ); ?></dt>
