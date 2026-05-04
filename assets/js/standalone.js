@@ -2821,6 +2821,28 @@ function initPhotos() {
                 return;
             }
 
+            var emailCliente = $.trim(String($('#agp-pv-email-cliente').val() || ''));
+            var whatsappCliente = $.trim(String($('#agp-pv-whatsapp-cliente').val() || ''));
+            var whatsappPattern = /^\+?[0-9 ]{8,30}$/;
+            var clientContactErrors = [];
+
+            if (!emailCliente && !whatsappCliente) {
+                $('.agp-pv-error[data-error-for="email_cliente"]').text('Ingresa correo o WhatsApp del cliente.');
+                $('.agp-pv-error[data-error-for="whatsapp_cliente"]').text('WhatsApp es obligatorio si no hay correo.');
+                clientContactErrors.push({ id: 'agp-pv-email-cliente', message: 'Ingresa correo o WhatsApp del cliente.' });
+                clientContactErrors.push({ id: 'agp-pv-whatsapp-cliente', message: 'WhatsApp es obligatorio si no hay correo.' });
+            } else if (whatsappCliente && !whatsappPattern.test(whatsappCliente)) {
+                $('.agp-pv-error[data-error-for="whatsapp_cliente"]').text('Ingresa un WhatsApp válido.');
+                clientContactErrors.push({ id: 'agp-pv-whatsapp-cliente', message: 'Ingresa un WhatsApp válido.' });
+            }
+
+            if (clientContactErrors.length) {
+                renderErrorSummary(clientContactErrors, getMessage('errorSummaryTitle', 'Revisa los siguientes campos antes de continuar:'), true);
+                setStatusMessage(getMessage('statusReviewFields', 'Revisa los campos marcados.'), 'error');
+                unlockSubmitUi();
+                return;
+            }
+
             collectSignatureData();
 
             var formData = new FormData(formEl);

@@ -212,6 +212,7 @@ class AGP_PV_Ajax {
             'tecnico' => sanitize_text_field( $raw['tecnico'] ?? '' ),
             'cliente' => sanitize_text_field( $raw['cliente'] ?? '' ),
             'email_cliente' => sanitize_email( $raw['email_cliente'] ?? '' ),
+            'whatsapp_cliente' => $this->sanitize_whatsapp_cliente( $raw['whatsapp_cliente'] ?? '' ),
             'faena_lugar' => sanitize_text_field( $raw['faena_lugar'] ?? '' ),
             'jefe_taller_nombre' => sanitize_text_field( $raw['jefe_taller_nombre'] ?? '' ),
             'maquina' => sanitize_text_field( $raw['maquina'] ?? '' ),
@@ -254,12 +255,34 @@ class AGP_PV_Ajax {
         return $data;
     }
 
+
+    private function sanitize_whatsapp_cliente( $value ): string {
+        $value = sanitize_text_field( (string) $value );
+        $value = preg_replace( '/[^0-9+ ]/', '', $value );
+        $value = preg_replace( '/\s+/', ' ', trim( (string) $value ) );
+
+        return substr( (string) $value, 0, 30 );
+    }
+
     private function validate_submission( array $data ): array {
         $errors = array();
 
         if ( '' === $data['tecnico'] ) {
             $errors['tecnico'] = __( 'Seleccionar Técnico.', 'agrocampo-post-venta' );
         }
+
+        $email_cliente = trim( (string) ( $data['email_cliente'] ?? '' ) );
+        $whatsapp_cliente = trim( (string) ( $data['whatsapp_cliente'] ?? '' ) );
+
+        if ( '' === $email_cliente && '' === $whatsapp_cliente ) {
+            $errors['email_cliente'] = __( 'Ingresa correo o WhatsApp del cliente.', 'agrocampo-post-venta' );
+            $errors['whatsapp_cliente'] = __( 'WhatsApp es obligatorio si no hay correo.', 'agrocampo-post-venta' );
+        }
+
+        if ( '' !== $whatsapp_cliente && ! preg_match( '/^\+?[0-9 ]{8,30}$/', $whatsapp_cliente ) ) {
+            $errors['whatsapp_cliente'] = __( 'Ingresa un WhatsApp válido.', 'agrocampo-post-venta' );
+        }
+
         if ( '' === $data['cliente'] ) {
             $errors['cliente'] = __( 'Cliente es obligatorio.', 'agrocampo-post-venta' );
         }
@@ -612,6 +635,7 @@ class AGP_PV_Ajax {
                 'tecnico' => $data['tecnico'],
                 'cliente' => $data['cliente'],
                 'email_cliente' => $data['email_cliente'],
+                'whatsapp_cliente' => $data['whatsapp_cliente'],
                 'faena_lugar' => $data['faena_lugar'],
                 'jefe_taller_nombre' => $data['jefe_taller_nombre'],
                 'maquina' => $data['maquina'],
@@ -660,6 +684,7 @@ class AGP_PV_Ajax {
                 '%s', // tecnico
                 '%s', // cliente
                 '%s', // email_cliente
+                '%s', // whatsapp_cliente
                 '%s', // faena_lugar
                 '%s', // jefe_taller_nombre
                 '%s', // maquina

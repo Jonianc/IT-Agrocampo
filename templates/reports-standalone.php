@@ -62,8 +62,8 @@ $where_values  = array();
 
 if ( '' !== $search ) {
     $like            = '%' . $wpdb->esc_like( $search ) . '%';
-    $where_clauses[] = '(tecnico LIKE %s OR cliente LIKE %s OR email_cliente LIKE %s OR serie LIKE %s OR CAST(id AS CHAR) LIKE %s)';
-    array_push( $where_values, $like, $like, $like, $like, $like );
+    $where_clauses[] = '(tecnico LIKE %s OR cliente LIKE %s OR email_cliente LIKE %s OR whatsapp_cliente LIKE %s OR serie LIKE %s OR CAST(id AS CHAR) LIKE %s)';
+    array_push( $where_values, $like, $like, $like, $like, $like, $like );
 }
 
 if ( in_array( $mail_status, array( 'pending', 'sent', 'failed' ), true ) ) {
@@ -111,8 +111,8 @@ $summary_where_values  = array();
 
 if ( '' !== $search ) {
     $like                    = '%' . $wpdb->esc_like( $search ) . '%';
-    $summary_where_clauses[] = '(tecnico LIKE %s OR cliente LIKE %s OR email_cliente LIKE %s OR serie LIKE %s OR CAST(id AS CHAR) LIKE %s)';
-    array_push( $summary_where_values, $like, $like, $like, $like, $like );
+    $summary_where_clauses[] = '(tecnico LIKE %s OR cliente LIKE %s OR email_cliente LIKE %s OR whatsapp_cliente LIKE %s OR serie LIKE %s OR CAST(id AS CHAR) LIKE %s)';
+    array_push( $summary_where_values, $like, $like, $like, $like, $like, $like );
 }
 
 if ( '' !== $service_type_normalized ) {
@@ -164,7 +164,7 @@ $count_sql   = "SELECT COUNT(*) FROM {$table_name} {$where_sql}";
 $total_items = (int) ( empty( $where_values ) ? $wpdb->get_var( $count_sql ) : $wpdb->get_var( $wpdb->prepare( $count_sql, $where_values ) ) );
 $total_pages = max( 1, (int) ceil( $total_items / $per_page ) );
 
-$list_sql    = "SELECT id, legacy_id, tecnico, cliente, email_cliente, serie, tipo_servicio, tipo_servicio_label, tipo_mantencion_label, mail_status, pdf_status, created_at FROM {$table_name} {$where_sql} ORDER BY created_at DESC LIMIT %d OFFSET %d";
+$list_sql    = "SELECT id, legacy_id, tecnico, cliente, email_cliente, whatsapp_cliente, serie, tipo_servicio, tipo_servicio_label, tipo_mantencion_label, mail_status, pdf_status, created_at FROM {$table_name} {$where_sql} ORDER BY created_at DESC LIMIT %d OFFSET %d";
 $list_values = array_merge( $where_values, array( $per_page, $offset ) );
 $items       = $wpdb->get_results( $wpdb->prepare( $list_sql, $list_values ), ARRAY_A );
 

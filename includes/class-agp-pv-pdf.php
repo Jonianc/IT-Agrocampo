@@ -1381,6 +1381,10 @@ class AGP_PV_PDF {
                     'value' => self::normalize_pdf_value( $submission['email_cliente'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ),
                 ),
                 array(
+                    'label' => __( 'WhatsApp', 'agrocampo-post-venta' ),
+                    'value' => self::normalize_pdf_value( $submission['whatsapp_cliente'] ?? '', __( 'No informado', 'agrocampo-post-venta' ) ),
+                ),
+                array(
                     'label' => __( 'Cliente', 'agrocampo-post-venta' ),
                     'value' => self::normalize_entity_case( self::normalize_pdf_value( $submission['cliente'] ?? '', '' ) ),
                 ),
@@ -1417,7 +1421,7 @@ class AGP_PV_PDF {
                 ),
             );
 
-            $general_rows = self::filter_visible_rows( $general_rows, array( __( 'Correo', 'agrocampo-post-venta' ) ) );
+            $general_rows = self::filter_visible_rows( $general_rows, array( __( 'Correo', 'agrocampo-post-venta' ), __( 'WhatsApp', 'agrocampo-post-venta' ) ) );
             $equipment_rows = self::filter_visible_rows( $equipment_rows );
 
             $rendered_intro_two_up = ! empty( $general_rows ) && ! empty( $equipment_rows ) && $document->render_intro_cards_two_up( $general_rows, $equipment_rows );

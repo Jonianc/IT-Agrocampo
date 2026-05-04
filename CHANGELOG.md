@@ -1,3 +1,6 @@
+## [1.26.0] - 2026-05-04
+- Se agrega `whatsapp_cliente` como contacto alternativo de `email_cliente` en formulario standalone, validación frontend/backend, guardado, PDF, gestor, búsqueda, exportaciones e importación legacy opcional.
+
 ## [1.25.22] - 2026-04-30
 - Se corrige regresión en `Marcar resuelto`: la acción vuelve a permitir pasar observaciones pendientes a resueltas (valida existencia y nonce, sin exigir estado `reviewed` previo).
 - Se refuerza validación de comentarios: `update_observation_note()` y `soft_delete_observation_note()` validan existencia real de la nota por `id + submission_id + deleted_at IS NULL` antes de operar, evitando falsos positivos por `wpdb->update() = 0`.

@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class AGP_PV_DB {
-    public const VERSION = '1.10.0';
+    public const VERSION = '1.11.0';
     public const OPTION_KEY = 'agp_pv_db_version';
 
     public static function table_name(): string {
@@ -32,6 +32,7 @@ class AGP_PV_DB {
             tecnico VARCHAR(255) NOT NULL,
             cliente VARCHAR(255) NOT NULL,
             email_cliente VARCHAR(255) DEFAULT '',
+            whatsapp_cliente VARCHAR(30) DEFAULT '',
             faena_lugar VARCHAR(255) DEFAULT '',
             jefe_taller_nombre VARCHAR(255) DEFAULT '',
             maquina VARCHAR(255) DEFAULT '',
