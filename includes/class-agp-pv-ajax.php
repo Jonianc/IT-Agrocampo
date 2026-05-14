@@ -238,6 +238,9 @@ class AGP_PV_Ajax {
         );
 
         if ( 'Diagnostico-Técnico' === (string) $data['tipo_servicio'] ) {
+            $data['lubricantes'] = '';
+            $data['lubricantes_json'] = '';
+            $data['filtros_utilizados'] = '';
             $data['componentes_utilizados'] = '';
         }
 

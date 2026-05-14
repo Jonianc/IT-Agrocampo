@@ -1,3 +1,7 @@
+## [1.26.4] - 2026-05-14
+- Diagnóstico Técnico (`Diagnostico-Técnico`): en el paso `Detalle de trabajo` se ocultan `Lubricantes`, `Filtros Utilizados` y `Componentes Utilizados`.
+- Backend submit AJAX: para `Diagnostico-Técnico` se fuerzan vacíos `lubricantes`, `lubricantes_json`, `filtros_utilizados` y `componentes_utilizados` antes de normalizar lubricantes.
+
 ## [1.26.3] - 2026-05-14
 - Formulario standalone: se oculta el campo `Componentes Utilizados` cuando `Tipo de Servicio` es `Diagnóstico Técnico`.
 - Backend submit AJAX: para `Diagnostico-Técnico` se fuerza `componentes_utilizados` a vacío, evitando persistencia por manipulación o datos residuales.

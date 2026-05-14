@@ -279,6 +279,8 @@
         var $cantidadHorasField = $('[data-condition="cantidad-horas"]');
         var $garantiaFields = $('[data-condition="garantia"]');
         var $componentesUtilizadosField = $('[data-condition="componentes-utilizados"]');
+        var $lubricantesUtilizadosField = $('[data-condition="lubricantes-utilizados"]');
+        var $filtrosUtilizadosField = $('[data-condition="filtros-utilizados"]');
         var $jefeTallerSignatureField = $('[data-jefe-taller-signature-field]');
         var $fechaContactoField = $('[data-condition="fecha-contacto"]');
         var $machineStatusHelp = $('[data-machine-status-help]');
@@ -324,7 +326,10 @@
 
             // Garantia block
             setVisibility($garantiaFields, tipoServicio === 'two');
-            setVisibility($componentesUtilizadosField, tipoServicio !== 'Diagnostico-Técnico');
+            var isDiagnosticoTecnico = tipoServicio === 'Diagnostico-Técnico';
+            setVisibility($lubricantesUtilizadosField, !isDiagnosticoTecnico);
+            setVisibility($filtrosUtilizadosField, !isDiagnosticoTecnico);
+            setVisibility($componentesUtilizadosField, !isDiagnosticoTecnico);
             if (hasFixedJefeTallerSignature && $jefeTallerSignatureField.length) {
                 setVisibility($jefeTallerSignatureField, false);
             }

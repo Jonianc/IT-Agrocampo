@@ -222,7 +222,7 @@ $render_machine_status_block = static function () use ( $machine_status_options,
 
             <?php if ( 'top' === $machine_status_position ) { $render_machine_status_block(); } ?>
 
-            <div class="agp-pv-field" id="agp-pv-lubricantes-repeater" data-max-rows="10">
+            <div class="agp-pv-field" id="agp-pv-lubricantes-repeater" data-max-rows="10" data-condition="lubricantes-utilizados">
                 <label><?php esc_html_e( 'Lubricantes', 'agrocampo-post-venta' ); ?></label>
                 <div class="agp-pv-lubricants-summary">
                     <span class="agp-pv-lubricants-summary__label"><?php esc_html_e( 'Resumen de lubricantes', 'agrocampo-post-venta' ); ?></span>
@@ -239,7 +239,7 @@ $render_machine_status_block = static function () use ( $machine_status_options,
                 <span class="agp-pv-error" data-error-for="lubricantes_json"></span>
             </div>
 
-            <div class="agp-pv-field">
+            <div class="agp-pv-field" data-condition="filtros-utilizados">
                 <label for="agp-pv-filtros"><?php esc_html_e( 'Filtros Utilizados', 'agrocampo-post-venta' ); ?></label>
                 <textarea id="agp-pv-filtros" name="filtros_utilizados" rows="3"></textarea>
                 <small class="agp-pv-help"><?php esc_html_e( 'Liste filtros cambiados con código o descripción breve.', 'agrocampo-post-venta' ); ?></small>
