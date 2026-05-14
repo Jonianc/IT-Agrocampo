@@ -237,6 +237,10 @@ class AGP_PV_Ajax {
             'correo_copia' => sanitize_email( $raw['correo_copia'] ?? '' ),
         );
 
+        if ( 'Diagnostico-Técnico' === (string) $data['tipo_servicio'] ) {
+            $data['componentes_utilizados'] = '';
+        }
+
         $normalized_lubricants = AGP_PV_Plugin::normalize_lubricants_json( (string) $data['lubricantes_json'] );
         if ( '' !== trim( (string) $data['lubricantes_json'] ) ) {
             if ( '' !== $normalized_lubricants['error'] ) {

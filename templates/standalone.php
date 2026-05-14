@@ -245,7 +245,7 @@ $render_machine_status_block = static function () use ( $machine_status_options,
                 <small class="agp-pv-help"><?php esc_html_e( 'Liste filtros cambiados con código o descripción breve.', 'agrocampo-post-venta' ); ?></small>
             </div>
 
-            <div class="agp-pv-field">
+            <div class="agp-pv-field" data-condition="componentes-utilizados">
                 <label for="agp-pv-componentes"><?php esc_html_e( 'Componentes Utilizados', 'agrocampo-post-venta' ); ?></label>
                 <textarea id="agp-pv-componentes" name="componentes_utilizados" rows="3"></textarea>
                 <small class="agp-pv-help"><?php esc_html_e( 'Detalle repuestos/componentes instalados o ajustados.', 'agrocampo-post-venta' ); ?></small>

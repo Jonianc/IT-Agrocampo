@@ -1,3 +1,7 @@
+## [1.26.3] - 2026-05-14
+- Formulario standalone: se oculta el campo `Componentes Utilizados` cuando `Tipo de Servicio` es `Diagnóstico Técnico`.
+- Backend submit AJAX: para `Diagnostico-Técnico` se fuerza `componentes_utilizados` a vacío, evitando persistencia por manipulación o datos residuales.
+
 ## [1.26.2] - 2026-05-04
 - Corrige validación condicional de contacto cliente en frontend: ahora exige correo o WhatsApp al avanzar desde el paso de datos y también al enviar.
 - Refuerza limpieza visual de errores de `email_cliente` y `whatsapp_cliente` al escribir.

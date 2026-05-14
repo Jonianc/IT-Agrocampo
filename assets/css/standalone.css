@@ -369,7 +369,8 @@
 
 [data-condition="garantia"],
 [data-condition="tipo-mantencion"],
-[data-condition="cantidad-horas"] {
+[data-condition="cantidad-horas"],
+[data-condition="componentes-utilizados"] {
     display: none;
 }
 
