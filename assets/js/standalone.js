@@ -1767,6 +1767,42 @@ function initPhotos() {
 
 
 
+
+    function initManualOnlyFields() {
+        var $fields = $('[data-manual-entry-only="serie"]');
+        if (!$fields.length) {
+            return;
+        }
+
+        function showManualEntryMessage() {
+            setStatusMessage('Digite la serie manualmente. No se permite pegar datos en este campo.', 'warning');
+        }
+
+        $fields.on('paste', function (event) {
+            event.preventDefault();
+            showManualEntryMessage();
+        });
+
+        $fields.on('drop', function (event) {
+            event.preventDefault();
+            showManualEntryMessage();
+        });
+
+        $fields.on('dragover', function (event) {
+            event.preventDefault();
+        });
+
+        $fields.on('beforeinput', function (event) {
+            var originalEvent = event && event.originalEvent ? event.originalEvent : null;
+            if (!originalEvent || originalEvent.inputType !== 'insertFromPaste') {
+                return;
+            }
+
+            event.preventDefault();
+            showManualEntryMessage();
+        });
+    }
+
     function initServiceWorker() {
         if (!('serviceWorker' in navigator)) {
             return;
@@ -3000,6 +3036,7 @@ function initPhotos() {
         initServiceWorker();
         initDraftPersistence();
         initTextLengthGuides();
+        initManualOnlyFields();
         initConnectivityAndPending();
         initForm();
     });

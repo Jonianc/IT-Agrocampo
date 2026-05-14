@@ -136,7 +136,7 @@ $render_machine_status_block = static function () use ( $machine_status_options,
                 </div>
                 <div class="agp-pv-field">
                     <label for="agp-pv-serie"><?php esc_html_e( 'Serie', 'agrocampo-post-venta' ); ?> *</label>
-                    <input id="agp-pv-serie" name="serie" type="text" required maxlength="60" data-maxlength-target="serie" autocomplete="off" autocapitalize="characters" spellcheck="false">
+                    <input id="agp-pv-serie" name="serie" type="text" required maxlength="60" data-maxlength-target="serie" autocomplete="off" autocapitalize="characters" spellcheck="false" data-manual-entry-only="serie">
                     <small class="agp-pv-help agp-pv-charcount" data-maxlength-counter="serie"></small>
                     <span class="agp-pv-error" data-error-for="serie"></span>
                 </div>

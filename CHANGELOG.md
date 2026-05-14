@@ -1,3 +1,6 @@
+## [1.26.8] - 2026-05-14
+- frontend `/post-venta/`: el campo `Serie` bloquea pegado y arrastre de datos (Ctrl+V, menú contextual y drop) para favorecer digitación manual, con feedback no invasivo al usuario.
+
 ## [1.26.7] - 2026-05-14
 - Gestor de Informes standalone: se corrige la resolución de `tipo_servicio_label` para normalizar históricos con `Factura Cliente` y mostrar `Reparación`, manteniendo el valor interno `one`.
 
