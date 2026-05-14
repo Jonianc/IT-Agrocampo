@@ -1368,7 +1368,14 @@ class AGP_PV_PDF {
 
             // Map labels (avoid one/two).
             $tecnico_label = self::normalize_pdf_value( $submission['tecnico_label'] ?? ( $submission['tecnico'] ?? '' ) );
-            $tipo_servicio_label = self::normalize_pdf_value( $submission['tipo_servicio_label'] ?? self::map_tipo_servicio( (string) ( $submission['tipo_servicio'] ?? '' ) ) );
+            $normalized_tipo_servicio_label = AGP_PV_Plugin::normalize_tipo_servicio_label(
+                (string) ( $submission['tipo_servicio'] ?? '' ),
+                (string) ( $submission['tipo_servicio_label'] ?? '' )
+            );
+            if ( '' === $normalized_tipo_servicio_label ) {
+                $normalized_tipo_servicio_label = self::map_tipo_servicio( (string) ( $submission['tipo_servicio'] ?? '' ) );
+            }
+            $tipo_servicio_label = self::normalize_pdf_value( $normalized_tipo_servicio_label );
             $tipo_mantencion_label = self::normalize_pdf_value( $submission['tipo_mantencion_label'] ?? self::map_tipo_mantencion( (string) ( $submission['tipo_mantencion'] ?? '' ) ) );
 
             $general_rows = array(

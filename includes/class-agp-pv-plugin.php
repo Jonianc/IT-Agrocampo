@@ -685,6 +685,22 @@ class AGP_PV_Plugin {
         return $position;
     }
 
+    public static function normalize_tipo_servicio_label( string $tipo_servicio, string $tipo_servicio_label = '' ): string {
+        $tipo_servicio = trim( $tipo_servicio );
+        $label = sanitize_text_field( $tipo_servicio_label );
+
+        if ( 'one' === $tipo_servicio ) {
+            return __( 'Reparación', 'agrocampo-post-venta' );
+        }
+
+        $normalized = mb_strtolower( remove_accents( trim( $label ) ) );
+        if ( 'factura cliente' === $normalized || 'reparacion' === $normalized ) {
+            return __( 'Reparación', 'agrocampo-post-venta' );
+        }
+
+        return $label;
+    }
+
     /**
      * @return string[]
      */

@@ -1,3 +1,6 @@
+## [1.26.6] - 2026-05-14
+- Gestor/Admin/PDF regenerado: los informes históricos con `tipo_servicio_label` en `Factura Cliente` ahora se normalizan y muestran como `Reparación`, manteniendo el valor interno `one` y compatibilidad backward.
+
 ## [1.26.5] - 2026-05-14
 - Tipo de servicio: la etiqueta visible `Factura Cliente` se renombra a `Reparación` en formulario, PDF y gestor, manteniendo el valor interno `one` para compatibilidad backward.
 

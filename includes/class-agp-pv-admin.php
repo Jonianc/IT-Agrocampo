@@ -2839,7 +2839,10 @@ class AGP_PV_Admin {
             $legacy_id = isset( $row['id'] ) ? absint( (string) $row['id'] ) : 0;
         }
 
-        $tipo_servicio_label = trim( (string) ( $row['tipo_servicio_label'] ?? '' ) );
+        $tipo_servicio_label = AGP_PV_Plugin::normalize_tipo_servicio_label(
+            (string) ( $row['tipo_servicio'] ?? '' ),
+            (string) ( $row['tipo_servicio_label'] ?? '' )
+        );
         if ( '' === $tipo_servicio_label ) {
             $tipo_servicio_label = $this->map_stored_tipo_servicio_to_legacy_label( (string) ( $row['tipo_servicio'] ?? '' ) );
         }
@@ -3190,6 +3193,7 @@ private function map_stored_tipo_servicio_to_legacy_label( string $value ): stri
         $map = array(
             'factura cliente' => 'one',
             'reparacion' => 'one',
+            'reparación' => 'one',
             'garantia' => 'two',
             'mantencion' => 'Interno',
             'visita de cortesia' => 'Visita-de-Cortesía',
@@ -3780,7 +3784,10 @@ class AGP_PV_Submissions_Table extends WP_List_Table {
             $legacy_id = isset( $row['id'] ) ? absint( (string) $row['id'] ) : 0;
         }
 
-        $tipo_servicio_label = trim( (string) ( $row['tipo_servicio_label'] ?? '' ) );
+        $tipo_servicio_label = AGP_PV_Plugin::normalize_tipo_servicio_label(
+            (string) ( $row['tipo_servicio'] ?? '' ),
+            (string) ( $row['tipo_servicio_label'] ?? '' )
+        );
         if ( '' === $tipo_servicio_label ) {
             $tipo_servicio_label = $this->map_stored_tipo_servicio_to_legacy_label( (string) ( $row['tipo_servicio'] ?? '' ) );
         }
