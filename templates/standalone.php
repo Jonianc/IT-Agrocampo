@@ -166,7 +166,7 @@ $render_machine_status_block = static function () use ( $machine_status_options,
                     <label for="agp-pv-tipo-servicio"><?php esc_html_e( 'Tipo de Servicio', 'agrocampo-post-venta' ); ?> *</label>
                     <select id="agp-pv-tipo-servicio" name="tipo_servicio" required>
                         <option value=""><?php esc_html_e( 'Seleccione', 'agrocampo-post-venta' ); ?></option>
-                        <option value="one"><?php esc_html_e( 'Factura Cliente', 'agrocampo-post-venta' ); ?></option>
+                        <option value="one"><?php esc_html_e( 'Reparación', 'agrocampo-post-venta' ); ?></option>
                         <option value="two"><?php esc_html_e( 'Garantía', 'agrocampo-post-venta' ); ?></option>
                         <option value="Interno"><?php esc_html_e( 'Mantención', 'agrocampo-post-venta' ); ?></option>
                         <option value="Visita-de-Cortesía"><?php esc_html_e( 'Visita de Cortesía', 'agrocampo-post-venta' ); ?></option>

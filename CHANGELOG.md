@@ -1,3 +1,6 @@
+## [1.26.5] - 2026-05-14
+- Tipo de servicio: la etiqueta visible `Factura Cliente` se renombra a `Reparación` en formulario, PDF y gestor, manteniendo el valor interno `one` para compatibilidad backward.
+
 ## [1.26.4] - 2026-05-14
 - Diagnóstico Técnico (`Diagnostico-Técnico`): en el paso `Detalle de trabajo` se ocultan `Lubricantes`, `Filtros Utilizados` y `Componentes Utilizados`.
 - Backend submit AJAX: para `Diagnostico-Técnico` se fuerzan vacíos `lubricantes`, `lubricantes_json`, `filtros_utilizados` y `componentes_utilizados` antes de normalizar lubricantes.

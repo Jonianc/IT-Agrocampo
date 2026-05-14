@@ -1971,7 +1971,7 @@ class AGP_PV_PDF {
 
     private static function map_tipo_servicio( string $value ): string {
         $map = array(
-            'one' => __( 'Factura Cliente', 'agrocampo-post-venta' ),
+            'one' => __( 'Reparación', 'agrocampo-post-venta' ),
             'two' => __( 'Garantía', 'agrocampo-post-venta' ),
             'Interno' => __( 'Mantención', 'agrocampo-post-venta' ),
             'Visita-de-Cortesía' => __( 'Visita de Cortesía', 'agrocampo-post-venta' ),
