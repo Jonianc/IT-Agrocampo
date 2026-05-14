@@ -369,7 +369,10 @@
 
 [data-condition="garantia"],
 [data-condition="tipo-mantencion"],
-[data-condition="cantidad-horas"] {
+[data-condition="cantidad-horas"],
+[data-condition="lubricantes-utilizados"],
+[data-condition="filtros-utilizados"],
+[data-condition="componentes-utilizados"] {
     display: none;
 }
 
