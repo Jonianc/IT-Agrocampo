@@ -1368,7 +1368,14 @@ class AGP_PV_PDF {
 
             // Map labels (avoid one/two).
             $tecnico_label = self::normalize_pdf_value( $submission['tecnico_label'] ?? ( $submission['tecnico'] ?? '' ) );
-            $tipo_servicio_label = self::normalize_pdf_value( $submission['tipo_servicio_label'] ?? self::map_tipo_servicio( (string) ( $submission['tipo_servicio'] ?? '' ) ) );
+            $normalized_tipo_servicio_label = AGP_PV_Plugin::normalize_tipo_servicio_label(
+                (string) ( $submission['tipo_servicio'] ?? '' ),
+                (string) ( $submission['tipo_servicio_label'] ?? '' )
+            );
+            if ( '' === $normalized_tipo_servicio_label ) {
+                $normalized_tipo_servicio_label = self::map_tipo_servicio( (string) ( $submission['tipo_servicio'] ?? '' ) );
+            }
+            $tipo_servicio_label = self::normalize_pdf_value( $normalized_tipo_servicio_label );
             $tipo_mantencion_label = self::normalize_pdf_value( $submission['tipo_mantencion_label'] ?? self::map_tipo_mantencion( (string) ( $submission['tipo_mantencion'] ?? '' ) ) );
 
             $general_rows = array(
@@ -1971,7 +1978,7 @@ class AGP_PV_PDF {
 
     private static function map_tipo_servicio( string $value ): string {
         $map = array(
-            'one' => __( 'Factura Cliente', 'agrocampo-post-venta' ),
+            'one' => __( 'Reparación', 'agrocampo-post-venta' ),
             'two' => __( 'Garantía', 'agrocampo-post-venta' ),
             'Interno' => __( 'Mantención', 'agrocampo-post-venta' ),
             'Visita-de-Cortesía' => __( 'Visita de Cortesía', 'agrocampo-post-venta' ),

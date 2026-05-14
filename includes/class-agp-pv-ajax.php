@@ -394,7 +394,7 @@ class AGP_PV_Ajax {
 
     private function get_tipo_servicio_label( string $value ): string {
         $map = array(
-            'one' => __( 'Factura Cliente', 'agrocampo-post-venta' ),
+            'one' => __( 'Reparación', 'agrocampo-post-venta' ),
             'two' => __( 'Garantía', 'agrocampo-post-venta' ),
             'Interno' => __( 'Mantención', 'agrocampo-post-venta' ),
             'Visita-de-Cortesía' => __( 'Visita de Cortesía', 'agrocampo-post-venta' ),

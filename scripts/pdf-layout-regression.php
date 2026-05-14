@@ -240,7 +240,7 @@ assert_true(AGP_PV_PDF::is_missing_display_value('No informado'), 'Detecta place
 assert_true(AGP_PV_PDF::is_missing_display_value('SIN INFORMACIÓN'), 'Detecta placeholder con acentos/case distintos.');
 assert_true(AGP_PV_PDF::is_missing_display_value('n/a'), 'Detecta placeholder N/A.');
 assert_true(AGP_PV_PDF::is_missing_display_value(' null '), 'Detecta placeholder null con espacios.');
-assert_true(!AGP_PV_PDF::is_missing_display_value('Factura Cliente'), 'No marca como ausente un valor válido.');
+assert_true(!AGP_PV_PDF::is_missing_display_value('Reparación'), 'No marca como ausente un valor válido.');
 
 $doc->section_title('Estrés observaciones');
 $doc->card_start('Observaciones', 20.0);

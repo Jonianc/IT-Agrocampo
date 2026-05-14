@@ -257,7 +257,7 @@ $pdf_status_labels = array(
 );
 
 $service_type_labels = array(
-    'one'                => __( 'Factura Cliente', 'agrocampo-post-venta' ),
+    'one'                => __( 'Reparación', 'agrocampo-post-venta' ),
     'two'                => __( 'Garantía', 'agrocampo-post-venta' ),
     'Interno'            => __( 'Mantención', 'agrocampo-post-venta' ),
     'interno'            => __( 'Mantención', 'agrocampo-post-venta' ),
@@ -270,8 +270,10 @@ $resolve_service_type_label = static function ( array $item ) use ( $service_typ
     $service_type = (string) ( $item['tipo_servicio'] ?? '' );
     $custom_label = sanitize_text_field( (string) ( $item['tipo_servicio_label'] ?? '' ) );
 
-    if ( '' !== $custom_label ) {
-        return $custom_label;
+    $normalized_label = AGP_PV_Plugin::normalize_tipo_servicio_label( $service_type, $custom_label );
+
+    if ( '' !== $normalized_label ) {
+        return $normalized_label;
     }
 
     $mantencion_label = sanitize_text_field( (string) ( $item['tipo_mantencion_label'] ?? '' ) );
@@ -407,7 +409,7 @@ $active_notice = $reports_notice_map[ $reports_notice ] ?? null;
                     <label class="agp-pv-field agp-pv-field--secondary" for="agp-pv-filter-service-type"><span class="agp-pv-field__label"><?php esc_html_e( 'Tipo de servicio', 'agrocampo-post-venta' ); ?></span>
                         <select id="agp-pv-filter-service-type" name="service_type">
                             <option value=""><?php esc_html_e( 'Todos', 'agrocampo-post-venta' ); ?></option>
-                            <option value="one" <?php selected( $service_type, 'one' ); ?>><?php esc_html_e( 'Factura Cliente', 'agrocampo-post-venta' ); ?></option>
+                            <option value="one" <?php selected( $service_type, 'one' ); ?>><?php esc_html_e( 'Reparación', 'agrocampo-post-venta' ); ?></option>
                             <option value="two" <?php selected( $service_type, 'two' ); ?>><?php esc_html_e( 'Garantía', 'agrocampo-post-venta' ); ?></option>
                             <option value="interno" <?php selected( $service_type_normalized, 'interno' ); ?>><?php esc_html_e( 'Mantención', 'agrocampo-post-venta' ); ?></option>
                             <option value="Visita-de-Cortesía" <?php selected( $service_type, 'Visita-de-Cortesía' ); ?>><?php esc_html_e( 'Visita de Cortesía', 'agrocampo-post-venta' ); ?></option>
