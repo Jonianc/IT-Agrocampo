@@ -270,8 +270,10 @@ $resolve_service_type_label = static function ( array $item ) use ( $service_typ
     $service_type = (string) ( $item['tipo_servicio'] ?? '' );
     $custom_label = sanitize_text_field( (string) ( $item['tipo_servicio_label'] ?? '' ) );
 
-    if ( '' !== $custom_label ) {
-        return $custom_label;
+    $normalized_label = AGP_PV_Plugin::normalize_tipo_servicio_label( $service_type, $custom_label );
+
+    if ( '' !== $normalized_label ) {
+        return $normalized_label;
     }
 
     $mantencion_label = sanitize_text_field( (string) ( $item['tipo_mantencion_label'] ?? '' ) );
